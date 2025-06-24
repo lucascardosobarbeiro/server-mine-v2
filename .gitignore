@@ -1,14 +1,11 @@
 # Arquivos de estado do Terraform (MUITO SENSÍVEIS)
-# Contêm um mapa detalhado de toda a sua infraestrutura na nuvem.
 *.tfstate
 *.tfstate.backup
 
 # Arquivos de variáveis locais (contém seus dados pessoais/de projeto)
-# Nunca envie seu arquivo .tfvars para um repositório público!
 *.tfvars
 
 # Diretório do Terraform com os provedores baixados
-# Este diretório é gerado localmente pelo comando `terraform init`.
 .terraform/
 
 # Logs de erro do Terraform que podem ser gerados localmente.
