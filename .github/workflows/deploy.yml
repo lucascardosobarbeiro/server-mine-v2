@@ -28,14 +28,11 @@ jobs:
         workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
         service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
 
-    - name: 'Update and restart Docker Compose services'
-      # A CORREÇÃO FINAL: Voltamos para a @v1, que é a tag principal correta e existente.
-      uses: 'google-github-actions/ssh-compute@v1'
-      with:
-        instance_name: '${{ env.INSTANCE_NAME }}'
-        zone: '${{ env.GCP_ZONE }}'
-        use_iap: true
-        command: |
-          cd /opt/minecraft && \
-          docker-compose pull && \
-          docker-compose up -d --remove-orphans
+    # PASSO DE SSH CORRIGIDO: Usamos o gcloud diretamente
+    - name: 'Execute remote update command via gcloud'
+      run: |
+        gcloud compute ssh ${{ env.INSTANCE_NAME }} \
+          --zone=${{ env.GCP_ZONE }} \
+          --project=${{ env.GCP_PROJECT_ID }} \
+          --tunnel-through-iap \
+          --command="cd /opt/minecraft && docker-compose pull && docker-compose up -d --remove-orphans"
