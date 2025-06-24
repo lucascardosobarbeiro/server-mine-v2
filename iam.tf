@@ -39,3 +39,10 @@ resource "google_project_iam_member" "iap_tunnel_for_sa" {
   member  = "serviceAccount:${google_service_account.minecraft_vm_sa.email}"
 }
 
+# Adicionar este bloco ao iam.tf
+
+resource "google_project_iam_member" "compute_viewer_for_user" {
+  project = var.project_id
+  role    = "roles/compute.viewer"
+  member  = "user:${var.gcp_user_email}"
+}
