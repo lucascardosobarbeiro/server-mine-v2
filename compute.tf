@@ -1,4 +1,4 @@
-# compute.tf
+# compute.tf - Final Version with Robust Docker Installation
 
 resource "google_compute_address" "static_ip" {
   name   = "minecraft-static-ip"
@@ -36,24 +36,39 @@ resource "google_compute_instance" "minecraft_server_host" {
       # Espera a rede estar totalmente pronta
       sleep 10
 
-      # Instalação do Docker, Docker Compose e outras ferramentas
-      apt-get update
-      apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release docker-ce docker-ce-cli containerd.io docker-compose-plugin
+      # ---- Seção 1: Instalação Robusta do Docker (Método Oficial) ----
 
-      # Instalação do Ops Agent para Monitoramento
+      # 1.1. Remove versões antigas, se existirem
+      for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do apt-get remove -y $pkg; done
+
+      # 1.2. Instala pré-requisitos
+      apt-get update
+      apt-get install -y ca-certificates curl
+
+      # 1.3. Adiciona a chave GPG oficial do Docker
+      install -m 0755 -d /etc/apt/keyrings
+      curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+      chmod a+r /etc/apt/keyrings/docker.asc
+
+      # 1.4. Adiciona o repositório do Docker ao Apt
+      echo \
+        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
+        $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+        tee /etc/apt/sources.list.d/docker.list > /dev/null
+      
+      # 1.5. Atualiza o cache do Apt com o novo repositório e instala o Docker
+      apt-get update
+      apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+      # ---- Seção 2: Instalação do Ops Agent ----
       curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
       bash add-google-cloud-ops-agent-repo.sh --also-install
 
-      # --- Ambiente Minecraft ---
-      mkdir -p /opt/minecraft
-      cd /opt/minecraft
-
-      # --- Criação dos Arquivos de Configuração ---
-
-      # FIX 1: Cria o diretório de dados do Velocity ANTES de tentar criar um arquivo dentro dele.
+      # ---- Seção 3: Ambiente Minecraft ----
       mkdir -p /opt/minecraft/velocity-data
+      cd /opt/minecraft
       
-      # Cria o arquivo de configuração do Velocity.
+      # Cria o arquivo de configuração do Velocity
       cat <<EOF_VELOCITY > /opt/minecraft/velocity-data/velocity.toml
       [servers]
       lobby = "lobby:25565"
@@ -68,7 +83,7 @@ resource "google_compute_instance" "minecraft_server_host" {
       enabled = false
       EOF_VELOCITY
 
-      # Cria o arquivo docker-compose.yml que define todos os nossos 4 contêineres.
+      # Cria o arquivo docker-compose.yml
       cat <<EOF_COMPOSE > /opt/minecraft/docker-compose.yml
       version: '3.8'
       networks:
@@ -125,9 +140,7 @@ resource "google_compute_instance" "minecraft_server_host" {
           networks: ["minecraft-net"]
       EOF_COMPOSE
 
-      # ---- Inicia os Serviços ----
-      
-      # FIX 2: Usa "docker compose" (com espaço), que é o comando correto para a versão em plugin.
+      # ---- Seção 4: Inicia os Serviços ----
       docker compose up -d
       EOT
   }
