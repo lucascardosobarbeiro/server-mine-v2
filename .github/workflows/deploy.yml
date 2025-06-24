@@ -29,8 +29,8 @@ jobs:
         service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
 
     - name: 'Update and restart Docker Compose services'
-      # AQUI ESTÁ A CORREÇÃO: Mudamos de @v1 para @v2
-      uses: 'google-github-actions/ssh-compute@v2'
+      # A CORREÇÃO FINAL: Voltamos para a @v1, que é a tag principal correta e existente.
+      uses: 'google-github-actions/ssh-compute@v1'
       with:
         instance_name: '${{ env.INSTANCE_NAME }}'
         zone: '${{ env.GCP_ZONE }}'
