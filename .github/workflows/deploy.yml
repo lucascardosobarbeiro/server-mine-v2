@@ -28,11 +28,12 @@ jobs:
         workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
         service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
 
-    # PASSO DE SSH CORRIGIDO: Usamos o gcloud diretamente
     - name: 'Execute remote update command via gcloud'
       run: |
         gcloud compute ssh ${{ env.INSTANCE_NAME }} \
           --zone=${{ env.GCP_ZONE }} \
           --project=${{ env.GCP_PROJECT_ID }} \
           --tunnel-through-iap \
+          --plain \
+          --quiet \
           --command="cd /opt/minecraft && docker-compose pull && docker-compose up -d --remove-orphans"
