@@ -1,11 +1,9 @@
-# .github/workflows/deploy.yml
-
 name: Deploy Minecraft Server Updates
 
 on:
   push:
     branches:
-      - main # ou a branch que você usa como principal
+      - main
 
 env:
   GCP_PROJECT_ID: server-mine-463823
@@ -20,10 +18,14 @@ jobs:
       id-token: 'write'
 
     steps:
+    - name: 'Checkout code'
+      uses: 'actions/checkout@v4'
+
     - name: 'Authenticate to Google Cloud'
       id: 'auth'
       uses: 'google-github-actions/auth@v2'
       with:
+        # A linha 'use_iap: true' foi REMOVIDA DAQUI.
         workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
         service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
 
@@ -32,7 +34,10 @@ jobs:
       with:
         instance_name: '${{ env.INSTANCE_NAME }}'
         zone: '${{ env.GCP_ZONE }}'
-        ssh_private_key: '${{ secrets.SSH_PRIVATE_KEY }}'
+        
+        # A linha 'use_iap: true' foi MOVIDA PARA CÁ, que é o lugar correto.
+        use_iap: true
+        
         command: |
           cd /opt/minecraft && \
           docker-compose pull && \
