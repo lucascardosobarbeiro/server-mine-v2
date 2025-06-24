@@ -1,0 +1,39 @@
+# .github/workflows/deploy.yml
+
+name: Deploy Minecraft Server Updates
+
+on:
+  push:
+    branches:
+      - main # ou a branch que você usa como principal
+
+env:
+  GCP_PROJECT_ID: server-mine-463823
+  GCP_ZONE: southamerica-east1-a
+  INSTANCE_NAME: minecraft-server-host
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+    - name: 'Authenticate to Google Cloud'
+      id: 'auth'
+      uses: 'google-github-actions/auth@v2'
+      with:
+        workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
+        service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
+
+    - name: 'Update and restart Docker Compose services'
+      uses: 'google-github-actions/ssh-compute@v1'
+      with:
+        instance_name: '${{ env.INSTANCE_NAME }}'
+        zone: '${{ env.GCP_ZONE }}'
+        ssh_private_key: '${{ secrets.SSH_PRIVATE_KEY }}'
+        command: |
+          cd /opt/minecraft && \
+          docker-compose pull && \
+          docker-compose up -d --remove-orphans
