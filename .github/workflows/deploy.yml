@@ -25,19 +25,16 @@ jobs:
       id: 'auth'
       uses: 'google-github-actions/auth@v2'
       with:
-        # A linha 'use_iap: true' foi REMOVIDA DAQUI.
         workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
         service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
 
     - name: 'Update and restart Docker Compose services'
-      uses: 'google-github-actions/ssh-compute@v1'
+      # AQUI ESTÁ A CORREÇÃO: Mudamos de @v1 para @v2
+      uses: 'google-github-actions/ssh-compute@v2'
       with:
         instance_name: '${{ env.INSTANCE_NAME }}'
         zone: '${{ env.GCP_ZONE }}'
-        
-        # A linha 'use_iap: true' foi MOVIDA PARA CÁ, que é o lugar correto.
         use_iap: true
-        
         command: |
           cd /opt/minecraft && \
           docker-compose pull && \
