@@ -39,18 +39,3 @@ resource "google_project_iam_member" "iap_tunnel_for_sa" {
   member  = "serviceAccount:${google_service_account.minecraft_vm_sa.email}"
 }
 
-# =================================================================================
-# PERMISSÕES FINAIS ADICIONADAS (OS LOGIN)
-# Concede à conta de serviço as permissões para interagir com o serviço OS Login,
-# cobrindo a última causa provável da falha de conexão.
-# =================================================================================
-resource "google_project_iam_member" "os_login_for_sa" {
-  project = var.project_id
-  role    = "roles/compute.osLogin"
-  member  = "serviceAccount:${google_service_account.minecraft_vm_sa.email}"
-}
-resource "google_project_iam_member" "sa_user_for_sa" {
-  project = var.project_id
-  role    = "roles/iam.serviceAccountUser"
-  member  = "serviceAccount:${google_service_account.minecraft_vm_sa.email}"
-}
