@@ -66,3 +66,5 @@ resource "google_project_iam_member" "sa_user_for_sa" {
   role    = "roles/iam.serviceAccountUser"
   member  = "serviceAccount:${google_service_account.minecraft_vm_sa.email}"
 }
+
+# necessario voce adicionar também a permissão do metadata v1 para gerar o acesso via ssh do deploy.yml
