@@ -6,7 +6,7 @@
 ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
 
 ## Overview
-
+teste
 This project demonstrates the end-to-end creation of a robust, secure, and fully automated multi-world Minecraft server platform on Google Cloud Platform (GCP). The entire infrastructure is managed through code (IaC), and it features a complete CI/CD pipeline powered by GitHub Actions for seamless updates and maintenance.
 
 The goal is not just to host a game server, but to showcase modern Cloud Engineering and DevOps best practices, including containerization, network security, least-privilege IAM, automated backups, and a GitOps-based workflow for application lifecycle management.
