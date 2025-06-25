@@ -53,3 +53,16 @@ resource "google_service_account_iam_member" "github_wif_user" {
   role               = "roles/iam.workloadIdentityUser"
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repo}"
 }
+
+# iam.tf - Adicionar este bloco ao final do arquivo
+
+# =================================================================================
+# PERMISSÃO FINAL (BASEADA NA DOCUMENTAÇÃO)
+# Concede à conta de serviço a capacidade de atuar em nome de outras contas
+# de serviço, o que é necessário para o fluxo de conexão IAP em cenários de automação.
+# =================================================================================
+resource "google_project_iam_member" "sa_user_for_sa" {
+  project = var.project_id
+  role    = "roles/iam.serviceAccountUser"
+  member  = "serviceAccount:${google_service_account.minecraft_vm_sa.email}"
+}
