@@ -25,7 +25,6 @@ jobs:
       id: 'auth'
       uses: 'google-github-actions/auth@v2'
       with:
-        # Voltamos a usar o Workload Identity Federation
         workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
         service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
 
@@ -35,7 +34,8 @@ jobs:
           --zone=${{ env.GCP_ZONE }} \
           --project=${{ env.GCP_PROJECT_ID }} \
           --tunnel-through-iap \
-          --command="cd /opt/minecraft && docker-compose pull && docker-compose up -d --remove-orphans" \
+          # CORREÇÃO: Usamos "docker compose" com espaço nos comandos abaixo
+          --command="cd /opt/minecraft && docker compose pull && docker compose up -d --remove-orphans" \
           -- \
           -o UserKnownHostsFile=/dev/null \
           -o StrictHostKeyChecking=no
