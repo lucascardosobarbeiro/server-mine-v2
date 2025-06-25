@@ -32,11 +32,7 @@ resource "google_iam_workload_identity_pool_provider" "github_provider" {
 
 # 3. A CONEXÃO MÁGICA: Permite que uma identidade do GitHub (nosso repositório)
 #    personifique (aja como) a nossa conta de serviço da VM.
-resource "google_service_account_iam_member" "github_wif_user" {
-  service_account_id = google_service_account.minecraft_vm_sa.name
-  role               = "roles/iam.workloadIdentityUser"
-  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repo}"
-}
+
 
 # Recurso auxiliar para gerar o sufixo aleatório.
 resource "random_string" "suffix" {
