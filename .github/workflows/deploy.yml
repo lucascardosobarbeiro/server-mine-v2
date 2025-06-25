@@ -34,8 +34,7 @@ jobs:
           --zone=${{ env.GCP_ZONE }} \
           --project=${{ env.GCP_PROJECT_ID }} \
           --tunnel-through-iap \
-          # CORREÇÃO: Usamos "docker compose" com espaço nos comandos abaixo
-          --command="cd /opt/minecraft && docker compose pull && docker compose up -d --remove-orphans" \
           -- \
           -o UserKnownHostsFile=/dev/null \
-          -o StrictHostKeyChecking=no
+          -o StrictHostKeyChecking=no \
+          "cd /opt/minecraft && docker compose pull && docker compose up -d --remove-orphans"
