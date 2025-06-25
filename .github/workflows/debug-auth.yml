@@ -1,0 +1,30 @@
+# .github/workflows/debug-auth.yml
+
+name: Debug GCP Authentication
+
+on:
+  # Aciona manualmente para podermos testar quando quisermos
+  workflow_dispatch:
+
+jobs:
+  debug-auth-job:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+    - name: 'Authenticate to Google Cloud with Debugging'
+      id: 'auth'
+      uses: 'google-github-actions/auth@v2'
+      with:
+        workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
+        service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
+        # Habilita logs de depuração detalhados para esta ação
+        debug: true
+
+    - name: 'Test gcloud command'
+      if: steps.auth.outputs.access_token
+      run: |
+        echo "Authentication successful!"
+        gcloud compute instances list --project=${{ env.GCP_PROJECT_ID }}
