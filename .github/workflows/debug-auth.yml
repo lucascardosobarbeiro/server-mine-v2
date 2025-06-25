@@ -1,5 +1,6 @@
 # .github/workflows/debug-auth.yml
-
+# basically investigates the authentication process with GCP
+# to ensure that the Workload Identity Federation is working correctly.
 name: Debug GCP Authentication
 
 on:
