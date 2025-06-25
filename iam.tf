@@ -1,9 +1,11 @@
+# iam.tf - Versão Final para WIF
+
 resource "google_service_account" "minecraft_vm_sa" {
   account_id   = "sa-minecraft-vm"
   display_name = "Service Account for Minecraft VM"
 }
 
-// Permissões de Logging, Monitoring, e Storage
+# Permissões da Conta de Serviço para operar (Logging, Monitoring, Storage)
 resource "google_project_iam_member" "logging_writer" {
   project = var.project_id
   role    = "roles/logging.logWriter"
@@ -20,7 +22,7 @@ resource "google_storage_bucket_iam_member" "backup_writer" {
   member = "serviceAccount:${google_service_account.minecraft_vm_sa.email}"
 }
 
-// Permissões para o seu usuário humano
+# Permissões para o SEU USUÁRIO HUMANO
 resource "google_project_iam_member" "iap_ssh_access" {
   project = var.project_id
   role    = "roles/iap.tunnelResourceAccessor"
@@ -32,8 +34,7 @@ resource "google_project_iam_member" "compute_viewer_for_user" {
   member  = "user:${var.gcp_user_email}"
 }
 
-
-// Permissões de acesso para a CONTA DE SERVIÇO
+# Permissões para a CONTA DE SERVIÇO do CI/CD
 resource "google_project_iam_member" "compute_viewer_for_sa" {
   project = var.project_id
   role    = "roles/compute.viewer"
@@ -45,15 +46,10 @@ resource "google_project_iam_member" "iap_tunnel_for_sa" {
   member  = "serviceAccount:${google_service_account.minecraft_vm_sa.email}"
 }
 
-# =================================================================================
-# CORREÇÃO: A PERMISSÃO QUE FALTAVA PARA O WORKLOAD IDENTITY FEDERATION
+# A PERMISSÃO MAIS IMPORTANTE PARA O WIF
 # Concede à identidade do GitHub a permissão para "personificar" esta conta de serviço.
-# =================================================================================
 resource "google_service_account_iam_member" "github_wif_user" {
-  # IMPORTANTE: A permissão é na CONTA DE SERVIÇO, não no projeto.
   service_account_id = google_service_account.minecraft_vm_sa.name
   role               = "roles/iam.workloadIdentityUser"
-  
-  # O 'member' é a identidade do GitHub que pode usar esta SA.
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repo}"
 }
