@@ -34,8 +34,7 @@ jobs:
           --zone=${{ env.GCP_ZONE }} \
           --project=${{ env.GCP_PROJECT_ID }} \
           --tunnel-through-iap \
-          # CORREÇÃO: Usa o novo caminho /home/root/minecraft para corresponder à imagem COS
-          --command="cd /home/root/minecraft && docker compose pull && docker compose up -d --remove-orphans" \
           -- \
           -o UserKnownHostsFile=/dev/null \
-          -o StrictHostKeyChecking=no
+          -o StrictHostKeyChecking=no \
+          "cd /home/root/minecraft && docker compose pull && docker compose up -d --remove-orphans"
