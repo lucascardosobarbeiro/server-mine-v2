@@ -13,15 +13,14 @@ resource "google_compute_instance" "minecraft_server_host" {
 
   boot_disk {
     initialize_params {
-      # Usamos uma imagem do Container-Optimized OS
-      # que já vem com Docker e docker-compose instalados.
-      image = "cos-cloud/cos-stable-113-lts"
+      # CORREÇÃO: Usamos a "família" de imagens cos-stable.
+      # Isso garante que sempre usaremos a versão estável mais recente.
+      image = "cos-cloud/cos-stable"
       size  = 70
     }
   }
 
-  # CORREÇÃO: Bloco de rede adicionado de volta.
-  # Conecta a VM à nossa sub-rede e atribui o IP estático.
+  # Bloco de rede que conecta a VM à nossa sub-rede e atribui o IP estático.
   network_interface {
     subnetwork = google_compute_subnetwork.minecraft_subnet.self_link
     access_config {
