@@ -1,4 +1,4 @@
-# compute.tf - Final Version with Robust Docker Installation
+# compute.tf - Final Version with Application-Level Fix
 
 resource "google_compute_address" "static_ip" {
   name   = "minecraft-static-ip"
@@ -36,27 +36,17 @@ resource "google_compute_instance" "minecraft_server_host" {
       # Espera a rede estar totalmente pronta
       sleep 10
 
-      # ---- Seção 1: Instalação Robusta do Docker (Método Oficial) ----
-
-      # 1.1. Remove versões antigas, se existirem
+      # ---- Seção 1: Instalação Robusta do Docker ----
       for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do apt-get remove -y $pkg; done
-
-      # 1.2. Instala pré-requisitos
       apt-get update
       apt-get install -y ca-certificates curl
-
-      # 1.3. Adiciona a chave GPG oficial do Docker
       install -m 0755 -d /etc/apt/keyrings
       curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
       chmod a+r /etc/apt/keyrings/docker.asc
-
-      # 1.4. Adiciona o repositório do Docker ao Apt
       echo \
         "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
         $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
         tee /etc/apt/sources.list.d/docker.list > /dev/null
-      
-      # 1.5. Atualiza o cache do Apt com o novo repositório e instala o Docker
       apt-get update
       apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
@@ -109,8 +99,9 @@ resource "google_compute_instance" "minecraft_server_host" {
             EULA: "TRUE"
             TYPE: "PAPER"
             MEMORY: "5G"
-            ENABLE_PLAYER_UUID_LOOKUP: "TRUE"
             BUNGEE_CORD: "TRUE"
+            # CORREÇÃO: Força o servidor a rodar em modo offline, como exigido por um proxy
+            ONLINE_MODE: "FALSE"
           networks: ["minecraft-net"]
         criativo:
           image: itzg/minecraft-server
@@ -122,8 +113,9 @@ resource "google_compute_instance" "minecraft_server_host" {
             TYPE: "PAPER"
             MEMORY: "5G"
             GAMEMODE: "creative"
-            ENABLE_PLAYER_UUID_LOOKUP: "TRUE"
             BUNGEE_CORD: "TRUE"
+            # CORREÇÃO: Força o servidor a rodar em modo offline
+            ONLINE_MODE: "FALSE"
           networks: ["minecraft-net"]
         lobby:
           image: itzg/minecraft-server
@@ -135,8 +127,9 @@ resource "google_compute_instance" "minecraft_server_host" {
             TYPE: "PAPER"
             MEMORY: "3G"
             GAMEMODE: "adventure"
-            ENABLE_PLAYER_UUID_LOOKUP: "TRUE"
             BUNGEE_CORD: "TRUE"
+            # CORREÇÃO: Força o servidor a rodar em modo offline
+            ONLINE_MODE: "FALSE"
           networks: ["minecraft-net"]
       EOF_COMPOSE
 
