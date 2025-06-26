@@ -1,4 +1,4 @@
-# compute.tf - Versão Final com Caminho Absoluto do Docker Compose
+# compute.tf - Versão Final com Instalação Explícita do Docker Compose
 
 resource "google_compute_address" "static_ip" {
   name   = "minecraft-static-ip"
@@ -34,14 +34,22 @@ resource "google_compute_instance" "minecraft_server_host" {
   metadata = {
     startup-script = <<-EOT
       #!/bin/bash
-      # Espera 10 segundos para garantir que todos os serviços de rede estejam prontos.
+      # Espera 10 segundos.
       sleep 10
 
-      # ---- Preparação do Ambiente ----
+      # ---- Seção 1: Instalação do Docker Compose ----
+      # Como a imagem COS não o inclui por padrão, nós o descarregamos diretamente do GitHub.
+      # Isto torna a nossa automação robusta e independente da imagem.
+      curl -L "https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+      
+      # Dá permissão de execução ao ficheiro que acabámos de descarregar.
+      chmod +x /usr/local/bin/docker-compose
+
+      # ---- Seção 2: Preparação do Ambiente Minecraft ----
       mkdir -p /home/root/minecraft/velocity-data
       cd /home/root/minecraft
       
-      # ---- Criação dos Ficheiros de Configuração ----
+      # ---- Seção 3: Criação dos Ficheiros de Configuração ----
       
       # Cria o ficheiro de configuração do Velocity.
       cat <<EOF_VELOCITY > /home/root/minecraft/velocity-data/velocity.toml
@@ -115,9 +123,9 @@ resource "google_compute_instance" "minecraft_server_host" {
           networks: ["minecraft-net"]
       EOF_COMPOSE
 
-      # ---- Inicia os Serviços ----
-      # CORREÇÃO FINAL: Usamos o caminho absoluto para o docker-compose, que é garantido de funcionar em imagens COS.
-      /usr/bin/docker-compose up -d
+      # ---- Seção 4: Inicia os Serviços ----
+      # Agora executamos o ficheiro que garantimos que existe.
+      /usr/local/bin/docker-compose up -d
       EOT
   }
 

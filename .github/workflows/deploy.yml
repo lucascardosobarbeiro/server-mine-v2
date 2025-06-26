@@ -37,4 +37,4 @@ jobs:
           -- \
           -o UserKnownHostsFile=/dev/null \
           -o StrictHostKeyChecking=no \
-          "cd /home/root/minecraft && docker compose pull && docker compose up -d --remove-orphans"
+          "cd /home/root/minecraft && /usr/local/bin/docker-compose pull && /usr/local/bin/docker-compose up -d --remove-orphans"
