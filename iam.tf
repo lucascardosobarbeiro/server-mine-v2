@@ -1,4 +1,3 @@
-
 # iam.tf - Versão Final para WIF
 
 resource "google_service_account" "minecraft_vm_sa" {
@@ -36,6 +35,15 @@ resource "google_project_iam_member" "compute_viewer_for_sa" {
 resource "google_project_iam_member" "iap_tunnel_for_sa" {
   project = var.project_id
   role    = "roles/iap.tunnelResourceAccessor"
+  member  = "serviceAccount:${google_service_account.minecraft_vm_sa.email}"
+}
+
+# ADIÇÃO: Permite que a SA modifique metadados da VM (Plano B de conexão)
+# A role 'compute.instanceAdmin.v1' contém a permissão 'compute.instances.setMetadata',
+# que resolve o erro de fallback do SSH no GitHub Actions.
+resource "google_project_iam_member" "instance_admin_for_sa" {
+  project = var.project_id
+  role    = "roles/compute.instanceAdmin.v1"
   member  = "serviceAccount:${google_service_account.minecraft_vm_sa.email}"
 }
 
