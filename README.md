@@ -1,6 +1,6 @@
 
 <div align="center">
-  <img src="https://storage.googleapis.com/gweb-uniblog-publish-prod/images/Minecraft_PMP_1.max-1000x1000.png" width="150" alt="Minecraft Logo"/>
+  <img src="https://res.cloudinary.com/zenbusiness/image/upload/v1670445040/logaster/logaster-2020-06-image14-3.png" width="150" alt="Minecraft Logo"/>
   <h1>Automated & Secure Minecraft Server Platform on GCP</h1>
   <p>
     A production-grade Minecraft server platform on Google Cloud, fully automated with Terraform, Docker, and a GitOps CI/CD pipeline.
@@ -8,7 +8,13 @@
 
   ![Status](https://img.shields.io/badge/status-complete-green?style=for-the-badge)
   ![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)
-
+   <p>
+    Technologies used in this project
+  </p> 
+    ![GCP](https://img.shields.io/badge/GCP-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white) 
+    ![Terraform](https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform&logoColor=white)
+    ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white) 
+    ![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
   <p>
     <a href="#-overview">Overview</a> •
     <a href="#-key-features">Key Features</a> •
