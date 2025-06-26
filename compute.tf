@@ -1,4 +1,4 @@
-# compute.tf - Versão Final com Imagem Otimizada para Contêineres
+# compute.tf - Versão Final com Comando Docker Corrigido para COS
 
 resource "google_compute_address" "static_ip" {
   name   = "minecraft-static-ip"
@@ -13,14 +13,13 @@ resource "google_compute_instance" "minecraft_server_host" {
 
   boot_disk {
     initialize_params {
-      # CORREÇÃO: Usamos a "família" de imagens cos-stable.
+      # Usamos a "família" de imagens cos-stable.
       # Isso garante que sempre usaremos a versão estável mais recente.
       image = "cos-cloud/cos-stable"
       size  = 70
     }
   }
 
-  # Bloco de rede que conecta a VM à nossa sub-rede e atribui o IP estático.
   network_interface {
     subnetwork = google_compute_subnetwork.minecraft_subnet.self_link
     access_config {
@@ -34,18 +33,16 @@ resource "google_compute_instance" "minecraft_server_host" {
   }
 
   metadata = {
-    # O startup-script agora é muito mais simples e focado.
     startup-script = <<-EOT
       #!/bin/bash
       # Espera 10 segundos para garantir que todos os serviços de rede estejam prontos.
       sleep 10
 
-      # ---- Seção 1: Preparação do Ambiente ----
-      # O Docker já está instalado, então apenas criamos os nossos diretórios.
+      # ---- Preparação do Ambiente ----
       mkdir -p /home/root/minecraft/velocity-data
       cd /home/root/minecraft
       
-      # ---- Seção 2: Criação dos Ficheiros de Configuração ----
+      # ---- Criação dos Ficheiros de Configuração ----
       
       # Cria o ficheiro de configuração do Velocity.
       cat <<EOF_VELOCITY > /home/root/minecraft/velocity-data/velocity.toml
@@ -119,9 +116,9 @@ resource "google_compute_instance" "minecraft_server_host" {
           networks: ["minecraft-net"]
       EOF_COMPOSE
 
-      # ---- Seção 3: Inicia os Serviços ----
-      # O comando 'docker compose' já está disponível globalmente nestas imagens.
-      docker compose up -d
+      # ---- Inicia os Serviços ----
+      # CORREÇÃO: Usamos 'docker-compose' com hífen, que é a sintaxe mais robusta em imagens COS.
+      docker-compose up -d
       EOT
   }
 
