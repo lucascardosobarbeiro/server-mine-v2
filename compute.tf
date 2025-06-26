@@ -1,4 +1,4 @@
-# compute.tf - Versão Final com Comando Docker Corrigido para COS
+# compute.tf - Versão Final com Caminho Absoluto do Docker Compose
 
 resource "google_compute_address" "static_ip" {
   name   = "minecraft-static-ip"
@@ -14,7 +14,6 @@ resource "google_compute_instance" "minecraft_server_host" {
   boot_disk {
     initialize_params {
       # Usamos a "família" de imagens cos-stable.
-      # Isso garante que sempre usaremos a versão estável mais recente.
       image = "cos-cloud/cos-stable"
       size  = 70
     }
@@ -117,8 +116,8 @@ resource "google_compute_instance" "minecraft_server_host" {
       EOF_COMPOSE
 
       # ---- Inicia os Serviços ----
-      # CORREÇÃO: Usamos 'docker-compose' com hífen, que é a sintaxe mais robusta em imagens COS.
-      docker-compose up -d
+      # CORREÇÃO FINAL: Usamos o caminho absoluto para o docker-compose, que é garantido de funcionar em imagens COS.
+      /usr/bin/docker-compose up -d
       EOT
   }
 
