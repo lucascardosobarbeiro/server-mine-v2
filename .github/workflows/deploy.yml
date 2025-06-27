@@ -28,10 +28,6 @@ jobs:
         workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
         service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
 
-    # PASSO DE OTIMIZAÇÃO ADICIONADO
-    - name: 'Install NumPy for IAP Performance'
-      run: pip install numpy
-
     - name: 'Execute remote update command via gcloud'
       run: |
         gcloud compute ssh ${{ env.INSTANCE_NAME }} \
@@ -41,4 +37,4 @@ jobs:
           -- \
           -o UserKnownHostsFile=/dev/null \
           -o StrictHostKeyChecking=no \
-          "cd /opt/minecraft && sudo docker compose pull && sudo docker compose up -d --remove-orphans"
+          "cd /mnt/data/minecraft && sudo docker compose pull && sudo docker compose up -d --remove-orphans"
