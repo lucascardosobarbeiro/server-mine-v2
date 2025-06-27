@@ -31,9 +31,6 @@ jobs:
         workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
         service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
 
-    - name: 'Install NumPy for IAP Performance'
-      run: pip install numpy
-
     - name: 'Get Server Public IP'
       id: get_ip
       run: |
