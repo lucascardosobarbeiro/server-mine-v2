@@ -1,4 +1,4 @@
-# compute.tf - Versão Final com Imagem Debian e Correção de Online-Mode
+# compute.tf - Versão Final com Correção de Configuração da Aplicação
 
 resource "google_compute_address" "static_ip" {
   name   = "minecraft-static-ip"
@@ -13,7 +13,7 @@ resource "google_compute_instance" "minecraft_server_host" {
 
   boot_disk {
     initialize_params {
-      # VOLTAMOS A USAR A IMAGEM DEBIAN, que se provou ser mais flexível.
+      # Usamos a imagem Debian, que é flexível e nos dá total controlo.
       image = "debian-cloud/debian-11"
       size  = 70
     }
@@ -32,8 +32,6 @@ resource "google_compute_instance" "minecraft_server_host" {
   }
 
   metadata = {
-    # Este é o script de ontem, que instalou o Docker com sucesso,
-    # agora com a correção do ONLINE_MODE adicionada.
     startup-script = <<-EOT
       #!/bin/bash
       # Espera a rede estar totalmente pronta
@@ -70,8 +68,6 @@ resource "google_compute_instance" "minecraft_server_host" {
       try = ["lobby"]
       [forced-hosts]
       "${google_compute_address.static_ip.address}:25565" = ["lobby"]
-      [advanced]
-      player-info-forwarding-mode = "modern"
       [metrics]
       enabled = false
       EOF_VELOCITY
@@ -92,6 +88,9 @@ resource "google_compute_instance" "minecraft_server_host" {
           environment:
             TYPE: "VELOCITY"
             TZ: "America/Sao_Paulo"
+            # CORREÇÃO: Forçamos o modo de encaminhamento para 'bungeecord',
+            # que é compatível com nossos servidores PaperMC.
+            PLAYER_INFO_FORWARDING_MODE: "BUNGEECORD"
           networks: ["minecraft-net"]
         sobrevivencia:
           image: itzg/minecraft-server
@@ -137,7 +136,6 @@ resource "google_compute_instance" "minecraft_server_host" {
       EOF_COMPOSE
 
       # ---- Seção 4: Inicia os Serviços ----
-      # Usamos 'docker compose' com espaço, que é a sintaxe correta para esta instalação
       docker compose up -d
       EOT
   }
