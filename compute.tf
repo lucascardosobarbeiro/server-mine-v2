@@ -1,4 +1,13 @@
-# compute.tf - Versão Final com Correção de Encaminhamento do Proxy
+# compute.tf - Versão Final com Servidor Único de 8GB e Plugins
+
+# --- RECURSO DO DISCO PERSISTENTE ---
+# Este disco existe independentemente da VM. É o nosso "cofre" de dados.
+resource "google_compute_disk" "minecraft_data_disk" {
+  name = "minecraft-data-disk"
+  type = "pd-balanced" # Um bom equilíbrio entre custo e performance.
+  zone = var.zone
+  size = 50 # Tamanho do disco em GB, pode ser ajustado.
+}
 
 resource "google_compute_address" "static_ip" {
   name   = "minecraft-static-ip"
@@ -13,10 +22,16 @@ resource "google_compute_instance" "minecraft_server_host" {
 
   boot_disk {
     initialize_params {
-      # Usamos a imagem Debian, que é flexível e nos dá total controlo.
+      # O disco de boot agora é apenas para o sistema operativo.
       image = "debian-cloud/debian-11"
-      size  = 70
+      size  = 20 # Podemos reduzir o tamanho, já que os dados não ficam aqui.
     }
+  }
+
+  # --- ALTERAÇÃO CRÍTICA: ANEXAR O DISCO DE DADOS ---
+  # Anexamos o nosso "cofre" à VM.
+  attached_disk {
+    source = google_compute_disk.minecraft_data_disk.self_link
   }
 
   network_interface {
@@ -34,10 +49,18 @@ resource "google_compute_instance" "minecraft_server_host" {
   metadata = {
     startup-script = <<-EOT
       #!/bin/bash
-      # Espera a rede estar totalmente pronta
       sleep 10
 
-      # ---- Seção 1: Instalação Robusta do Docker ----
+      # ---- Montagem do Disco Persistente ----
+      # Formata o disco de dados (apenas se ainda não tiver um sistema de ficheiros)
+      # e monta-o no diretório /mnt/data.
+      mkfs.ext4 -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdb
+      mkdir -p /mnt/data
+      mount -o discard,defaults /dev/sdb /mnt/data
+      # Adiciona ao fstab para montar automaticamente nos reboots.
+      echo UUID=$(blkid -s UUID -o value /dev/sdb) /mnt/data ext4 discard,defaults,nofail 0 2 | tee -a /etc/fstab
+
+      # ---- Instalação do Docker ----
       for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do apt-get remove -y $pkg; done
       apt-get update
       apt-get install -y ca-certificates curl
@@ -51,25 +74,20 @@ resource "google_compute_instance" "minecraft_server_host" {
       apt-get update
       apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-      # ---- Seção 2: Instalação do Ops Agent ----
-      curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
-      bash add-google-cloud-ops-agent-repo.sh --also-install
-
-      # ---- Seção 3: Ambiente Minecraft ----
-      mkdir -p /opt/minecraft/velocity-data
-      cd /opt/minecraft
+      # ---- Ambiente Minecraft ----
+      # ALTERAÇÃO: Agora criamos a nossa estrutura de trabalho no disco montado.
+      mkdir -p /mnt/data/minecraft/velocity-data
+      cd /mnt/data/minecraft
       
       # Cria o arquivo de configuração do Velocity
-      cat <<EOF_VELOCITY > /opt/minecraft/velocity-data/velocity.toml
+      cat <<EOF_VELOCITY > /mnt/data/minecraft/velocity-data/velocity.toml
       [servers]
-      lobby = "lobby:25565"
+      # ATUALIZAÇÃO: Agora temos apenas um servidor de destino.
       sobrevivencia = "sobrevivencia:25565"
-      criativo = "criativo:25565"
-      try = ["lobby"]
+      # ATUALIZAÇÃO: O servidor de tentativa inicial agora é o de sobrevivência.
+      try = ["sobrevivencia"]
       [forced-hosts]
-      "${google_compute_address.static_ip.address}:25565" = ["lobby"]
-      # CORREÇÃO: Usamos o modo de encaminhamento 'modern', que é mais seguro
-      # e não requer uma senha secreta compartilhada.
+      "${google_compute_address.static_ip.address}:25565" = ["sobrevivencia"]
       [advanced]
       player-info-forwarding-mode = "modern"
       [metrics]
@@ -77,7 +95,7 @@ resource "google_compute_instance" "minecraft_server_host" {
       EOF_VELOCITY
 
       # Cria o arquivo docker-compose.yml
-      cat <<EOF_COMPOSE > /opt/minecraft/docker-compose.yml
+      cat <<EOF_COMPOSE > /mnt/data/minecraft/docker-compose.yml
       version: '3.8'
       networks:
         minecraft-net:
@@ -97,43 +115,22 @@ resource "google_compute_instance" "minecraft_server_host" {
           image: itzg/minecraft-server
           container_name: mc-sobrevivencia
           restart: unless-stopped
+          # ALTERAÇÃO: Os volumes agora apontam para o diretório de trabalho no disco montado.
           volumes: ["./sobrevivencia-data:/data"]
           environment:
             EULA: "TRUE"
             TYPE: "PAPER"
-            MEMORY: "5G"
+            # ATUALIZAÇÃO: Memória alocada aumentada para 8GB
+            MEMORY: "8G"
             BUNGEE_CORD: "TRUE"
             ONLINE_MODE: "FALSE"
+            # ATUALIZAÇÃO: Instalação automática dos plugins solicitados
+            PLUGINS: "https://hangar.papermc.io/api/v1/projects/Plan/versions/5.6.3315/platforms/paper/download,https://hangar.papermc.io/api/v1/projects/ViaVersion/versions/5.1.0/platforms/paper/download,https://hangar.papermc.io/api/v1/projects/GeyserMC/versions/2.3.1-SNAPSHOT/platforms/paper/download,https://hangar.papermc.io/api/v1/projects/CoreProtect/versions/22.4/platforms/paper/download,https://hangar.papermc.io/api/v1/projects/EssentialsX/versions/2.21.0/platforms/paper/download"
           networks: ["minecraft-net"]
-        criativo:
-          image: itzg/minecraft-server
-          container_name: mc-criativo
-          restart: unless-stopped
-          volumes: ["./criativo-data:/data"]
-          environment:
-            EULA: "TRUE"
-            TYPE: "PAPER"
-            MEMORY: "5G"
-            GAMEMODE: "creative"
-            BUNGEE_CORD: "TRUE"
-            ONLINE_MODE: "FALSE"
-          networks: ["minecraft-net"]
-        lobby:
-          image: itzg/minecraft-server
-          container_name: mc-lobby
-          restart: unless-stopped
-          volumes: ["./lobby-data:/data"]
-          environment:
-            EULA: "TRUE"
-            TYPE: "PAPER"
-            MEMORY: "3G"
-            GAMEMODE: "adventure"
-            BUNGEE_CORD: "TRUE"
-            ONLINE_MODE: "FALSE"
-          networks: ["minecraft-net"]
+        # ATUALIZAÇÃO: Servidores 'criativo' e 'lobby' foram removidos.
       EOF_COMPOSE
 
-      # ---- Seção 4: Inicia os Serviços ----
+      # ---- Inicia os Serviços ----
       docker compose up -d
       EOT
   }
