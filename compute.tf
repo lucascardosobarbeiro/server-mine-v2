@@ -1,4 +1,4 @@
-# compute.tf - Versão Final com Imagem Debian e Correção de Online-Mode
+# compute.tf - Versão Final com Otimização de Performance do Túnel IAP
 
 resource "google_compute_address" "static_ip" {
   name   = "minecraft-static-ip"
@@ -13,7 +13,7 @@ resource "google_compute_instance" "minecraft_server_host" {
 
   boot_disk {
     initialize_params {
-      # VOLTAMOS A USAR A IMAGEM DEBIAN, que se provou ser mais flexível.
+      # Usamos a imagem Debian, que é flexível e nos dá total controlo.
       image = "debian-cloud/debian-11"
       size  = 70
     }
@@ -32,17 +32,21 @@ resource "google_compute_instance" "minecraft_server_host" {
   }
 
   metadata = {
-    # Este é o script de ontem, que instalou o Docker com sucesso,
-    # agora com a correção do ONLINE_MODE adicionada.
     startup-script = <<-EOT
       #!/bin/bash
       # Espera a rede estar totalmente pronta
       sleep 10
 
-      # ---- Seção 1: Instalação Robusta do Docker ----
-      for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do apt-get remove -y $pkg; done
+      # ---- Seção 1: Instalação de Dependências ----
       apt-get update
-      apt-get install -y ca-certificates curl
+      # ADIÇÃO: Instala o pip, o gestor de pacotes do Python.
+      apt-get install -y python3-pip ca-certificates curl
+
+      # ADIÇÃO: Usa o pip para instalar a biblioteca NumPy.
+      pip3 install numpy
+
+      # Instalação Robusta do Docker
+      for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do apt-get remove -y $pkg; done
       install -m 0755 -d /etc/apt/keyrings
       curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
       chmod a+r /etc/apt/keyrings/docker.asc
@@ -53,15 +57,15 @@ resource "google_compute_instance" "minecraft_server_host" {
       apt-get update
       apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-      # ---- Seção 2: Instalação do Ops Agent ----
+      # Instalação do Ops Agent
       curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
       bash add-google-cloud-ops-agent-repo.sh --also-install
 
-      # ---- Seção 3: Ambiente Minecraft ----
+      # ---- Seção 2: Ambiente Minecraft ----
       mkdir -p /opt/minecraft/velocity-data
       cd /opt/minecraft
       
-      # Cria o arquivo de configuração do Velocity
+      # Cria o ficheiro de configuração do Velocity
       cat <<EOF_VELOCITY > /opt/minecraft/velocity-data/velocity.toml
       [servers]
       lobby = "lobby:25565"
@@ -71,12 +75,12 @@ resource "google_compute_instance" "minecraft_server_host" {
       [forced-hosts]
       "${google_compute_address.static_ip.address}:25565" = ["lobby"]
       [advanced]
-      player-info-forwarding-mode = "modern"
+      player-info-forwarding-mode = "bungeecord"
       [metrics]
       enabled = false
       EOF_VELOCITY
 
-      # Cria o arquivo docker-compose.yml
+      # Cria o ficheiro docker-compose.yml
       cat <<EOF_COMPOSE > /opt/minecraft/docker-compose.yml
       version: '3.8'
       networks:
@@ -92,6 +96,7 @@ resource "google_compute_instance" "minecraft_server_host" {
           environment:
             TYPE: "VELOCITY"
             TZ: "America/Sao_Paulo"
+            PLAYER_INFO_FORWARDING_MODE: "BUNGEECORD"
           networks: ["minecraft-net"]
         sobrevivencia:
           image: itzg/minecraft-server
@@ -102,9 +107,8 @@ resource "google_compute_instance" "minecraft_server_host" {
             EULA: "TRUE"
             TYPE: "PAPER"
             MEMORY: "5G"
-            BUNGEE_CORD: "TRUE"
-            # CORREÇÃO: Força o servidor a rodar em modo offline
             ONLINE_MODE: "FALSE"
+            BUNGEE_CORD: "TRUE"
           networks: ["minecraft-net"]
         criativo:
           image: itzg/minecraft-server
@@ -116,9 +120,8 @@ resource "google_compute_instance" "minecraft_server_host" {
             TYPE: "PAPER"
             MEMORY: "5G"
             GAMEMODE: "creative"
-            BUNGEE_CORD: "TRUE"
-            # CORREÇÃO: Força o servidor a rodar em modo offline
             ONLINE_MODE: "FALSE"
+            BUNGEE_CORD: "TRUE"
           networks: ["minecraft-net"]
         lobby:
           image: itzg/minecraft-server
@@ -130,14 +133,12 @@ resource "google_compute_instance" "minecraft_server_host" {
             TYPE: "PAPER"
             MEMORY: "3G"
             GAMEMODE: "adventure"
-            BUNGEE_CORD: "TRUE"
-            # CORREÇÃO: Força o servidor a rodar em modo offline
             ONLINE_MODE: "FALSE"
+            BUNGEE_CORD: "TRUE"
           networks: ["minecraft-net"]
       EOF_COMPOSE
 
-      # ---- Seção 4: Inicia os Serviços ----
-      # Usamos 'docker compose' com espaço, que é a sintaxe correta para esta instalação
+      # ---- Seção 3: Inicia os Serviços ----
       docker compose up -d
       EOT
   }
