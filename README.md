@@ -30,57 +30,30 @@ Gestão de Estado Centralizada: O estado do Terraform é gerido por um Backend R
 A plataforma foi projetada com foco em segurança, automação e separação de responsabilidades. Esta arquitetura não apenas fornece um servidor Minecraft funcional, mas também serve como um modelo para implantar aplicações conteinerizadas na GCP seguindo os princípios modernos de DevOps.
 
 Diagrama de Alto Nível
-graph TD
-    subgraph "Ambiente Externo"
-        direction LR
-        Jogador("fa:fa-user Jogador")
-        Admin("fa:fa-user-cog Administrador / DevOps")
-    end
-
-    subgraph "Plataforma de Automação"
-        direction LR
-        GitHub("fa:fa-github-alt Repositório GitHub<br/><i>Fonte da Verdade</i>")
-        Pipeline("fa:fa-cogs Pipeline CI/CD<br/><i>GitHub Actions</i>")
-    end
-
-    subgraph "Google Cloud Platform (GCP)"
-        direction TB
-        Firewall("fa:fa-shield-alt Firewall GCP<br/><i>Permite Porta 25565<br/>Permite Tráfego IAP</i>")
-        IP[("fa:fa-network-wired IP Público Estático")]
-
-        subgraph VM["fa:fa-server VM Host (Compute Engine)<br/><i>Debian 11</i>"]
-            subgraph Docker["fa:fa-docker Docker Engine"]
-                Proxy[("fa:fa-route<br/>Proxy Velocity<br/>Contentor")]
-                RedeDocker(fa:fa-sitemap Rede Docker Interna)
-                ServidoresJogo[("fa:fa-gamepad<br/>Contentores Servidores de Jogo<br/>(Lobby, Sobrevivência, Criativo)")]
-            end
-        end
-        
-        Storage(fa:fa-database Cloud Storage Bucket<br/><i>Estado Terraform & Backups</i>)
-        IAM("fa:fa-key IAM<br/><i>Contas de Serviço & Papéis</i>")
-        
-    end
-
-    %% Conexões
-    Admin -- "1. git push" --> GitHub
-    GitHub -- "2. Aciona" --> Pipeline
-    Jogador -- "Conecta-se (TCP 25565)" --> Firewall
-    Firewall --> IP
-    IP --> Proxy
-
-    Proxy -- "Encaminha para" --> RedeDocker
-    ServidoresJogo -- "Comunicam via" --> RedeDocker
-
-    Pipeline -- "3. Autentica-se via" --> IAM
-    Pipeline -- "4. SSH via Túnel IAP Seguro" --> VM
-    VM -- "5. Backups Agendados (Cron)" --> Storage
-
-    %% Estilos
-    style Admin fill:#c9d1d9,color:#1c2128
-    style Jogador fill:#c9d1d9,color:#1c2128
-    style VM fill:#DB4437,color:#fff,stroke:#c32a1f,stroke-width:2px
-    style Docker fill:#2496ED,color:#fff,stroke:#1d79ba,stroke-width:2px
-    style Storage fill:#4285F4,color:#fff,stroke:#2c5da9,stroke-width:2px
+                               +----------------------------------+
+[ Git Push ] ------------> |   GitHub Actions (CI/CD)         | ----+
+                               +----------------------------------+     | (SSH via IAP)
+                                                                        v
++----------+   (Internet)    +-----------------+   +------------------+   +-------------------------------------+
+|  Jogador | --------------> |   Firewall GCP  |-->|      IP Estático   |   |        Máquina Virtual (GCE)        |
++----------+                 | (Porta 25565)   |   |                  |   |                                     |
+                             +-----------------+   +------------------+   |   +-------------------------------+   |
+                                                                        |   |        Docker Engine          |   |
+                                                                        |   |                               |   |
+                                                                        |   | [ Container Proxy Velocity ]  |   |
+                                                                        |   |      ^ (Porta 25565)          |   |
+                                                                        |   |      |                        |   |
+                                                                        |   | <-----> [Rede Docker] <-------> |   |
+                                                                        |   |      |                        |   |
+                                                                        |   |      v                        |   |
+                                                                        |   | [ Containers Servidores Jogo] |   |
+                                                                        |   | (Lobby, Sobrevivência, etc.)  |   |
+                                                                        |   +-------------------------------+   |
+                                                                        |                                     |
++--------------------------------+                                      +-------------------------------------+
+| Google Cloud Storage           | <------------------------------------------ (Backups Agendados via Cron)
+| (Bucket para Backups)          |
++--------------------------------+
 
 Análise Detalhada dos Componentes
 Terraform (Infraestrutura como Código): Todos os recursos da nuvem são definidos declarativamente. O projeto utiliza um Backend Remoto no GCS para armazenar o ficheiro de estado (.tfstate) de forma segura, permitindo o bloqueio de estado e o trabalho colaborativo entre múltiplas máquinas, resolvendo o problema de estados dessincronizados.
