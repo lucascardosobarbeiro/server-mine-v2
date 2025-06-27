@@ -54,4 +54,4 @@ jobs:
           -- \
           -o UserKnownHostsFile=/dev/null \
           -o StrictHostKeyChecking=no \
-          "cd /home/root/minecraft && sudo /opt/bin/docker-compose pull && sudo /opt/bin/docker-compose up -d --remove-orphans"
+          "sudo mkdir -p ${{ env.REMOTE_DIR }}/velocity-data && sudo mv ~/docker-compose.yml ${{ env.REMOTE_DIR }}/ && sudo mv ~/velocity.toml ${{ env.REMOTE_DIR }}/velocity-data/ && cd ${{ env.REMOTE_DIR }} && sudo docker compose up -d"
