@@ -1,4 +1,15 @@
+<<<<<<< HEAD
 # compute.tf - Versão Final com Correção de Configuração da Aplicação
+=======
+# compute.tf - Versão Final Simplificada
+
+resource "google_compute_disk" "minecraft_data_disk" {
+  name = "minecraft-data-disk"
+  type = "pd-balanced"
+  zone = var.zone
+  size = 50
+}
+>>>>>>> 85732fd0e4ed5bfb73884659bf9f5dd3e39c5517
 
 resource "google_compute_address" "static_ip" {
   name   = "minecraft-static-ip"
@@ -13,10 +24,17 @@ resource "google_compute_instance" "minecraft_server_host" {
 
   boot_disk {
     initialize_params {
+<<<<<<< HEAD
       # Usamos a imagem Debian, que é flexível e nos dá total controlo.
+=======
+>>>>>>> 85732fd0e4ed5bfb73884659bf9f5dd3e39c5517
       image = "debian-cloud/debian-11"
-      size  = 70
+      size  = 20
     }
+  }
+
+  attached_disk {
+    source = google_compute_disk.minecraft_data_disk.self_link
   }
 
   network_interface {
@@ -32,13 +50,20 @@ resource "google_compute_instance" "minecraft_server_host" {
   }
 
   metadata = {
+<<<<<<< HEAD
+=======
+    # O startup-script agora é mínimo. Ele apenas prepara a máquina.
+>>>>>>> 85732fd0e4ed5bfb73884659bf9f5dd3e39c5517
     startup-script = <<-EOT
       #!/bin/bash
-      # Espera a rede estar totalmente pronta
       sleep 10
-
-      # ---- Seção 1: Instalação Robusta do Docker ----
-      for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do apt-get remove -y $pkg; done
+      # Monta o disco persistente
+      mkfs.ext4 -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdb
+      mkdir -p /mnt/data
+      mount -o discard,defaults /dev/sdb /mnt/data
+      echo UUID=$(blkid -s UUID -o value /dev/sdb) /mnt/data ext4 discard,defaults,nofail 0 2 | tee -a /etc/fstab
+      
+      # Instala o Docker e o plugin Compose
       apt-get update
       apt-get install -y ca-certificates curl
       install -m 0755 -d /etc/apt/keyrings
@@ -50,6 +75,7 @@ resource "google_compute_instance" "minecraft_server_host" {
         tee /etc/apt/sources.list.d/docker.list > /dev/null
       apt-get update
       apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+<<<<<<< HEAD
 
       # ---- Seção 2: Instalação do Ops Agent ----
       curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
@@ -138,6 +164,9 @@ resource "google_compute_instance" "minecraft_server_host" {
       # ---- Seção 4: Inicia os Serviços ----
       docker compose up -d
       EOT
+=======
+    EOT
+>>>>>>> 85732fd0e4ed5bfb73884659bf9f5dd3e39c5517
   }
 
   depends_on = [google_compute_firewall.allow_iap_ssh]

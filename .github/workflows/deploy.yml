@@ -1,3 +1,5 @@
+# .github/workflows/deploy.yml - Versão Final GitOps
+
 name: Deploy Minecraft Server Updates
 
 on:
@@ -9,6 +11,7 @@ env:
   GCP_PROJECT_ID: server-mine-463823
   GCP_ZONE: southamerica-east1-a
   INSTANCE_NAME: minecraft-server-host
+  REMOTE_DIR: /mnt/data/minecraft
 
 jobs:
   deploy:
@@ -28,7 +31,21 @@ jobs:
         workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
         service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
 
-    - name: 'Execute remote update command via gcloud'
+    - name: 'Get Server Public IP'
+      id: get_ip
+      run: |
+        IP=$(gcloud compute instances describe ${{ env.INSTANCE_NAME }} --project=${{ env.GCP_PROJECT_ID }} --zone=${{ env.GCP_ZONE }} --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
+        echo "SERVER_IP=$IP" >> $GITHUB_ENV
+
+    - name: 'Copy configuration files to VM'
+      run: |
+        # Prepara o ficheiro velocity.toml substituindo o placeholder pelo IP real
+        sed -i 's/__SERVER_IP__/${{ env.SERVER_IP }}/g' config/velocity.toml
+        
+        # Copia os ficheiros para a VM usando gcloud scp
+        gcloud compute scp docker-compose.yml config/velocity.toml ${{ env.INSTANCE_NAME }}:~ --project=${{ env.GCP_PROJECT_ID }} --zone=${{ env.GCP_ZONE }} --tunnel-through-iap
+
+    - name: 'Setup remote directories and run services'
       run: |
         gcloud compute ssh ${{ env.INSTANCE_NAME }} \
           --zone=${{ env.GCP_ZONE }} \
