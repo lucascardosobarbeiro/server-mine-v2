@@ -1,0 +1,29 @@
+# docker-compose.yml
+version: '3.8'
+networks:
+  minecraft-net:
+    driver: bridge
+services:
+  velocity:
+    image: itzg/bungeecord
+    container_name: velocity-proxy
+    restart: unless-stopped
+    ports: ["25565:25565"]
+    volumes: ["./velocity-data:/server"]
+    environment:
+      TYPE: "VELOCITY"
+      TZ: "America/Sao_Paulo"
+    networks: ["minecraft-net"]
+  sobrevivencia:
+    image: itzg/minecraft-server
+    container_name: mc-sobrevivencia
+    restart: unless-stopped
+    volumes: ["./sobrevivencia-data:/data"]
+    environment:
+      EULA: "TRUE"
+      TYPE: "PAPER"
+      MEMORY: "8G"
+      BUNGEE_CORD: "TRUE"
+      ONLINE_MODE: "FALSE"
+      PLUGINS: "https://hangar.papermc.io/api/v1/projects/Plan/versions/5.6.3315/platforms/paper/download,https://hangar.papermc.io/api/v1/projects/ViaVersion/versions/5.1.0/platforms/paper/download,https://hangar.papermc.io/api/v1/projects/GeyserMC/versions/2.3.1-SNAPSHOT/platforms/paper/download,https://hangar.papermc.io/api/v1/projects/CoreProtect/versions/22.4/platforms/paper/download,https://hangar.papermc.io/api/v1/projects/EssentialsX/versions/2.21.0/platforms/paper/download"
+    networks: ["minecraft-net"]
