@@ -1,4 +1,4 @@
-# compute.tf - Versão Final com Otimização de Performance do Túnel IAP
+# compute.tf - Versão Final com Correção de Encaminhamento do Proxy
 
 resource "google_compute_address" "static_ip" {
   name   = "minecraft-static-ip"
@@ -37,16 +37,10 @@ resource "google_compute_instance" "minecraft_server_host" {
       # Espera a rede estar totalmente pronta
       sleep 10
 
-      # ---- Seção 1: Instalação de Dependências ----
-      apt-get update
-      # ADIÇÃO: Instala o pip, o gestor de pacotes do Python.
-      apt-get install -y python3-pip ca-certificates curl
-
-      # ADIÇÃO: Usa o pip para instalar a biblioteca NumPy.
-      pip3 install numpy
-
-      # Instalação Robusta do Docker
+      # ---- Seção 1: Instalação Robusta do Docker ----
       for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do apt-get remove -y $pkg; done
+      apt-get update
+      apt-get install -y ca-certificates curl
       install -m 0755 -d /etc/apt/keyrings
       curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
       chmod a+r /etc/apt/keyrings/docker.asc
@@ -57,15 +51,15 @@ resource "google_compute_instance" "minecraft_server_host" {
       apt-get update
       apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-      # Instalação do Ops Agent
+      # ---- Seção 2: Instalação do Ops Agent ----
       curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
       bash add-google-cloud-ops-agent-repo.sh --also-install
 
-      # ---- Seção 2: Ambiente Minecraft ----
+      # ---- Seção 3: Ambiente Minecraft ----
       mkdir -p /opt/minecraft/velocity-data
       cd /opt/minecraft
       
-      # Cria o ficheiro de configuração do Velocity
+      # Cria o arquivo de configuração do Velocity
       cat <<EOF_VELOCITY > /opt/minecraft/velocity-data/velocity.toml
       [servers]
       lobby = "lobby:25565"
@@ -74,13 +68,15 @@ resource "google_compute_instance" "minecraft_server_host" {
       try = ["lobby"]
       [forced-hosts]
       "${google_compute_address.static_ip.address}:25565" = ["lobby"]
+      # CORREÇÃO: Usamos o modo de encaminhamento 'modern', que é mais seguro
+      # e não requer uma senha secreta compartilhada.
       [advanced]
-      player-info-forwarding-mode = "bungeecord"
+      player-info-forwarding-mode = "modern"
       [metrics]
       enabled = false
       EOF_VELOCITY
 
-      # Cria o ficheiro docker-compose.yml
+      # Cria o arquivo docker-compose.yml
       cat <<EOF_COMPOSE > /opt/minecraft/docker-compose.yml
       version: '3.8'
       networks:
@@ -96,7 +92,6 @@ resource "google_compute_instance" "minecraft_server_host" {
           environment:
             TYPE: "VELOCITY"
             TZ: "America/Sao_Paulo"
-            PLAYER_INFO_FORWARDING_MODE: "BUNGEECORD"
           networks: ["minecraft-net"]
         sobrevivencia:
           image: itzg/minecraft-server
@@ -107,8 +102,8 @@ resource "google_compute_instance" "minecraft_server_host" {
             EULA: "TRUE"
             TYPE: "PAPER"
             MEMORY: "5G"
-            ONLINE_MODE: "FALSE"
             BUNGEE_CORD: "TRUE"
+            ONLINE_MODE: "FALSE"
           networks: ["minecraft-net"]
         criativo:
           image: itzg/minecraft-server
@@ -120,8 +115,8 @@ resource "google_compute_instance" "minecraft_server_host" {
             TYPE: "PAPER"
             MEMORY: "5G"
             GAMEMODE: "creative"
-            ONLINE_MODE: "FALSE"
             BUNGEE_CORD: "TRUE"
+            ONLINE_MODE: "FALSE"
           networks: ["minecraft-net"]
         lobby:
           image: itzg/minecraft-server
@@ -133,12 +128,12 @@ resource "google_compute_instance" "minecraft_server_host" {
             TYPE: "PAPER"
             MEMORY: "3G"
             GAMEMODE: "adventure"
-            ONLINE_MODE: "FALSE"
             BUNGEE_CORD: "TRUE"
+            ONLINE_MODE: "FALSE"
           networks: ["minecraft-net"]
       EOF_COMPOSE
 
-      # ---- Seção 3: Inicia os Serviços ----
+      # ---- Seção 4: Inicia os Serviços ----
       docker compose up -d
       EOT
   }
