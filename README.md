@@ -1,182 +1,200 @@
+🚀 Visão Geral
+Este projeto é um estudo de caso abrangente em Engenharia de Nuvem e DevOps modernos, demonstrando a criação de ponta a ponta de uma plataforma de servidores de jogos Minecraft multi-mundo, que é robusta, segura e totalmente automatizada, utilizando a Google Cloud Platform (GCP).
 
-<div align="center">
-  <img src="https://res.cloudinary.com/zenbusiness/image/upload/v1670445040/logaster/logaster-2020-06-image14-3.png" width="150" alt="Minecraft Logo"/>
-  <h1>Automated & Secure Minecraft Server Platform on GCP</h1>
-  <p>
-    A production-grade Minecraft server platform on Google Cloud, fully automated with Terraform, Docker, and a GitOps CI/CD pipeline.
-  </p>
+O objetivo transcende a simples hospedagem de um servidor de jogos; serve como uma peça de portfólio robusta que aplica práticas padrão da indústria. Toda a infraestrutura é gerida como código (IaC), e o ciclo de vida da aplicação é automatizado por um pipeline de CI/CD completo, garantindo que o sistema não apenas funcione, mas que seja resiliente, gerenciável e profissional.
 
-  ![Status](https://img.shields.io/badge/status-complete-green?style=for-the-badge)
-  ![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)
+✨ Principais Funcionalidades
+Infraestrutura como Código (IaC): 100% do ambiente na nuvem (VPC, Firewall, VM, IAM, Storage) é definido declarativamente com Terraform, garantindo reprodutibilidade, controlo de versão e consistência.
 
-   <p>
-    Technologies used in this project
-  </p> 
+Automação de CI/CD Completa: Uma pipeline de GitHub Actions implementa atualizações na aplicação automaticamente após um git push na branch main, eliminando intervenção manual e o risco de erro humano.
 
-   ![GCP](https://img.shields.io/badge/GCP-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white) 
-   ![Terraform](https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform&logoColor=white)
-   ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white) 
-   ![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
+Segurança em Múltiplas Camadas:
 
-  <p>
-    <a href="#-overview">Overview</a> •
-    <a href="#-key-features">Key Features</a> •
-    <a href="#-architecture">Architecture</a> •
-    <a href="#-technology-stack">Tech Stack</a> •
-    <a href="#-getting-started">Getting Started</a> •
-    <a href="#-how-to-use">How to Use</a>
-  </p>
-</div>
+Acesso Zero Trust: O acesso administrativo via SSH é feito exclusivamente pelo Identity-Aware Proxy (IAP) do Google, mantendo a porta 22 completamente fechada para a internet.
 
----
+Isolamento de Rede: Os serviços rodam numa VPC customizada com regras de firewall granulares que expõem apenas o proxy.
 
-## 🚀 Overview
+Princípio do Menor Privilégio: Uma Conta de Serviço dedicada com o mínimo de permissões IAM necessárias para a operação.
 
-This project is a comprehensive case study in modern Cloud Engineering and DevOps, demonstrating the end-to-end creation of a robust, secure, and fully automated multi-world Minecraft server platform on Google Cloud Platform (GCP).
+Arquitetura Conteinerizada: Todos os serviços (Proxy Velocity, servidores PaperMC) rodam em contentores Docker isolados, orquestrados na VM pelo Docker Compose.
 
-The goal transcends simply hosting a game server; it serves as a robust portfolio piece that applies industry-standard practices. The entire infrastructure is managed as code (IaC), and the application's lifecycle is automated by a complete CI/CD pipeline, ensuring the system is not only functional but also resilient, manageable, and professional.
+Resiliência e Operações Profissionais:
 
----
+Backups Automatizados: Um cron job na VM executa backups diários dos mundos para o Google Cloud Storage.
 
-## ✨ Key Features
+Proxy & Alta Disponibilidade: O Velocity atua como um ponto de entrada único e seguro, permitindo que os jogadores troquem de servidor sem se desconectar e protegendo os servidores de jogo de acesso direto.
 
--   **Infrastructure as Code (IaC):** 100% of the cloud environment (VPC, Firewall, VM, IAM, Storage) is declaratively managed with **Terraform**, ensuring reproducibility and version control.
--   **Full CI/CD Automation:** A **GitHub Actions** workflow automatically deploys application updates upon a `git push` to the `main` branch, eliminating manual intervention and human error.
--   **Multi-Layered Security:**
-    -   **Zero Trust Access:** Administrative SSH access is handled exclusively through **Google's Identity-Aware Proxy (IAP)**, keeping port 22 completely closed to the internet.
-    -   **Network Isolation:** Services run in a custom VPC with granular firewall rules that only expose the proxy.
-    -   **Principle of Least Privilege:** A dedicated GCP Service Account with the bare minimum IAM roles required for operation.
--   **Containerized Architecture:** All services (Velocity Proxy, PaperMC servers) run in isolated **Docker** containers, orchestrated on the VM by **Docker Compose**.
--   **Resilience & Professional Operations:**
-    -   **Automated Backups:** A `cron` job on the host VM performs daily backups of server worlds to **Google Cloud Storage**.
-    -   **Proxy & High Availability:** A **Velocity** proxy acts as a single, secure entry point, allowing players to seamlessly switch between game servers and protecting backend servers from direct access.
-    -   **Centralized State Management:** Terraform's state is managed by a **Remote Backend** on GCS, enabling collaborative and safe infrastructure management.
+Gestão de Estado Centralizada: O estado do Terraform é gerido por um Backend Remoto no GCS, permitindo trabalho colaborativo e seguro.
 
----
+🏗️ Arquitetura e Detalhes Técnicos
+A plataforma foi projetada com foco em segurança, automação e separação de responsabilidades. Esta arquitetura não apenas fornece um servidor Minecraft funcional, mas também serve como um modelo para implantar aplicações conteinerizadas na GCP seguindo os princípios modernos de DevOps.
 
-## 🏗️ Architecture
+Diagrama de Alto Nível
+graph TD
+    subgraph "Ambiente Externo"
+        direction LR
+        Jogador("fa:fa-user Jogador")
+        Admin("fa:fa-user-cog Administrador / DevOps")
+    end
 
-The platform is designed with a focus on security, automation, and separation of concerns. The high-level architecture can be visualized as follows:
+    subgraph "Plataforma de Automação"
+        direction LR
+        GitHub("fa:fa-github-alt Repositório GitHub<br/><i>Fonte da Verdade</i>")
+        Pipeline("fa:fa-cogs Pipeline CI/CD<br/><i>GitHub Actions</i>")
+    end
 
-```text
-                               +----------------------------------+
-[ Git Push ] ------------> |   GitHub Actions (CI/CD)         | ----+
-                               +----------------------------------+     | (SSH via IAP)
-                                                                        v
-+----------+   (Internet)    +-----------------+   +------------------+   +-------------------------------------+
-|  Player  | --------------> |   GCP Firewall  |-->|    Static IP     |   |       Compute Engine VM Host        |
-+----------+                 |  (Allow 25565)  |   |                  |   |                                     |
-                             +-----------------+   +------------------+   |   +-------------------------------+   |
-                                                                        |   |        Docker Engine          |   |
-                                                                        |   |                               |   |
-                                                                        |   | [ Velocity Proxy Container ]  |   |
-                                                                        |   |      ^ (Port 25565)           |   |
-                                                                        |   |      |                        |   |
-                                                                        |   | <-----> [Docker Network] <----> |   |
-                                                                        |   |      |                        |   |
-                                                                        |   |      v                        |   |
-                                                                        |   | [   Game Server Containers  ] |   |
-                                                                        |   | (Lobby, Survival, Creative)   |   |
-                                                                        |   +-------------------------------+   |
-                                                                        |                                     |
-+--------------------------------+                                      +-------------------------------------+
-| Google Cloud Storage           | <------------------------------------------ (Scheduled Backups via Cron)
-| (Backup Bucket)                |
-+--------------------------------+
-````
+    subgraph "Google Cloud Platform (GCP)"
+        direction TB
+        Firewall("fa:fa-shield-alt Firewall GCP<br/><i>Permite Porta 25565<br/>Permite Tráfego IAP</i>")
+        IP[("fa:fa-network-wired IP Público Estático")]
 
-### How It Works
+        subgraph VM["fa:fa-server VM Host (Compute Engine)<br/><i>Debian 11</i>"]
+            subgraph Docker["fa:fa-docker Docker Engine"]
+                Proxy[("fa:fa-route<br/>Proxy Velocity<br/>Contentor")]
+                RedeDocker(fa:fa-sitemap Rede Docker Interna)
+                ServidoresJogo[("fa:fa-gamepad<br/>Contentores Servidores de Jogo<br/>(Lobby, Sobrevivência, Criativo)")]
+            end
+        end
+        
+        Storage(fa:fa-database Cloud Storage Bucket<br/><i>Estado Terraform & Backups</i>)
+        IAM("fa:fa-key IAM<br/><i>Contas de Serviço & Papéis</i>")
+        
+    end
 
-  - **User Inputs:** The **Player** connects to the server via the single, publicly exposed port `25565`. The **Administrator** interacts with the system by performing a `git push` to the repository.
-  - **Automation:** The `git push` triggers the **CI/CD Pipeline** in GitHub Actions.
-  - **Secure Connection:** The pipeline authenticates with GCP and establishes a secure SSH connection to the **VM** through a **secure IAP Tunnel**, keeping the instance isolated from the public internet.
-  - **Internal Orchestration:** Inside the VM, the **Docker Engine** manages the containers. Player traffic arrives at the **Velocity Proxy**, which then routes them to the appropriate **Game Servers** over a private, internal Docker network.
-  - **Data Persistence:** The VM itself runs a scheduled `cron` job to push world data backups to a **Cloud Storage Bucket**, ensuring data safety.
+    %% Conexões
+    Admin -- "1. git push" --> GitHub
+    GitHub -- "2. Aciona" --> Pipeline
+    Jogador -- "Conecta-se (TCP 25565)" --> Firewall
+    Firewall --> IP
+    IP --> Proxy
 
------
+    Proxy -- "Encaminha para" --> RedeDocker
+    ServidoresJogo -- "Comunicam via" --> RedeDocker
 
-## 🛠️ Technology Stack
+    Pipeline -- "3. Autentica-se via" --> IAM
+    Pipeline -- "4. SSH via Túnel IAP Seguro" --> VM
+    VM -- "5. Backups Agendados (Cron)" --> Storage
 
-| Technology | Purpose |
-| :--- | :--- |
-| **Google Cloud Platform** | Cloud Provider |
-| **Terraform** | Infrastructure as Code |
-| **Docker & Docker Compose** | Containerization & Orchestration |
-| **GitHub Actions** | CI/CD & Automation |
-| **Velocity** | Minecraft Proxy |
-| **PaperMC** | Minecraft Server Software |
-| **Bash & Cron** | Automation Scripts & Scheduling |
+    %% Estilos
+    style Admin fill:#c9d1d9,color:#1c2128
+    style Jogador fill:#c9d1d9,color:#1c2128
+    style VM fill:#DB4437,color:#fff,stroke:#c32a1f,stroke-width:2px
+    style Docker fill:#2496ED,color:#fff,stroke:#1d79ba,stroke-width:2px
+    style Storage fill:#4285F4,color:#fff,stroke:#2c5da9,stroke-width:2px
 
------
+Análise Detalhada dos Componentes
+Terraform (Infraestrutura como Código): Todos os recursos da nuvem são definidos declarativamente. O projeto utiliza um Backend Remoto no GCS para armazenar o ficheiro de estado (.tfstate) de forma segura, permitindo o bloqueio de estado e o trabalho colaborativo entre múltiplas máquinas, resolvendo o problema de estados dessincronizados.
 
-## ⚙️ Getting Started
+GCP Compute Engine & Debian 11: O workload principal corre numa VM GCE. Após um processo de depuração, o Debian 11 foi escolhido pela sua flexibilidade e suporte robusto a instalações personalizadas, em contraste com as restrições do Container-Optimized OS. O startup-script inclui um processo abrangente para instalar de forma fiável os repositórios oficiais do Docker e o docker-compose.
 
-To deploy this project, you will need to have the following tools installed and configured.
+Docker & Docker Compose: A aplicação é totalmente conteinerizada. Um Proxy Velocity e três servidores PaperMC rodam como serviços isolados. O Docker Compose é usado no script de inicialização para definir e gerir esta aplicação multi-contentor. A configuração ONLINE_MODE: "FALSE" nos servidores de jogo é crítica para permitir que o proxy Velocity lide com a autenticação dos jogadores.
 
-### Prerequisites
+Rede GCP (VPC & IAP): A segurança é primordial.
 
-  - A Google Cloud Platform account with billing enabled.
-  - [Terraform CLI](https://learn.hashicorp.com/tutorials/terraform/install-cli) (`v1.0.0+`).
-  - [Google Cloud SDK (`gcloud`)](https://cloud.google.com/sdk/docs/install) authenticated with your account (`gcloud auth login`).
-  - A GitHub repository to host the project code.
+VPC Customizada: A VM reside numa VPC isolada, com controlo total sobre as sub-redes.
 
-### Installation
+Firewall Granular: As regras de firewall permitem apenas tráfego público na porta 25565 para o jogo e tráfego do serviço IAP da Google para o SSH. A porta 22 não está exposta à internet.
 
-1.  **Clone the Repository**
+Identity-Aware Proxy (IAP): O acesso administrativo segue um modelo Zero Trust. O IAP autentica cada conexão com base na identidade do utilizador (via IAM), criando um túnel seguro sem a necessidade de uma VPN ou chaves SSH estáticas.
 
-    ```bash
-    git clone [https://github.com/your-username/your-repo-name.git](https://github.com/your-username/your-repo-name.git)
-    cd your-repo-name
-    ```
+GitHub Actions (CI/CD): As operações de "Dia 2" são automatizadas. Após um processo de depuração detalhado, a pipeline agora utiliza uma Chave de Conta de Serviço (JSON) armazenada de forma segura nos Segredos do GitHub. Este método de autenticação direta provou ser mais robusto para este ambiente do que o Workload Identity Federation. A pipeline usa então o gcloud para se conectar via túnel IAP e executar os comandos de atualização.
 
-2.  **Configure Terraform Variables**
-    Create a file named `terraform.tfvars` by copying the example file.
+Persistência e Backups: Os dados do mundo do Minecraft são persistidos no disco da VM usando volumes Docker. Um cron job executa um script que cria arquivos comprimidos dos dados e os sincroniza para um Bucket no Cloud Storage, que tem o versionamento ativado para segurança extra.
 
-    ```bash
-    cp terraform.tfvars.example terraform.tfvars
-    ```
+🛠️ Pilha de Tecnologia
+Tecnologia
 
-    Now, edit `terraform.tfvars` and fill in your specific project details (GCP Project ID, email, etc.).
+Propósito
 
-3.  **Deploy the Infrastructure**
-    Run the following commands from the project's root directory:
+Google Cloud Platform
 
-    ```bash
-    # Initialize the Terraform providers
-    terraform init
+Provedor de Nuvem
 
-    # (Optional) Review the execution plan
-    terraform plan
+Terraform
 
-    # Apply the configuration to create the infrastructure in GCP
-    terraform apply -auto-approve
-    ```
+Infraestrutura como Código
 
-    After the apply is complete, Terraform will output the server's public IP and other important values.
+Docker & Docker Compose
 
-4.  **Set Up GitHub Secrets**
-    The `terraform apply` command will output the values for `workload_identity_provider` and `service_account_email_for_github`.
+Conteinerização & Orquestração
 
-      - In your GitHub repository, navigate to **Settings \> Secrets and variables \> Actions**.
-      - Create two new repository secrets:
-          - `GCP_WORKLOAD_IDENTITY_PROVIDER`: Paste the value from the Terraform output.
-          - `GCP_SERVICE_ACCOUNT`: Paste the service account email from the Terraform output.
+GitHub Actions
 
-The project is now fully deployed, and the CI/CD pipeline is active and ready.
+CI/CD & Automação
 
------
+Velocity
 
-## 🕹️ How to Use
+Proxy Minecraft
 
-### For Players
+PaperMC
 
-  - **Server Address:** To connect, use the public IP address in your Minecraft client:
-    `[YOUR_SERVER_IP_ADDRESS]` (Replace with the IP generated by Terraform).
-  - **Navigation:** Once in the Lobby, use the commands `/server sobrevivencia` or `/server criativo` to switch between worlds.
+Software do Servidor Minecraft
 
-### For the Administrator
+Bash & Cron
 
-  - **Administrative Access (SSH):** Access to the virtual machine is handled securely following a Zero Trust model. Instead of relying on static SSH keys, IAP authenticates every connection based on the user's identity and IAM permissions.
-  
-```
-```
+Scripts de Automação & Agendamento
+
+⚙️ Como Começar
+Para implantar este projeto, você precisará das seguintes ferramentas instaladas e configuradas.
+
+Pré-requisitos
+Uma conta Google Cloud Platform com faturação ativa.
+
+Terraform CLI (v1.0.0+).
+
+Google Cloud SDK (gcloud) autenticado com a sua conta (gcloud auth login).
+
+Um repositório GitHub para hospedar o código do projeto.
+
+Instalação
+Clone o Repositório
+
+git clone https://github.com/lucascardosobarbeiro/server-mine-v2.git
+cd server-mine-v2
+
+Configure as Variáveis do Terraform
+Crie um ficheiro chamado terraform.tfvars copiando o ficheiro de exemplo.
+
+cp terraform.tfvars.example terraform.tfvars
+
+Agora, edite o terraform.tfvars e preencha com os detalhes específicos do seu projeto (ID do Projeto GCP, e-mail, etc.).
+
+Implante a Infraestrutura
+Execute os seguintes comandos a partir do diretório raiz do projeto:
+
+# Inicializa os provedores do Terraform e configura o backend remoto
+terraform init
+
+# Aplica a configuração para criar a infraestrutura na GCP
+terraform apply -auto-approve
+
+Após a conclusão, o Terraform exibirá o IP público do servidor e outros valores importantes.
+
+Configure os Segredos do GitHub
+
+Gere uma Chave de Conta de Serviço (ficheiro JSON) para a conta de serviço sa-minecraft-vm a partir do Console do GCP.
+
+No seu repositório do GitHub, navegue para Settings > Secrets and variables > Actions.
+
+Crie um novo segredo de repositório chamado GCP_SA_KEY e cole todo o conteúdo do ficheiro JSON descarregado como o seu valor.
+
+O projeto está agora totalmente implantado e a pipeline de CI/CD está ativa.
+
+🕹️ Fluxo de Trabalho do Projeto
+Dia 1: Provisionamento
+O comando terraform apply lida com toda a configuração do "Dia 1". Ele constrói a rede, provisiona a VM e usa um script de inicialização para instalar o Docker, configurar o proxy Velocity e o docker-compose.yml, e iniciar todos os contentores.
+
+Dia 2: Operações e Atualizações
+Toda a manutenção subsequente é tratada através do fluxo de trabalho GitOps:
+
+Um desenvolvedor faz uma alteração localmente (ex: atualiza uma configuração do servidor).
+
+A alteração é enviada para a branch main no GitHub.
+
+O push aciona automaticamente o workflow do GitHub Actions.
+
+A pipeline autentica-se na GCP usando a Chave de Conta de Serviço segura.
+
+Ela estabelece uma conexão SSH segura com a VM através do túnel IAP.
+
+Finalmente, executa os comandos docker compose para aplicar as atualizações à aplicação em execução.
