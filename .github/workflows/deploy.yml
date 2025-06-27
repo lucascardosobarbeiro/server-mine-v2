@@ -28,6 +28,10 @@ jobs:
         workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
         service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
 
+    # PASSO DE OTIMIZAÇÃO ADICIONADO
+    - name: 'Install NumPy for IAP Performance'
+      run: pip install numpy
+
     - name: 'Execute remote update command via gcloud'
       run: |
         gcloud compute ssh ${{ env.INSTANCE_NAME }} \
