@@ -1,15 +1,10 @@
-# Conteúdo de: terraform/templates/docker-compose.yml.tpl
-
 version: '3.8'
-
 secrets:
   velocity_secret:
     file: ./config/forwarding.secret
-
 networks:
   minecraft-net:
     driver: bridge
-
 services:
   velocity:
     image: itzg/bungeecord
@@ -18,12 +13,11 @@ services:
     ports: ["25565:25565"]
     volumes:
       - ./config/velocity.toml:/server/velocity.toml
-      - ./config/forwarding.secret:/server/forwarding.secret:ro
+      - ./config/forwarding.secret:/server/forwarding.secret
     environment:
       TYPE: "VELOCITY"
       TZ: "America/Sao_Paulo"
     networks: ["minecraft-net"]
-
   sobrevivencia:
     image: itzg/minecraft-server
     container_name: mc-sobrevivencia
@@ -33,9 +27,8 @@ services:
     environment:
       EULA: "TRUE"
       TYPE: "PAPER"
-      MEMORY: "8G" # Ajustado para o seu custom-4-18432
+      MEMORY: "10G"
       ONLINE_MODE: "false"
-      # Injeta o segredo no paper-global.yml de forma segura
       YAML_MODS: |
         - file: config/paper-global.yml
           path: proxies.velocity.enabled

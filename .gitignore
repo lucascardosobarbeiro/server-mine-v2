@@ -1,16 +1,5 @@
-# Arquivos de estado do Terraform (MUITO SENSÍVEIS)
-*.tfstate
-*.tfstate.backup
-/secrets/
-# Arquivos de variáveis locais (contém seus dados pessoais/de projeto)
-*.tfvars
-
-# Diretório do Terraform com os provedores baixados
-.terraform/
-
-# Logs de erro do Terraform que podem ser gerados localmente.
-crash.log
-*crash.log
-
-# Arquivos gerados por editores de código
+# Arquivos de configuração de editores de código
 .vscode/
+# Arquivos de sistema operacional
+.DS_Store
+Thumbs.db

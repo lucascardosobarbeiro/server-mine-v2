@@ -1,0 +1,7 @@
+# Arquivos de estado do Terraform (SENSÍVEIS)
+*.tfstate
+*.tfstate.backup
+# Arquivos de variáveis locais
+*.tfvars
+# Diretório de provedores do Terraform
+.terraform/
