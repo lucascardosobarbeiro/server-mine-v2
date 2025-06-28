@@ -6,17 +6,14 @@ networks:
 
 services:
   velocity:
-    # --- MUDANÇA CRUCIAL: USANDO A IMAGEM OFICIAL ---
-    image: papermc/velocity
+    # --- MUDANÇA: USANDO UMA TAG DE IMAGEM ESPECÍFICA E MODERNA ---
+    image: papermc/velocity:3.3.0-SNAPSHOT
     container_name: velocity-proxy
     restart: unless-stopped
     ports:
       - "25565:25565"
     volumes:
-      # Montamos uma pasta inteira de configuração, que conterá nossos ficheiros.
-      # Esta é a abordagem padrão para a imagem oficial.
       - ./config:/velocity/config
-    # Nenhuma variável de ambiente é necessária para o Velocity, ele lerá os ficheiros.
     networks:
       - "minecraft-net"
 
@@ -29,9 +26,8 @@ services:
     environment:
       EULA: "TRUE"
       TYPE: "PAPER"
-      MEMORY: "10G"
+      MEMORY: "16G"
       ONLINE_MODE: "false"
-      # A configuração do Paper para receber a conexão do proxy está correta e permanece.
       YAML_MODS: |
         - file: config/paper-global.yml
           path: proxies.velocity.enabled
@@ -49,5 +45,4 @@ services:
 
 secrets:
   velocity_secret:
-    # A imagem oficial do Velocity espera o segredo neste caminho dentro da pasta de config.
     file: ./config/forwarding.secret
