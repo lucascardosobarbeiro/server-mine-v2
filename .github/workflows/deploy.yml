@@ -1,4 +1,4 @@
-# .github/workflows/deploy.yml - VERSÃO CORRETA E FINAL
+# .github/workflows/deploy.yml - Versão Final e Corrigida
 
 name: Deploy Minecraft Server Updates
 
@@ -28,6 +28,7 @@ jobs:
       id: 'auth'
       uses: 'google-github-actions/auth@v2'
       with:
+        # Assegure-se que estes secrets estão configurados no seu repositório GitHub
         workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
         service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
 
@@ -38,6 +39,8 @@ jobs:
         echo "SERVER_IP=$IP" >> $GITHUB_ENV
 
     - name: 'Prepare configuration files from templates'
+      # REMOVIDO: working-directory. Todos os comandos agora rodam da raiz do projeto.
+      # Os caminhos dos arquivos são explícitos (iniciam com 'terraform/').
       run: |
         echo "Generating configuration files..."
         mkdir -p terraform/config
@@ -47,6 +50,7 @@ jobs:
         sed -i 's/__SERVER_IP__/${{ env.SERVER_IP }}/g' terraform/config/velocity.toml
 
     - name: 'Copy all configuration files to VM'
+      # REMOVIDO: working-directory. Os caminhos para o scp são explícitos.
       run: |
         echo "Copying files to VM via IAP tunnel..."
         gcloud compute scp \
@@ -59,6 +63,7 @@ jobs:
           --tunnel-through-iap
 
     - name: 'Setup remote directories and run services'
+      # Este passo já estava correto e não necessita de 'working-directory'.
       run: |
         echo "Moving files and starting services on VM..."
         gcloud compute ssh ${{ env.INSTANCE_NAME }} \
