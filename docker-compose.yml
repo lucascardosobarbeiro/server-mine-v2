@@ -18,6 +18,8 @@ services:
     environment:
       TYPE: "VELOCITY"
       TZ: "America/Sao_Paulo"
+      # CORREÇÃO: Removemos a variável de ambiente contraditória.
+      # O modo de encaminhamento será agora lido exclusivamente do ficheiro velocity.toml.
     networks: ["minecraft-net"]
 
   # O serviço do seu servidor de jogo principal
@@ -32,9 +34,8 @@ services:
       TYPE: "PAPER"
       MEMORY: "8G"
       # Configurações para funcionar com o proxy
-      BUNGEE_CORD: "FALSE"
+      BUNGEE_CORD: "TRUE"
       ONLINE_MODE: "FALSE"
-      # CORREÇÃO: Usamos a variável HANGAR_PROJECTS para uma instalação robusta.
-      # A imagem Docker irá usar a API do Hangar para encontrar e descarregar estes plugins.
+      # Usamos a variável HANGAR_PROJECTS para uma instalação robusta.
       HANGAR_PROJECTS: "Plan,ViaVersion,GeyserMC,CoreProtect,EssentialsX"
     networks: ["minecraft-net"]
