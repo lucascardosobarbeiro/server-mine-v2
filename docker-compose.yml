@@ -32,7 +32,9 @@ services:
       TYPE: "PAPER"
       MEMORY: "8G"
       # Configurações para funcionar com o proxy
-      BUNGEE_CORD: "TRUE"
+      BUNGEE_CORD: "FALSE"
       ONLINE_MODE: "FALSE"
-      # Instala automaticamente todos os seus plugins
-      PLUGINS: ""
+      # CORREÇÃO: Usamos a variável HANGAR_PROJECTS para uma instalação robusta.
+      # A imagem Docker irá usar a API do Hangar para encontrar e descarregar estes plugins.
+      HANGAR_PROJECTS: "Plan,ViaVersion,GeyserMC,CoreProtect,EssentialsX"
+    networks: ["minecraft-net"]
