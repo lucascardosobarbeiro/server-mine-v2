@@ -26,7 +26,7 @@ services:
     environment:
       EULA: "TRUE"
       TYPE: "PAPER"
-      MEMORY: "16G"
+      MEMORY: "10G"
       ONLINE_MODE: "false"
       YAML_MODS: |
         - file: config/paper-global.yml
