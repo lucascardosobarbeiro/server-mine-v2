@@ -6,8 +6,9 @@ networks:
 
 services:
   velocity:
-    # --- MUDANÇA: USANDO UMA TAG DE IMAGEM ESPECÍFICA E MODERNA ---
-    image: papermc/velocity:3.3.0-SNAPSHOT
+    # --- CORREÇÃO FINAL APLICADA AQUI ---
+    # Usando a tag 'latest' que é estável e sempre estará disponível.
+    image: papermc/velocity:latest
     container_name: velocity-proxy
     restart: unless-stopped
     ports:
