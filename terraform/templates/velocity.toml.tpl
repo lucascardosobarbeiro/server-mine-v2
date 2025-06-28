@@ -19,8 +19,6 @@
 [metrics]
   enabled = false
 
-# --- CORREÇÃO FINAL E MAIS IMPORTANTE ---
 # Define em qual endereço e porta o proxy deve escutar.
 [proxy]
-  # Força o Velocity a escutar em todas as interfaces de rede na porta 25565.
   bind = "0.0.0.0:25565"

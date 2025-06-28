@@ -6,8 +6,6 @@ networks:
 
 services:
   velocity:
-    # --- CORREÇÃO FINAL APLICADA AQUI ---
-    # Usando a tag 'latest' que é estável e sempre estará disponível.
     image: papermc/velocity:latest
     container_name: velocity-proxy
     restart: unless-stopped
