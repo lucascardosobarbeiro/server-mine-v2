@@ -1,33 +1,40 @@
 name: Deploy Minecraft Server Updates
+
 on:
   push:
     branches:
       - main
+
 env:
   GCP_PROJECT_ID: server-mine-463823
   GCP_ZONE: southamerica-east1-a
   INSTANCE_NAME: minecraft-server-host
   REMOTE_DIR: /mnt/data/minecraft
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: 'read'
       id-token: 'write'
+
     steps:
     - name: 'Checkout code'
       uses: 'actions/checkout@v4'
+
     - name: 'Authenticate to Google Cloud'
       id: 'auth'
       uses: 'google-github-actions/auth@v2'
       with:
         workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
         service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
+
     - name: 'Get Server Public IP'
       id: get_ip
       run: |
         IP=$(gcloud compute instances describe ${{ env.INSTANCE_NAME }} --project=${{ env.GCP_PROJECT_ID }} --zone=${{ env.GCP_ZONE }} --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
         echo "SERVER_IP=$IP" >> $GITHUB_ENV
+
     - name: 'Prepare configuration files from templates'
       run: |
         echo "Generating configuration files..."
@@ -36,6 +43,7 @@ jobs:
         cp terraform/templates/docker-compose.yml.tpl terraform/docker-compose.yml
         cp terraform/templates/velocity.toml.tpl terraform/config/velocity.toml
         sed -i 's/__SERVER_IP__/${{ env.SERVER_IP }}/g' terraform/config/velocity.toml
+
     - name: 'Copy all configuration files to VM'
       run: |
         echo "Copying files to VM via IAP tunnel..."
@@ -47,6 +55,7 @@ jobs:
           --project=${{ env.GCP_PROJECT_ID }} \
           --zone=${{ env.GCP_ZONE }} \
           --tunnel-through-iap
+
     - name: 'Setup remote directories and run services'
       run: |
         echo "Moving files and starting services on VM..."
