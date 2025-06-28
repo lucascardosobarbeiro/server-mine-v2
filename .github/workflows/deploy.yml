@@ -1,4 +1,4 @@
-# .github/workflows/deploy.yml - Versão Definitiva e Corrigida
+# .github/workflows/deploy.yml - VERSÃO FINAL E CORRIGIDA
 
 name: Deploy Minecraft Server Updates
 
@@ -38,7 +38,7 @@ jobs:
         echo "SERVER_IP=$IP" >> $GITHUB_ENV
 
     - name: 'Prepare configuration files from templates'
-      # Comandos executam na raiz do repositório, usando caminhos completos.
+      # REMOVIDO: working-directory. Comandos agora usam caminhos completos a partir da raiz.
       run: |
         echo "Generating configuration files..."
         mkdir -p terraform/config
@@ -48,7 +48,7 @@ jobs:
         sed -i 's/__SERVER_IP__/${{ env.SERVER_IP }}/g' terraform/config/velocity.toml
 
     - name: 'Copy all configuration files to VM'
-      # Usa caminhos completos para os arquivos a serem copiados.
+      # REMOVIDO: working-directory. Caminhos dos arquivos são explícitos.
       run: |
         echo "Copying files to VM via IAP tunnel..."
         gcloud compute scp \
@@ -61,6 +61,7 @@ jobs:
           --tunnel-through-iap
 
     - name: 'Setup remote directories and run services'
+      # Este passo não tinha 'working-directory' e permanece igual.
       run: |
         echo "Moving files and starting services on VM..."
         gcloud compute ssh ${{ env.INSTANCE_NAME }} \
