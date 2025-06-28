@@ -1,4 +1,4 @@
-# .github/workflows/deploy.yml - Versão com Correção Final
+# .github/workflows/deploy.yml - VERSÃO CORRETA E FINAL
 
 name: Deploy Minecraft Server Updates
 
@@ -36,31 +36,25 @@ jobs:
       run: |
         IP=$(gcloud compute instances describe ${{ env.INSTANCE_NAME }} --project=${{ env.GCP_PROJECT_ID }} --zone=${{ env.GCP_ZONE }} --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
         echo "SERVER_IP=$IP" >> $GITHUB_ENV
-      working-directory: ./terraform # Adicionado para consistência de onde gcloud roda
 
     - name: 'Prepare configuration files from templates'
-      # O diretório de trabalho é definido aqui para simplificar os caminhos
-      working-directory: ./terraform
+      # Os caminhos agora incluem 'terraform/' pois cada passo roda na raiz do repo.
       run: |
         echo "Generating configuration files..."
-        # --- MUDANÇA ---
-        # Cria o diretório 'config' caso ele não exista. O -p garante que não dê erro se já existir.
-        mkdir -p config
-        
-        echo "${{ secrets.VELOCITY_FORWARDING_SECRET }}" > config/forwarding.secret
-        cp templates/docker-compose.yml.tpl docker-compose.yml
-        cp templates/velocity.toml.tpl config/velocity.toml
-        sed -i 's/__SERVER_IP__/${{ env.SERVER_IP }}/g' config/velocity.toml
+        mkdir -p terraform/config
+        echo "${{ secrets.VELOCITY_FORWARDING_SECRET }}" > terraform/config/forwarding.secret
+        cp terraform/templates/docker-compose.yml.tpl terraform/docker-compose.yml
+        cp terraform/templates/velocity.toml.tpl terraform/config/velocity.toml
+        sed -i 's/__SERVER_IP__/${{ env.SERVER_IP }}/g' terraform/config/velocity.toml
 
     - name: 'Copy all configuration files to VM'
-      # O diretório de trabalho é definido aqui para simplificar os caminhos
-      working-directory: ./terraform
+      # Os caminhos dos arquivos a serem copiados também incluem 'terraform/'.
       run: |
         echo "Copying files to VM via IAP tunnel..."
         gcloud compute scp \
-          docker-compose.yml \
-          config/velocity.toml \
-          config/forwarding.secret \
+          terraform/docker-compose.yml \
+          terraform/config/velocity.toml \
+          terraform/config/forwarding.secret \
           ${{ env.INSTANCE_NAME }}:~ \
           --project=${{ env.GCP_PROJECT_ID }} \
           --zone=${{ env.GCP_ZONE }} \
