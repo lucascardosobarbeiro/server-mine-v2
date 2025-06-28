@@ -1,5 +1,4 @@
-# docker-compose.yml
-version: '3.8'
+# docker-compose.yml - Versão Final com Rede Corrigida
 
 # Define a rede privada onde os nossos contentores irão comunicar
 networks:
@@ -13,11 +12,14 @@ services:
     container_name: velocity-proxy
     restart: unless-stopped
     ports: ["25565:25565"]
+    # Mapeia a pasta de configuração que a pipeline irá criar
     volumes: ["./velocity-data:/server"]
     environment:
       TYPE: "VELOCITY"
       TZ: "America/Sao_Paulo"
-    networks: ["minecraft-net"]
+    # CORREÇÃO: Garante que o serviço Velocity está na nossa rede customizada
+    networks:
+      - minecraft-net
 
   # O serviço do seu servidor de jogo principal
   sobrevivencia:
@@ -33,9 +35,8 @@ services:
       # Configurações para funcionar com o proxy
       BUNGEE_CORD: "TRUE"
       ONLINE_MODE: "FALSE"
-      # CORREÇÃO: Adicionamos a propriedade para desativar a verificação de perfil seguro.
-      # A imagem itzg/minecraft-server converte isto para 'enforce-secure-profile=false' no server.properties.
-      ENFORCE_SECURE_PROFILE: "FALSE"
       # Instala automaticamente todos os seus plugins
       PLUGINS: "https://jd.viaversion.com"
-    networks: ["minecraft-net"]
+    # CORREÇÃO: Garante que o serviço Sobrevivência está na nossa rede customizada
+    networks:
+      - minecraft-net
