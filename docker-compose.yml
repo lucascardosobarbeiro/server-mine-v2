@@ -35,4 +35,4 @@ services:
       BUNGEE_CORD: "TRUE"
       ONLINE_MODE: "FALSE"
       # Instala automaticamente todos os seus plugins
-      PLUGINS: "essentialsx, luckperms, vault, worldedit, worldguard"
+      PLUGINS: ""
