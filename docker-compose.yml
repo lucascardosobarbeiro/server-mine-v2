@@ -35,5 +35,4 @@ services:
       BUNGEE_CORD: "TRUE"
       ONLINE_MODE: "FALSE"
       # Instala automaticamente todos os seus plugins
-      PLUGINS: "https://hangar.papermc.io/api/v1/projects/Plan/versions/5.6.3315/platforms/paper/download,https://hangar.papermc.io/api/v1/projects/ViaVersion/versions/5.1.0/platforms/paper/download,https://hangar.papermc.io/api/v1/projects/GeyserMC/versions/2.3.1-SNAPSHOT/platforms/paper/download,https://hangar.papermc.io/api/v1/projects/CoreProtect/versions/22.4/platforms/paper/download,https://hangar.papermc.io/api/v1/projects/EssentialsX/versions/2.21.0/platforms/paper/download"
-    networks: ["minecraft-net"]
+      PLUGINS: "essentialsx, luckperms, vault, worldedit, worldguard"
