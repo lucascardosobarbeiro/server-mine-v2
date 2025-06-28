@@ -11,20 +11,18 @@ services:
     restart: unless-stopped
     ports:
       - "25565:25565"
+    # --- INÍCIO DA CORREÇÃO FINAL ---
+    # Montamos os nossos próprios ficheiros de configuração diretamente,
+    # tomando controlo total sobre a configuração do Velocity.
+    volumes:
+      - ./config/velocity.toml:/server/velocity.toml
+      - ./config/forwarding.secret:/server/forwarding.secret
+    # Removemos TODAS as variáveis de ambiente do Velocity para evitar
+    # qualquer conflito com os ficheiros que estamos a montar.
     environment:
-      # --- INÍCIO DA CORREÇÃO ---
       TYPE: "VELOCITY"
       TZ: "America/Sao_Paulo"
-      # Define o modo de encaminhamento de jogador através de uma variável de ambiente.
-      # Esta é a forma preferida pela imagem itzg.
-      VELOCITY_PLAYER_INFO_FORWARDING_MODE: "modern"
-      # Aponta para o segredo que será montado pelo Docker.
-      VELOCITY_FORWARDING_SECRET_PATH: "/run/secrets/velocity_secret"
-      # Define o servidor de backend.
-      VELOCITY_SERVERS: "sobrevivencia=sobrevivencia:25565"
-      # --- FIM DA CORREÇÃO ---
-    secrets:
-      - velocity_secret
+      # --- FIM DA CORREÇÃO FINAL ---
     networks:
       - "minecraft-net"
 
@@ -37,9 +35,9 @@ services:
     environment:
       EULA: "TRUE"
       TYPE: "PAPER"
-      MEMORY: "16G"
+      MEMORY: "10G"
       ONLINE_MODE: "false"
-      # A configuração do Paper permanece a mesma, pois já está correta.
+      # A configuração do Paper está correta e permanece a mesma.
       YAML_MODS: |
         - file: config/paper-global.yml
           path: proxies.velocity.enabled
@@ -55,7 +53,6 @@ services:
     networks:
       - "minecraft-net"
 
-# O segredo é definido no nível superior e usado por ambos os serviços.
 secrets:
   velocity_secret:
     file: ./config/forwarding.secret
