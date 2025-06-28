@@ -1,7 +1,7 @@
 # Arquivos de estado do Terraform (MUITO SENSÍVEIS)
 *.tfstate
 *.tfstate.backup
-
+/secrets/
 # Arquivos de variáveis locais (contém seus dados pessoais/de projeto)
 *.tfvars
 

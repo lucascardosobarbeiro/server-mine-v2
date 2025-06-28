@@ -1,4 +1,4 @@
-# .github/workflows/deploy.yml - Versão Final GitOps
+# Conteúdo de: .github/workflows/deploy.yml
 
 name: Deploy Minecraft Server Updates
 
@@ -12,6 +12,7 @@ env:
   GCP_ZONE: southamerica-east1-a
   INSTANCE_NAME: minecraft-server-host
   REMOTE_DIR: /mnt/data/minecraft
+  WORK_DIR: ./terraform
 
 jobs:
   deploy:
@@ -19,6 +20,10 @@ jobs:
     permissions:
       contents: 'read'
       id-token: 'write'
+    
+    defaults:
+      run:
+        working-directory: ${{ env.WORK_DIR }}
 
     steps:
     - name: 'Checkout code'
@@ -37,21 +42,38 @@ jobs:
         IP=$(gcloud compute instances describe ${{ env.INSTANCE_NAME }} --project=${{ env.GCP_PROJECT_ID }} --zone=${{ env.GCP_ZONE }} --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
         echo "SERVER_IP=$IP" >> $GITHUB_ENV
 
-    - name: 'Copy configuration files to VM'
+    - name: 'Prepare configuration files from templates'
       run: |
-        # Prepara o ficheiro velocity.toml substituindo o placeholder pelo IP real
+        echo "Generating configuration files..."
+        echo "${{ secrets.VELOCITY_FORWARDING_SECRET }}" > config/forwarding.secret
+        cp templates/docker-compose.yml.tpl docker-compose.yml
+        cp templates/velocity.toml.tpl config/velocity.toml
         sed -i 's/__SERVER_IP__/${{ env.SERVER_IP }}/g' config/velocity.toml
-        
-        # Copia os ficheiros para a VM usando gcloud scp
-        gcloud compute scp docker-compose.yml config/velocity.toml ${{ env.INSTANCE_NAME }}:~ --project=${{ env.GCP_PROJECT_ID }} --zone=${{ env.GCP_ZONE }} --tunnel-through-iap
+
+    - name: 'Copy all configuration files to VM'
+      run: |
+        echo "Copying files to VM via IAP tunnel..."
+        gcloud compute scp \
+          docker-compose.yml \
+          config/velocity.toml \
+          config/forwarding.secret \
+          ${{ env.INSTANCE_NAME }}:~ \
+          --project=${{ env.GCP_PROJECT_ID }} \
+          --zone=${{ env.GCP_ZONE }} \
+          --tunnel-through-iap
 
     - name: 'Setup remote directories and run services'
       run: |
+        echo "Moving files and starting services on VM..."
         gcloud compute ssh ${{ env.INSTANCE_NAME }} \
           --zone=${{ env.GCP_ZONE }} \
           --project=${{ env.GCP_PROJECT_ID }} \
           --tunnel-through-iap \
           -- \
-          -o UserKnownHostsFile=/dev/null \
-          -o StrictHostKeyChecking=no \
-          "sudo mkdir -p ${{ env.REMOTE_DIR }}/velocity-data && sudo mv ~/docker-compose.yml ${{ env.REMOTE_DIR }}/ && sudo mv ~/velocity.toml ${{ env.REMOTE_DIR }}/velocity-data/ && cd ${{ env.REMOTE_DIR }} && sudo docker compose up -d"
+          "sudo mkdir -p ${{ env.REMOTE_DIR }}/config && \
+           sudo mv ~/docker-compose.yml ${{ env.REMOTE_DIR }}/ && \
+           sudo mv ~/velocity.toml ${{ env.REMOTE_DIR }}/config/ && \
+           sudo mv ~/forwarding.secret ${{ env.REMOTE_DIR }}/config/ && \
+           cd ${{ env.REMOTE_DIR }} && \
+           echo 'Restarting services...' && \
+           sudo docker compose up -d --force-recreate"
