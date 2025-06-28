@@ -1,4 +1,4 @@
-# .github/workflows/deploy.yml - Versão Final e Corrigida
+# .github/workflows/deploy.yml - Versão Definitiva e Corrigida
 
 name: Deploy Minecraft Server Updates
 
@@ -38,28 +38,23 @@ jobs:
         echo "SERVER_IP=$IP" >> $GITHUB_ENV
 
     - name: 'Prepare configuration files from templates'
-      # Esta diretiva nos coloca dentro da pasta 'terraform'
-      working-directory: ./terraform
+      # Comandos executam na raiz do repositório, usando caminhos completos.
       run: |
         echo "Generating configuration files..."
-        mkdir -p config
-        echo "${{ secrets.VELOCITY_FORWARDING_SECRET }}" > config/forwarding.secret
-        
-        # --- CORREÇÃO APLICADA AQUI ---
-        # Os caminhos agora são relativos à pasta 'terraform'
-        cp templates/docker-compose.yml.tpl docker-compose.yml
-        cp templates/velocity.toml.tpl config/velocity.toml
-        sed -i 's/__SERVER_IP__/${{ env.SERVER_IP }}/g' config/velocity.toml
+        mkdir -p terraform/config
+        echo "${{ secrets.VELOCITY_FORWARDING_SECRET }}" > terraform/config/forwarding.secret
+        cp terraform/templates/docker-compose.yml.tpl terraform/docker-compose.yml
+        cp terraform/templates/velocity.toml.tpl terraform/config/velocity.toml
+        sed -i 's/__SERVER_IP__/${{ env.SERVER_IP }}/g' terraform/config/velocity.toml
 
     - name: 'Copy all configuration files to VM'
-      # Esta diretiva também nos coloca dentro da pasta 'terraform'
-      working-directory: ./terraform
+      # Usa caminhos completos para os arquivos a serem copiados.
       run: |
         echo "Copying files to VM via IAP tunnel..."
         gcloud compute scp \
-          docker-compose.yml \
-          config/velocity.toml \
-          config/forwarding.secret \
+          terraform/docker-compose.yml \
+          terraform/config/velocity.toml \
+          terraform/config/forwarding.secret \
           ${{ env.INSTANCE_NAME }}:~ \
           --project=${{ env.GCP_PROJECT_ID }} \
           --zone=${{ env.GCP_ZONE }} \
