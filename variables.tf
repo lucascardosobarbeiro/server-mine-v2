@@ -32,3 +32,11 @@ variable "github_repo" {
   description = "Seu repositório no GitHub no formato 'usuario/repositorio'."
   type        = string
 }
+
+# Conteúdo a ser adicionado em: variables.tf
+
+variable "velocity_forwarding_secret" {
+  type        = string
+  description = "Segredo compartilhado para o encaminhamento do Velocity, injetado pelo CI/CD."
+  sensitive   = true # Impede que o valor do segredo apareça nos logs do Terraform.
+}

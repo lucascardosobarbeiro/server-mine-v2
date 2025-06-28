@@ -1,4 +1,4 @@
-# .github/workflows/deploy.yml - Versão Corrigida e Final
+# .github/workflows/deploy.yml - Versão com Correção Final
 
 name: Deploy Minecraft Server Updates
 
@@ -19,10 +19,6 @@ jobs:
     permissions:
       contents: 'read'
       id-token: 'write'
-    
-    # --- MUDANÇA ---
-    # O bloco 'defaults' foi removido para evitar problemas de caminho.
-    # Cada passo agora roda a partir da raiz do repositório.
 
     steps:
     - name: 'Checkout code'
@@ -40,33 +36,37 @@ jobs:
       run: |
         IP=$(gcloud compute instances describe ${{ env.INSTANCE_NAME }} --project=${{ env.GCP_PROJECT_ID }} --zone=${{ env.GCP_ZONE }} --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
         echo "SERVER_IP=$IP" >> $GITHUB_ENV
+      working-directory: ./terraform # Adicionado para consistência de onde gcloud roda
 
     - name: 'Prepare configuration files from templates'
-      # --- MUDANÇA --- 
-      # Os caminhos agora incluem 'terraform/' pois o passo roda na raiz.
+      # O diretório de trabalho é definido aqui para simplificar os caminhos
+      working-directory: ./terraform
       run: |
         echo "Generating configuration files..."
-        echo "${{ secrets.VELOCITY_FORWARDING_SECRET }}" > terraform/config/forwarding.secret
-        cp terraform/templates/docker-compose.yml.tpl terraform/docker-compose.yml
-        cp terraform/templates/velocity.toml.tpl terraform/config/velocity.toml
-        sed -i 's/__SERVER_IP__/${{ env.SERVER_IP }}/g' terraform/config/velocity.toml
+        # --- MUDANÇA ---
+        # Cria o diretório 'config' caso ele não exista. O -p garante que não dê erro se já existir.
+        mkdir -p config
+        
+        echo "${{ secrets.VELOCITY_FORWARDING_SECRET }}" > config/forwarding.secret
+        cp templates/docker-compose.yml.tpl docker-compose.yml
+        cp templates/velocity.toml.tpl config/velocity.toml
+        sed -i 's/__SERVER_IP__/${{ env.SERVER_IP }}/g' config/velocity.toml
 
     - name: 'Copy all configuration files to VM'
-      # --- MUDANÇA ---
-      # Os caminhos dos arquivos a serem copiados agora incluem 'terraform/'.
+      # O diretório de trabalho é definido aqui para simplificar os caminhos
+      working-directory: ./terraform
       run: |
         echo "Copying files to VM via IAP tunnel..."
         gcloud compute scp \
-          terraform/docker-compose.yml \
-          terraform/config/velocity.toml \
-          terraform/config/forwarding.secret \
+          docker-compose.yml \
+          config/velocity.toml \
+          config/forwarding.secret \
           ${{ env.INSTANCE_NAME }}:~ \
           --project=${{ env.GCP_PROJECT_ID }} \
           --zone=${{ env.GCP_ZONE }} \
           --tunnel-through-iap
 
     - name: 'Setup remote directories and run services'
-      # Nenhuma mudança necessária aqui, pois o comando é remoto na VM.
       run: |
         echo "Moving files and starting services on VM..."
         gcloud compute ssh ${{ env.INSTANCE_NAME }} \
