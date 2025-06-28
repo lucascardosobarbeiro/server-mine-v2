@@ -6,23 +6,17 @@ networks:
 
 services:
   velocity:
-    image: itzg/bungeecord
+    # --- MUDANÇA CRUCIAL: USANDO A IMAGEM OFICIAL ---
+    image: papermc/velocity
     container_name: velocity-proxy
     restart: unless-stopped
     ports:
       - "25565:25565"
-    # --- INÍCIO DA CORREÇÃO FINAL ---
-    # Montamos os nossos próprios ficheiros de configuração diretamente,
-    # tomando controlo total sobre a configuração do Velocity.
     volumes:
-      - ./config/velocity.toml:/server/velocity.toml
-      - ./config/forwarding.secret:/server/forwarding.secret
-    # Removemos TODAS as variáveis de ambiente do Velocity para evitar
-    # qualquer conflito com os ficheiros que estamos a montar.
-    environment:
-      TYPE: "VELOCITY"
-      TZ: "America/Sao_Paulo"
-      # --- FIM DA CORREÇÃO FINAL ---
+      # Montamos uma pasta inteira de configuração, que conterá nossos ficheiros.
+      # Esta é a abordagem padrão para a imagem oficial.
+      - ./config:/velocity/config
+    # Nenhuma variável de ambiente é necessária para o Velocity, ele lerá os ficheiros.
     networks:
       - "minecraft-net"
 
@@ -37,7 +31,7 @@ services:
       TYPE: "PAPER"
       MEMORY: "10G"
       ONLINE_MODE: "false"
-      # A configuração do Paper está correta e permanece a mesma.
+      # A configuração do Paper para receber a conexão do proxy está correta e permanece.
       YAML_MODS: |
         - file: config/paper-global.yml
           path: proxies.velocity.enabled
@@ -55,4 +49,5 @@ services:
 
 secrets:
   velocity_secret:
+    # A imagem oficial do Velocity espera o segredo neste caminho dentro da pasta de config.
     file: ./config/forwarding.secret
