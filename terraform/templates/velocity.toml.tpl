@@ -1,21 +1,22 @@
-# Define quais servidores o Velocity conhece.
+# Define os servidores para os quais o Velocity pode enviar jogadores.
 [servers]
-  # O 'try' define a ordem dos servidores para os quais os jogadores são enviados ao conectar-se.
-  try = ["sobrevivencia"]
-  # Mapeia o nome 'sobrevivencia' para o endereço do contêiner Docker.
+  # 'try' define a ordem de tentativa de conexão ao entrar no servidor.
+  try = [
+    "sobrevivencia"
+  ]
+  # Mapeia o nome do servidor para o seu endereço na rede Docker interna.
   sobrevivencia = "sobrevivencia:25565"
 
-# Mapeia o seu IP público para o servidor principal.
+# Força os jogadores que se conectam através do IP público a irem para o servidor 'sobrevivencia'.
 [forced-hosts]
   "__SERVER_IP__:25565" = ["sobrevivencia"]
 
-# --- CORREÇÃO APLICADA AQUI ---
-# Configurações avançadas do proxy.
+# Configurações avançadas e de segurança.
 [advanced]
-  # Esta linha é a mais importante. Ela força o Velocity a usar o método
-  # moderno e seguro de encaminhamento de informações do jogador.
+  # ESSENCIAL: Habilita o modo de encaminhamento de jogador moderno.
+  # Isto envia o UUID e a skin do jogador de forma segura para o servidor de backend.
   player-info-forwarding-mode = "modern"
 
-# Desativa a recolha de métricas.
+# Desativa a recolha de métricas de telemetria.
 [metrics]
   enabled = false
