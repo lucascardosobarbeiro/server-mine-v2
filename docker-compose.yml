@@ -1,4 +1,5 @@
-# docker-compose.yml - Versão Final com Rede e Encaminhamento Corrigidos
+# docker-compose.yml
+version: '3.8'
 
 # Define a rede privada onde os nossos contentores irão comunicar
 networks:
@@ -17,11 +18,7 @@ services:
     environment:
       TYPE: "VELOCITY"
       TZ: "America/Sao_Paulo"
-      # CORREÇÃO: Define o modo de encaminhamento para o mais seguro e moderno
-      PLAYER_INFO_FORWARDING_MODE: "modern"
-    # Garante que o serviço Velocity está na nossa rede customizada
-    networks:
-      - minecraft-net
+    networks: ["minecraft-net"]
 
   # O serviço do seu servidor de jogo principal
   sobrevivencia:
@@ -37,8 +34,6 @@ services:
       # Configurações para funcionar com o proxy
       BUNGEE_CORD: "TRUE"
       ONLINE_MODE: "FALSE"
-      # CORREÇÃO: Usa o link de download direto da API do Hangar para o ViaVersion
-      PLUGINS: "https://hangar.papermc.io/api/v1/projects/ViaVersion/versions/5.1.0/platforms/paper/download"
-    # Garante que o serviço Sobrevivência está na nossa rede customizada
-    networks:
-      - minecraft-net
+      # Instala automaticamente todos os seus plugins
+      PLUGINS: "https://hangar.papermc.io/api/v1/projects/Plan/versions/5.6.3315/platforms/paper/download,https://hangar.papermc.io/api/v1/projects/ViaVersion/versions/5.1.0/platforms/paper/download,https://hangar.papermc.io/api/v1/projects/GeyserMC/versions/2.3.1-SNAPSHOT/platforms/paper/download,https://hangar.papermc.io/api/v1/projects/CoreProtect/versions/22.4/platforms/paper/download,https://hangar.papermc.io/api/v1/projects/EssentialsX/versions/2.21.0/platforms/paper/download"
+    networks: ["minecraft-net"]

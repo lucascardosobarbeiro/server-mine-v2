@@ -1,12 +1,18 @@
+# config/velocity.toml
+
 [servers]
+# Define o nosso servidor de sobrevivência como o destino principal
 sobrevivencia = "sobrevivencia:25565"
+
+# Define que todos os jogadores devem tentar conectar-se primeiro ao servidor de sobrevivência
 try = ["sobrevivencia"]
 
 [forced-hosts]
-# A pipeline irá substituir este placeholder pelo IP real.
+# A pipeline irá substituir este placeholder pelo IP real do seu servidor
 "__SERVER_IP__:25565" = ["sobrevivencia"]
 
 [advanced]
+# Usa o método de encaminhamento de jogador mais seguro e moderno
 player-info-forwarding-mode = "modern"
 
 [metrics]
