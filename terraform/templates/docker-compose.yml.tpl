@@ -26,11 +26,11 @@ services:
       VELOCITY_FORWARDING_SECRET_PATH: "/server/forwarding.secret"
       # Define o servidor de backend.
       VELOCITY_SERVERS: "sobrevivencia=sobrevivencia:25565"
-      # Define o servidor padrão.
+      # Define o servidor padrão para onde os jogadores são enviados.
       VELOCITY_TRY_SERVERS: "sobrevivencia"
 
     # Montamos apenas o ficheiro de segredo, sem a flag 'read-only'
-    # para evitar o erro de permissão 'chown'.
+    # para evitar o erro de permissão 'chown' que tivemos no início.
     volumes:
       - ./config/forwarding.secret:/server/forwarding.secret
 
