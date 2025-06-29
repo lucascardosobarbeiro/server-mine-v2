@@ -44,7 +44,7 @@ jobs:
     - name: 'Stop, Clean, and Restart Services on VM'
       run: |
         echo "Stopping old containers and cleaning environment..."
-        gcloud compute ssh ${{ env.INSTANCE_NAME }} --zone ${{ env.GCP_ZONE }} --project ${{ env.GCP_PROJECT_ID }} --tunnel-through-iap -- \
+        gcloud compute ssh ${{ env.INSTANCE_NAME }} --zone ${{ env.GCP_ZONE }} --project=${{ env.GCP_PROJECT_ID }} --tunnel-through-iap -- \
         "sudo mkdir -p /mnt/data/minecraft/config && \
          cd /mnt/data/minecraft || true && \
          sudo docker compose down && \

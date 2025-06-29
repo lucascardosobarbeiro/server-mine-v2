@@ -1,11 +1,9 @@
-# A linha 'version' foi removida para seguir as práticas modernas do Docker Compose.
 networks:
   minecraft-net:
     driver: bridge
 
 services:
   proxy:
-    # Usamos a imagem correta, itzg/mc-proxy, conforme a documentação.
     image: itzg/mc-proxy
     container_name: velocity-proxy
     restart: unless-stopped
@@ -17,14 +15,12 @@ services:
       VELOCITY_ONLINE_MODE: "true"
       VELOCITY_PLAYER_INFO_FORWARDING_MODE: "MODERN"
       VELOCITY_FORWARDING_SECRET_PATH: "/run/secrets/velocity_secret"
-      # A CHAVE: Diz ao Velocity para encontrar o servidor de jogo usando seu nome de serviço.
       VELOCITY_SERVERS: "sobrevivencia=mc-sobrevivencia:25565"
       VELOCITY_TRY_SERVERS: "sobrevivencia"
     secrets:
       - velocity_secret
     networks:
       - "minecraft-net"
-    # Garante que o servidor Paper esteja pronto antes do proxy tentar se conectar.
     depends_on:
       mc-sobrevivencia:
         condition: service_healthy
@@ -55,7 +51,6 @@ services:
       retries: 10
       start_period: 30s
 
-# A seção 'secrets' global para o forwarding.secret.
 secrets:
   velocity_secret:
     file: ./config/forwarding.secret
