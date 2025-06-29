@@ -1,42 +1,43 @@
-# A linha 'version' foi removida para seguir as práticas modernas.
+# A linha 'version' foi removida.
 networks:
   minecraft-net:
     driver: bridge
 
 volumes:
-  # Definimos os volumes que irão persistir os dados e configurações.
   paper-data:
   velocity-data:
 
 services:
   velocity:
-    # IMAGEM OFICIAL E MINIMALISTA DO VELOCITY
     image: papermc/velocity:latest
     container_name: velocity-proxy
     restart: unless-stopped
     ports:
       - "25565:25565"
     volumes:
-      # Montamos um volume dedicado para os dados/configurações do Velocity.
       - velocity-data:/app
     networks:
       - "minecraft-net"
     depends_on:
-      - paper
+      paper:
+        condition: service_healthy # Adicionada condição de saúde para estabilidade
 
   paper:
-    # IMAGEM OFICIAL E MINIMALISTA DO PAPER
     image: papermc/paper:latest
     container_name: paper-server
     restart: unless-stopped
     volumes:
-      # Montamos um volume dedicado para os dados/configurações do Paper.
       - paper-data:/app
+      
+    # --- CORREÇÃO FINAL E ASSERTIVA ---
+    # Usamos a variável de ambiente documentada para alocar memória,
+    # em vez de substituir o comando de arranque.
     environment:
-      # A única variável necessária é para aceitar o EULA.
       EULA: "true"
-    # --- MUDANÇA ASSERTIVA NO ARRANQUE ---
-    # Substituímos o comando de arranque padrão para definir a memória.
-    command: java -Xms10G -Xmx10G -jar paper.jar --nogui
+      MEMORY: "10G" # Ex: "10G", "2048M"
+      
+    # --- REMOVIDO ---
+    # O 'command' customizado foi removido para deixar a imagem usar o seu padrão.
+    
     networks:
       - "minecraft-net"
