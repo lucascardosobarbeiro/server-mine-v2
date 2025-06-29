@@ -11,11 +11,16 @@ services:
     restart: unless-stopped
     ports:
       - "25565:25565"
-    # --- CORREÇÃO FINAL E ASSERTIVA ---
-    # Montamos a nossa pasta de config local diretamente para /velocity no contêiner.
-    # Isto coloca velocity.toml e forwarding.secret no local que a imagem espera.
     volumes:
+      # Montamos a nossa pasta de config local diretamente para /velocity no contêiner.
+      # Isto coloca velocity.toml e forwarding.secret no local que a imagem espera.
       - ./config:/velocity
+    
+    # --- A MUDANÇA ASSERTIVA ---
+    # Ignoramos qualquer script de inicialização e executamos o Java diretamente.
+    working_dir: /velocity
+    command: java -jar velocity.jar
+    
     networks:
       - "minecraft-net"
 
