@@ -5,7 +5,7 @@ networks:
 
 services:
   proxy:
-    # Usamos a imagem correta, itzg/mc-proxy, conforme a documentação.
+    # Usamos a imagem correta, itzg/mc-proxy, conforme a sua documentação.
     image: itzg/mc-proxy
     container_name: velocity-proxy
     restart: unless-stopped
@@ -13,7 +13,7 @@ services:
       # Expõe a porta do proxy para o mundo exterior.
       - "25565:25565"
     environment:
-      # --- CONFIGURAÇÃO ASSERTIVA 100% VIA VARIÁVEIS DE AMBIENTE ---
+      # --- CONFIGURAÇÃO ASSERTIVA 100% VIA VARIÁVEIS DE AMBIENTE (SEGUINDO A DOC) ---
       TYPE: "VELOCITY"
       # Força o modo online, como requisitado pela documentação do Velocity.
       VELOCITY_ONLINE_MODE: "true"
@@ -29,7 +29,7 @@ services:
       - velocity_secret
     networks:
       - "minecraft-net"
-    # Garante que o servidor Paper esteja pronto antes de o proxy tentar se conectar.
+    # Garante que o servidor Paper esteja pronto antes do proxy tentar se conectar.
     depends_on:
       mc-sobrevivencia:
         condition: service_healthy
@@ -50,12 +50,10 @@ services:
       
       # --- CONFIGURAÇÃO ASSERTIVA DO PAPER ---
       # Esta única variável instrui a imagem a configurar TODOS os ficheiros
-      # necessários (spigot.yml, paper-global.yml) para aceitar uma conexão de proxy.
+      # necessários para aceitar uma conexão de proxy.
       BUNGEECORD: "TRUE"
       
     secrets:
-      # O segredo ainda é necessário para o Velocity, mas a configuração
-      # principal do Paper é feita pela variável BUNGEECORD.
       - velocity_secret
     networks:
       - "minecraft-net"
