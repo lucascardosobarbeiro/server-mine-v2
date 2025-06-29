@@ -1,62 +1,42 @@
-# A linha 'version' foi removida.
+# A linha 'version' foi removida para seguir as práticas modernas do Docker Compose.
 networks:
   minecraft-net:
     driver: bridge
 
+volumes:
+  # Definimos os volumes que irão persistir os dados e configurações.
+  paper-data:
+  velocity-data:
+
 services:
-  proxy:
-    # Usamos a imagem correta, itzg/mc-proxy, conforme a documentação.
-    image: itzg/mc-proxy
+  velocity:
+    # IMAGEM OFICIAL E MINIMALISTA DO VELOCITY
+    image: papermc/velocity:latest
     container_name: velocity-proxy
     restart: unless-stopped
     ports:
       - "25565:25565"
-    environment:
-      # --- CONFIGURAÇÃO ASSERTIVA 100% VIA VARIÁVEIS DE AMBIENTE ---
-      TYPE: "VELOCITY"
-      VELOCITY_ONLINE_MODE: "true"
-      VELOCITY_PLAYER_INFO_FORWARDING_MODE: "MODERN"
-      VELOCITY_FORWARDING_SECRET_PATH: "/run/secrets/velocity_secret"
-      VELOCITY_SERVERS: "sobrevivencia=mc-sobrevivencia:25565"
-      VELOCITY_TRY_SERVERS: "sobrevivencia"
-    secrets:
-      - velocity_secret
+    volumes:
+      # Montamos um volume dedicado para os dados/configurações do Velocity.
+      # A configuração será feita manualmente aqui.
+      - velocity-data:/app
     networks:
       - "minecraft-net"
     depends_on:
-      mc-sobrevivencia:
-        condition: service_healthy
+      - paper
 
-  mc-sobrevivencia:
-    image: itzg/minecraft-server
-    container_name: mc-sobrevivencia
+  # --- A CORREÇÃO FINAL ESTÁ AQUI ---
+  # O nome do serviço agora é 'paper', exatamente como o pipeline espera.
+  paper:
+    # IMAGEM OFICIAL E MINIMALISTA DO PAPER
+    image: papermc/paper:latest
+    container_name: paper-server
     restart: unless-stopped
     volumes:
-      - ./sobrevivencia-data:/data
+      # Montamos um volume dedicado para os dados/configurações do Paper.
+      - paper-data:/app
     environment:
-      EULA: "TRUE"
-      TYPE: "PAPER"
+      # A imagem 'papermc/paper' usa esta variável para definir a memória.
       MEMORY: "10G"
-      # O servidor Paper DEVE estar em modo offline para delegar a autenticação.
-      ONLINE_MODE: "false"
-      # Esta variável única configura corretamente o Paper para o proxy.
-      BUNGEECORD: "TRUE"
-    secrets:
-      - velocity_secret
     networks:
       - "minecraft-net"
-      
-    # --- A CORREÇÃO FINAL E ASSERTIVA ---
-    # Substituímos o healthcheck por um que usa a ferramenta 'mc-monitor',
-    # que vem incluída na imagem itzg/minecraft-server e é a forma documentada.
-    healthcheck:
-      test: ["CMD", "mc-monitor", "status", "--host=localhost", "--port=25565"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-
-# A seção 'secrets' global para o forwarding.secret.
-secrets:
-  velocity_secret:
-    file: ./config/forwarding.secret
