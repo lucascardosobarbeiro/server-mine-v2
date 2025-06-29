@@ -1,44 +1,32 @@
-# A linha 'version' foi removida.
+# A linha 'version' foi removida para seguir as práticas modernas do Docker Compose.
 networks:
   minecraft-net:
     driver: bridge
 
-volumes:
-  paper-data:
-  velocity-data:
-
 services:
-  velocity:
-    image: papermc/velocity:latest
-    container_name: velocity-proxy
+  # O serviço do proxy foi completamente removido.
+
+  mc-sobrevivencia:
+    image: itzg/minecraft-server
+    container_name: mc-sobrevivencia
     restart: unless-stopped
+    
+    # --- MUDANÇA CRÍTICA ---
+    # Expomos a porta do servidor de jogo diretamente para o mundo exterior.
     ports:
       - "25565:25565"
-    volumes:
-      - velocity-data:/app
-    networks:
-      - "minecraft-net"
-    depends_on:
-      paper:
-        condition: service_healthy
 
-  paper:
-    image: papermc/paper:latest
-    container_name: paper-server
-    restart: unless-stopped
     volumes:
-      - paper-data:/app
+      - ./sobrevivencia-data:/data
+      
     environment:
-      EULA: "true"
+      EULA: "TRUE"
+      TYPE: "PAPER"
       MEMORY: "10G"
+      
+      # --- MUDANÇA CRÍTICA ---
+      # O servidor agora fará sua própria autenticação (modo premium).
+      ONLINE_MODE: "true"
+      
     networks:
       - "minecraft-net"
-      
-    # --- CORREÇÃO FINAL E ASSERTIVA ---
-    # Adicionamos uma verificação de saúde para que o 'depends_on' funcione.
-    # O Docker irá verificar se a porta 25565 está a aceitar conexões dentro do contêiner.
-    healthcheck:
-      test: ["CMD", "mc-health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
