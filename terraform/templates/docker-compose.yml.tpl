@@ -1,57 +1,52 @@
-# A linha 'version' foi removida para seguir as práticas modernas do Docker Compose.
+# A linha 'version' foi removida para seguir as práticas modernas.
 networks:
   minecraft-net:
     driver: bridge
 
 services:
-  velocity:
+  # Usamos a imagem itzg/bungeecord, conforme o exemplo oficial.
+  proxy:
     image: itzg/bungeecord
-    container_name: velocity-proxy
+    container_name: bungeecord-proxy
     restart: unless-stopped
     ports:
+      # Expõe a porta do proxy para o mundo exterior.
       - "25565:25565"
     environment:
-      TYPE: "VELOCITY"
-      VELOCITY_PLAYER_INFO_FORWARDING_MODE: "MODERN"
-      VELOCITY_FORWARDING_SECRET_PATH: "/run/secrets/velocity_secret"
-      VELOCITY_SERVERS: "sobrevivencia=mc-sobrevivencia:25565"
-      VELOCITY_TRY_SERVERS: "sobrevivencia"
-    secrets:
-      - velocity_secret
+      # --- CONFIGURAÇÃO ASSERTIVA VIA VARIÁVEIS DE AMBIENTE (SEGUINDO A DOC) ---
+      # Habilita o modo BungeeCord.
+      BUNGEE_ONLINE_MODE: "true"
+      # A CHAVE: Diz ao BungeeCord para encontrar o servidor de jogo usando seu nome de serviço.
+      # O formato é "nome_no_bungee,endereço_docker,motd,restricted".
+      SERVERS: "sobrevivencia,mc-sobrevivencia:25565,Seu Servidor,false"
+      # Define o servidor padrão para os jogadores.
+      DEFAULT_SERVER: "sobrevivencia"
+      # Força o servidor padrão ao entrar.
+      FORCE_DEFAULT_SERVER: "true"
+      # Define o nome do host do proxy.
+      HOST_NAME: "sobrevivencia"
+
     networks:
       - "minecraft-net"
-    # --- CORREÇÃO FINAL E ASSERTIVA ---
-    # A dependência agora aponta para o nome do serviço correto: 'sobrevivencia'.
+    # Garante que o servidor Paper esteja pronto antes do proxy tentar se conectar.
     depends_on:
-      sobrevivencia:
+      mc-sobrevivencia:
         condition: service_healthy
 
-  sobrevivencia:
+  mc-sobrevivencia:
     image: itzg/minecraft-server
     container_name: mc-sobrevivencia
     restart: unless-stopped
+    # A porta do servidor Paper NÃO é mais exposta ao exterior.
     volumes:
       - ./sobrevivencia-data:/data
     environment:
       EULA: "TRUE"
       TYPE: "PAPER"
       MEMORY: "10G"
+      # O servidor Paper DEVE estar em modo offline para delegar a autenticação ao proxy.
       ONLINE_MODE: "false"
-      YAML_MODS: |
-        - file: config/paper-global.yml
-          path: proxies.velocity.enabled
-          value: true
-        - file: config/paper-global.yml
-          path: proxies.velocity.online-mode
-          value: true
-        - file: config/paper-global.yml
-          path: proxies.velocity.secret
-          value: !!str `cat /run/secrets/velocity_secret`
-    secrets:
-      - velocity_secret
+      # Habilita o modo de encaminhamento BungeeCord no backend.
+      BUNGEECORD: "TRUE"
     networks:
       - "minecraft-net"
-
-secrets:
-  velocity_secret:
-    file: ./config/forwarding.secret
