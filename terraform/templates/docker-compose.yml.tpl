@@ -6,21 +6,34 @@ networks:
 
 services:
   velocity:
-    image: papermc/velocity:latest
+    # Voltamos para a imagem itzg, que é altamente configurável via 'env'.
+    image: itzg/bungeecord
     container_name: velocity-proxy
     restart: unless-stopped
     ports:
       - "25565:25565"
     
     # --- A MUDANÇA ASSERTIVA E FINAL ---
-    # Montamos cada ficheiro individualmente nos seus locais padrão dentro do contêiner.
-    # O diretório de trabalho padrão é /velocity.
+    # Configuramos TUDO via variáveis de ambiente. A imagem irá gerar o seu
+    # próprio velocity.toml internamente com base nestas instruções.
+    environment:
+      TYPE: "VELOCITY"
+      # Força a porta correta.
+      SERVER_PORT: "25565"
+      # Define o modo de encaminhamento de jogador.
+      VELOCITY_PLAYER_INFO_FORWARDING_MODE: "MODERN"
+      # Aponta para o ficheiro de segredo que vamos montar.
+      VELOCITY_FORWARDING_SECRET_PATH: "/server/forwarding.secret"
+      # Define o servidor de backend.
+      VELOCITY_SERVERS: "sobrevivencia=sobrevivencia:25565"
+      # Define o servidor padrão.
+      VELOCITY_TRY_SERVERS: "sobrevivencia"
+
+    # Montamos apenas o ficheiro de segredo, sem a flag 'read-only'
+    # para evitar o erro de permissão 'chown'.
     volumes:
-      - ./config/velocity.toml:/velocity/velocity.toml
-      - ./config/forwarding.secret:/velocity/forwarding.secret
-    
-    # NÃO definimos 'command' ou 'working_dir', para deixar o script da imagem funcionar.
-    
+      - ./config/forwarding.secret:/server/forwarding.secret
+
     networks:
       - "minecraft-net"
 
