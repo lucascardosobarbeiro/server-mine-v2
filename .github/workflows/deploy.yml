@@ -1,4 +1,4 @@
-name: Deploy Minecraft Server
+name: Deploy Minecraft Services
 on:
   push:
     branches:
@@ -7,7 +7,6 @@ env:
   GCP_PROJECT_ID: server-mine-463823
   GCP_ZONE: southamerica-east1-a
   INSTANCE_NAME: minecraft-server-host
-  REMOTE_DIR: /mnt/data/minecraft
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -22,50 +21,14 @@ jobs:
       with:
         workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
         service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
-    - name: 'Prepare Configuration Files'
+    - name: 'Prepare and Copy docker-compose.yml'
       run: |
-        echo "Generating configuration files..."
-        mkdir -p terraform/config
-        echo "${{ secrets.VELOCITY_FORWARDING_SECRET }}" > terraform/config/forwarding.secret
-        cp terraform/templates/velocity.toml.tpl terraform/config/velocity.toml
-        cp terraform/templates/docker-compose.yml.tpl terraform/docker-compose.yml
-    - name: 'Copy Configuration Files to VM'
-      run: |
-        gcloud compute scp \
-          terraform/docker-compose.yml \
-          terraform/config/velocity.toml \
-          terraform/config/forwarding.secret \
-          ${{ env.INSTANCE_NAME }}:~ \
-          --project=${{ env.GCP_PROJECT_ID }} --zone=${{ env.GCP_ZONE }} --tunnel-through-iap
-    - name: 'Initial Server Setup and Deploy'
+        cp terraform/templates/docker-compose.yml.tpl docker-compose.yml
+        gcloud compute scp docker-compose.yml ${{ env.INSTANCE_NAME }}:~ --project=${{ env.GCP_PROJECT_ID }} --zone=${{ env.GCP_ZONE }} --tunnel-through-iap
+    - name: 'Deploy Services on VM'
       run: |
         gcloud compute ssh ${{ env.INSTANCE_NAME }} --zone ${{ env.GCP_ZONE }} --project=${{ env.GCP_PROJECT_ID }} --tunnel-through-iap -- \
-        "sudo mkdir -p ${{ env.REMOTE_DIR }}/config && \
-         sudo mv ~/docker-compose.yml ${{ env.REMOTE_DIR }}/ && \
-         sudo mv ~/velocity.toml ${{ env.REMOTE_DIR }}/config/ && \
-         sudo mv ~/forwarding.secret ${{ env.REMOTE_DIR }}/config/ && \
-         cd ${{ env.REMOTE_DIR }} && \
-         \
-         echo 'Starting Paper service to generate configs...' && \
-         sudo docker compose up -d paper && \
-         \
-         echo 'Waiting for server.properties to be created...' && \
-         timeout=90 && start_time=\$(date +%s) && file_path='/var/lib/docker/volumes/minecraft_paper-data/_data/server.properties' && \
-         while ! sudo test -f \$file_path; do \
-           current_time=\$(date +%s) && elapsed_time=\$((current_time - start_time)) && \
-           if [ \$elapsed_time -ge \$timeout ]; then \
-             echo 'ERROR: Timed out waiting for server.properties.' && sudo docker logs paper-server && exit 1; \
-           fi; \
-           sleep 5; echo -n '.'; \
-         done && \
-         \
-         echo 'Paper config files created. Stopping service for modification...' && \
-         sudo docker compose stop paper && \
-         \
-         echo 'Configuring Paper to trust Velocity...' && \
-         sudo sed -i 's/online-mode=true/online-mode=false/g' \$file_path && \
-         SECRET_KEY=\$(cat ${{ env.REMOTE_DIR }}/config/forwarding.secret) && \
-         echo -e '\\nproxies:\\n  velocity:\\n    enabled: true\\n    online-mode: true\\n    secret: \"'\$SECRET_KEY'\"' | sudo tee -a /var/lib/docker/volumes/minecraft_paper-data/_data/config/paper-global.yml > /dev/null && \
-         \
-         echo 'Restarting all services with final configuration...' && \
+        "sudo mkdir -p /mnt/data/minecraft && \
+         sudo mv ~/docker-compose.yml /mnt/data/minecraft/ && \
+         cd /mnt/data/minecraft && \
          sudo docker compose up -d --force-recreate"
