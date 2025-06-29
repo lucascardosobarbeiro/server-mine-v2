@@ -1,40 +1,32 @@
-# A linha 'version' foi removida.
+# A linha 'version' foi removida para seguir as práticas modernas do Docker Compose.
 networks:
   minecraft-net:
     driver: bridge
 
-volumes:
-  # Definimos os volumes que irão persistir os dados e configurações.
-  paper-data:
-  velocity-data:
-
 services:
-  velocity:
-    # IMAGEM OFICIAL E MINIMALISTA DO VELOCITY
-    image: papermc/velocity:latest
-    container_name: velocity-proxy
+  # O serviço do proxy foi completamente removido.
+
+  mc-sobrevivencia:
+    image: itzg/minecraft-server
+    container_name: mc-sobrevivencia
     restart: unless-stopped
+    
+    # --- MUDANÇA CRÍTICA ---
+    # Expomos a porta do servidor de jogo diretamente para o mundo exterior.
     ports:
       - "25565:25565"
-    volumes:
-      # Montamos um volume dedicado para os dados/configurações do Velocity.
-      # A configuração será feita manualmente aqui.
-      - velocity-data:/app
-    networks:
-      - "minecraft-net"
-    depends_on:
-      - paper
 
-  paper:
-    # IMAGEM OFICIAL E MINIMALISTA DO PAPER
-    image: papermc/paper:latest
-    container_name: paper-server
-    restart: unless-stopped
     volumes:
-      # Montamos um volume dedicado para os dados/configurações do Paper.
-      - paper-data:/app
+      - ./sobrevivencia-data:/data
+      
     environment:
-      # A imagem 'papermc/paper' usa esta variável para definir a memória.
+      EULA: "TRUE"
+      TYPE: "PAPER"
       MEMORY: "10G"
+      
+      # --- MUDANÇA CRÍTICA ---
+      # O servidor agora fará sua própria autenticação (modo premium).
+      ONLINE_MODE: "true"
+      
     networks:
       - "minecraft-net"
