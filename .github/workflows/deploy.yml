@@ -25,15 +25,19 @@ jobs:
         service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
     - name: 'Install NumPy to improve IAP tunnel performance'
       run: python -m pip install numpy
-    - name: 'Prepare configuration files'
+      
+    # --- MUDANÇA ASSERTIVA ---
+    # Removemos o passo de "Prepare" que usava templates.
+    # A única coisa que geramos é o ficheiro de segredo.
+    - name: 'Create Secret File'
       run: |
-        echo "Generating configuration files..."
+        echo "Generating secret file from GitHub Secret..."
         mkdir -p terraform/config
         echo "${{ secrets.VELOCITY_FORWARDING_SECRET }}" > terraform/config/forwarding.secret
-        cp terraform/templates/docker-compose.yml.tpl terraform/docker-compose.yml
-    - name: 'Copy configuration files to VM'
+
+    - name: 'Copy Files to VM'
       run: |
-        echo "Copying configuration files to VM via IAP tunnel..."
+        echo "Copying docker-compose.yml and secret file to VM..."
         gcloud compute scp \
           terraform/docker-compose.yml \
           terraform/config/forwarding.secret \
@@ -42,20 +46,14 @@ jobs:
           --zone=${{ env.GCP_ZONE }} \
           --tunnel-through-iap
 
-    # --- CORREÇÃO FINAL E ASSERTIVA ---
     - name: 'Stop, Clean, and Restart Services on VM'
       run: |
         echo "Stopping old containers and cleaning environment..."
         gcloud compute ssh ${{ env.INSTANCE_NAME }} --zone ${{ env.GCP_ZONE }} --project=${{ env.GCP_PROJECT_ID }} --tunnel-through-iap -- \
         "sudo mkdir -p /mnt/data/minecraft/config && \
          cd /mnt/data/minecraft || true && \
-         \
-         echo 'Bringing down the previous stack and removing any orphan containers...' && \
          sudo docker compose down --remove-orphans && \
-         \
-         echo 'Moving new configuration into place...' && \
          sudo mv ~/docker-compose.yml /mnt/data/minecraft/ && \
          sudo mv ~/forwarding.secret /mnt/data/minecraft/config/ && \
-         \
          echo 'Starting new services...' && \
          sudo docker compose up -d"
