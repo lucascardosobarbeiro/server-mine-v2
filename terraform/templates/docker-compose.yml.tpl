@@ -1,26 +1,44 @@
-# A linha 'version' foi removida.
+# A linha 'version' foi removida para seguir as práticas modernas do Docker Compose.
 networks:
   minecraft-net:
     driver: bridge
 
 services:
-  velocity:
+  proxy:
+    # Usamos a imagem correta, itzg/mc-proxy, conforme a documentação.
     image: itzg/mc-proxy
     container_name: velocity-proxy
     restart: unless-stopped
     ports:
+      # Expõe a porta do proxy para o mundo exterior.
       - "25565:25565"
     environment:
+      # --- CONFIGURAÇÃO ASSERTIVA 100% VIA VARIÁVEIS DE AMBIENTE ---
+      # Define o tipo de proxy a ser executado.
       TYPE: "VELOCITY"
+      
+      # Força o modo online, como requisitado pela documentação do Velocity.
       VELOCITY_ONLINE_MODE: "true"
+      
+      # Habilita o modo de encaminhamento moderno e seguro.
       VELOCITY_PLAYER_INFO_FORWARDING_MODE: "MODERN"
+      
+      # Aponta para o ficheiro de segredo que o Docker Secrets irá montar.
       VELOCITY_FORWARDING_SECRET_PATH: "/run/secrets/velocity_secret"
+      
+      # A CHAVE: Diz ao Velocity para encontrar o servidor de jogo usando seu nome de serviço.
+      # O formato é "nome_no_velocity=nome_do_serviço_docker:porta".
       VELOCITY_SERVERS: "sobrevivencia=mc-sobrevivencia:25565"
+      
+      # Define o servidor padrão para onde os jogadores são enviados.
       VELOCITY_TRY_SERVERS: "sobrevivencia"
+
     secrets:
       - velocity_secret
     networks:
       - "minecraft-net"
+    # Garante que o servidor Paper esteja pronto antes do proxy tentar se conectar.
+    # CORREÇÃO: Aponta para o nome do serviço 'mc-sobrevivencia'.
     depends_on:
       mc-sobrevivencia:
         condition: service_healthy
@@ -29,27 +47,30 @@ services:
     image: itzg/minecraft-server
     container_name: mc-sobrevivencia
     restart: unless-stopped
+    # A porta do servidor Paper NÃO é mais exposta ao exterior.
     volumes:
       - ./sobrevivencia-data:/data
     environment:
       EULA: "TRUE"
       TYPE: "PAPER"
       MEMORY: "10G"
+      # O servidor Paper DEVE estar em modo offline para delegar a autenticação ao proxy.
       ONLINE_MODE: "false"
-      # Esta variável única configura corretamente o Paper para o proxy.
+      
+      # --- CONFIGURAÇÃO ASSERTIVA DO PAPER (conforme documentação do itzg e PaperMC) ---
+      # Esta única variável instrui a imagem a configurar TODOS os ficheiros
+      # necessários (spigot.yml, paper-global.yml) para aceitar uma conexão de proxy.
       BUNGEECORD: "TRUE"
+      
     secrets:
+      # O segredo ainda é necessário para o Velocity, mas a configuração
+      # principal é feita pela variável BUNGEECORD.
       - velocity_secret
     networks:
       - "minecraft-net"
-      
-    # --- A CORREÇÃO FINAL E ASSERTIVA ---
-    # Substituímos o healthcheck por um que verifica diretamente a porta 25565,
-    # um método universal e à prova de falhas.
     healthcheck:
-      # O 'nc' (netcat) tenta conectar-se a localhost na porta 25565.
-      # Se conseguir, retorna sucesso (código 0), e o serviço é considerado saudável.
-      test: ["CMD", "nc", "-z", "localhost", "25565"]
+      # Verificação de saúde compatível com a imagem itzg.
+      test: ["CMD", "mc-monitor", "status", "--host=localhost", "--port=25565"]
       interval: 10s
       timeout: 5s
       retries: 10
