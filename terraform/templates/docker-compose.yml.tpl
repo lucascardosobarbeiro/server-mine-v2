@@ -1,32 +1,29 @@
-# A linha 'version' foi removida para seguir as práticas modernas do Docker Compose.
+# A linha 'version' foi removida.
 networks:
   minecraft-net:
     driver: bridge
 
 services:
-  # O serviço do proxy foi completamente removido.
+  # O serviço 'proxy' foi removido para focar no servidor standalone.
 
   mc-sobrevivencia:
     image: itzg/minecraft-server
     container_name: mc-sobrevivencia
     restart: unless-stopped
-    
-    # --- MUDANÇA CRÍTICA ---
-    # Expomos a porta do servidor de jogo diretamente para o mundo exterior.
     ports:
       - "25565:25565"
-
     volumes:
       - ./sobrevivencia-data:/data
-      
+      # --- ADIÇÃO PARA PLUGINS ---
+      # Montamos o nosso ficheiro de lista de plugins dentro do contêiner.
+      - ./config/plugins.txt:/config/plugins.txt
     environment:
       EULA: "TRUE"
       TYPE: "PAPER"
       MEMORY: "10G"
-      
-      # --- MUDANÇA CRÍTICA ---
-      # O servidor agora fará sua própria autenticação (modo premium).
       ONLINE_MODE: "true"
-      
+      # --- ADIÇÃO PARA PLUGINS ---
+      # Dizemos ao script de inicialização para ler a nossa lista de plugins.
+      PLUGINS_FILE: "/config/plugins.txt"
     networks:
       - "minecraft-net"

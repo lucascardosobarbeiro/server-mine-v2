@@ -1,60 +1,64 @@
 name: Deploy Minecraft Server
-
 on:
   push:
     branches:
       - main
-
 env:
   GCP_PROJECT_ID: server-mine-463823
   GCP_ZONE: southamerica-east1-a
   INSTANCE_NAME: minecraft-server-host
   REMOTE_DIR: /mnt/data/minecraft
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: 'read'
       id-token: 'write'
-
     steps:
     - name: 'Checkout code'
       uses: 'actions/checkout@v4'
-
     - name: 'Authenticate to Google Cloud'
       id: 'auth'
       uses: 'google-github-actions/auth@v2'
       with:
         workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
         service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
-
     - name: 'Install NumPy to improve IAP tunnel performance'
       run: python -m pip install numpy
-
-    - name: 'Prepare configuration file'
+      
+    # --- MUDANÇA: Prepara a lista de plugins ---
+    - name: 'Prepare configuration files'
       run: |
-        echo "Generating standalone docker-compose.yml..."
+        echo "Generating configuration files..."
+        # Cria a pasta config se não existir, para o plugins.txt
+        mkdir -p terraform/config
+        # Cria um plugins.txt de exemplo se não existir, para o pipeline não falhar.
+        # Você deve substituir este ficheiro pelo seu próprio.
+        touch terraform/config/plugins.txt
         cp terraform/templates/docker-compose.yml.tpl terraform/docker-compose.yml
 
-    - name: 'Copy configuration file to VM'
+    # --- MUDANÇA: Copia a lista de plugins para a VM ---
+    - name: 'Copy configuration files to VM'
       run: |
-        echo "Copying docker-compose.yml to VM via IAP tunnel..."
+        echo "Copying configuration to VM via IAP tunnel..."
         gcloud compute scp \
           terraform/docker-compose.yml \
+          terraform/config/plugins.txt \
           ${{ env.INSTANCE_NAME }}:~ \
           --project=${{ env.GCP_PROJECT_ID }} \
           --zone=${{ env.GCP_ZONE }} \
           --tunnel-through-iap
-
+          
+    # --- MUDANÇA: Move a lista de plugins na VM ---
     - name: 'Stop, Clean, and Restart Service on VM'
       run: |
         echo "Stopping old containers and cleaning environment..."
-        gcloud compute ssh ${{ env.INSTANCE_NAME }} --zone ${{ env.GCP_ZONE }} --project ${{ env.GCP_PROJECT_ID }} --tunnel-through-iap -- \
-        "sudo mkdir -p /mnt/data/minecraft && \
+        gcloud compute ssh ${{ env.INSTANCE_NAME }} --zone ${{ env.GCP_ZONE }} --project=${{ env.GCP_PROJECT_ID }} --tunnel-through-iap -- \
+        "sudo mkdir -p /mnt/data/minecraft/config && \
          cd /mnt/data/minecraft || true && \
          sudo docker compose down && \
          sudo docker rm -f mc-sobrevivencia bungeecord-proxy velocity-proxy || true && \
          sudo mv ~/docker-compose.yml /mnt/data/minecraft/ && \
+         sudo mv ~/plugins.txt /mnt/data/minecraft/config/ && \
          echo 'Starting new service...' && \
          sudo docker compose up -d"
