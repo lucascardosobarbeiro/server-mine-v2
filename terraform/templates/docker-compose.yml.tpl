@@ -1,56 +1,46 @@
+# A linha 'version' foi removida.
 networks:
   minecraft-net:
     driver: bridge
 
+volumes:
+  paper-data:
+
 services:
-  proxy:
-    image: itzg/mc-proxy
+  velocity:
+    # IMAGEM OFICIAL E MINIMALISTA DO VELOCITY
+    image: papermc/velocity:latest
     container_name: velocity-proxy
     restart: unless-stopped
     ports:
       - "25565:25565"
-    environment:
-      # --- CONFIGURAÇÃO ASSERTIVA 100% VIA VARIÁVEIS DE AMBIENTE ---
-      TYPE: "VELOCITY"
-      VELOCITY_ONLINE_MODE: "true"
-      VELOCITY_PLAYER_INFO_FORWARDING_MODE: "MODERN"
-      VELOCITY_FORWARDING_SECRET_PATH: "/run/secrets/velocity_secret"
-      VELOCITY_SERVERS: "sobrevivencia=mc-sobrevivencia:25565"
-      VELOCITY_TRY_SERVERS: "sobrevivencia"
-    secrets:
-      - velocity_secret
+    volumes:
+      # Montamos os nossos ficheiros de configuração diretamente nos locais que a imagem espera.
+      - ./config/velocity.toml:/velocity/velocity.toml
+      - ./config/forwarding.secret:/velocity/forwarding.secret
     networks:
       - "minecraft-net"
     depends_on:
-      mc-sobrevivencia:
+      paper:
         condition: service_healthy
 
-  mc-sobrevivencia:
-    image: itzg/minecraft-server
-    container_name: mc-sobrevivencia
+  paper:
+    # IMAGEM OFICIAL E MINIMALISTA DO PAPER
+    image: papermc/paper:latest
+    container_name: paper-server
     restart: unless-stopped
     volumes:
-      - ./sobrevivencia-data:/data
+      # Montamos um volume dedicado para os dados do jogo.
+      - paper-data:/app
     environment:
-      EULA: "TRUE"
-      TYPE: "PAPER"
+      # A imagem 'papermc/paper' usa esta variável para definir a memória.
       MEMORY: "10G"
-      ONLINE_MODE: "false"
-      # Esta única variável instrui a imagem a configurar TODOS os ficheiros
-      # necessários para aceitar uma conexão de proxy.
-      BUNGEECORD: "TRUE"
-    secrets:
-      - velocity_secret
     networks:
       - "minecraft-net"
     healthcheck:
-      # Verificação de saúde compatível com a imagem itzg.
-      test: ["CMD", "mc-monitor", "status", "--host=localhost", "--port=25565"]
+      # Esta imagem vem com uma ferramenta de verificação de saúde.
+      test: ["CMD", "mc-health"]
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 30s
-
-secrets:
-  velocity_secret:
-    file: ./config/forwarding.secret
+      start_period: 60s
