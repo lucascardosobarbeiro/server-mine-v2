@@ -12,10 +12,10 @@ services:
     ports:
       - "25565:25565"
     # --- CORREÇÃO FINAL E ASSERTIVA ---
-    # Montamos cada ficheiro individualmente para garantir que sejam lidos.
+    # Montamos a nossa pasta de config local diretamente para /velocity no contêiner.
+    # Isto coloca velocity.toml e forwarding.secret no local que a imagem espera.
     volumes:
-      - ./config/velocity.toml:/velocity/velocity.toml
-      - ./config/forwarding.secret:/velocity/forwarding.secret
+      - ./config:/velocity
     networks:
       - "minecraft-net"
 

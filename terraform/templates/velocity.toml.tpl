@@ -13,7 +13,8 @@
 
 # Aponta para o local correto do ficheiro de segredo.
 [forwarding]
-  secret-file = "/velocity/config/forwarding.secret"
+  # O caminho agora é relativo ao diretório /velocity dentro do contêiner.
+  secret-file = "forwarding.secret"
 
 # Desativa a recolha de métricas.
 [metrics]
