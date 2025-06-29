@@ -6,22 +6,20 @@ networks:
 
 services:
   velocity:
-    # Usamos a tag 'latest' da imagem oficial para agilidade e atualizações.
     image: papermc/velocity:latest
     container_name: velocity-proxy
     restart: unless-stopped
     ports:
       - "25565:25565"
-    volumes:
-      # Montamos a nossa pasta de config local diretamente para /velocity no contêiner.
-      # Isto coloca velocity.toml e forwarding.secret no local que o processo Java espera.
-      - ./config:/velocity
     
     # --- A MUDANÇA ASSERTIVA E FINAL ---
-    # Ignoramos qualquer script de inicialização e executamos o Java diretamente.
-    # Isto garante que os nossos ficheiros de configuração sejam lidos.
-    working_dir: /velocity
-    command: java -jar velocity.jar
+    # Montamos cada ficheiro individualmente nos seus locais padrão dentro do contêiner.
+    # O diretório de trabalho padrão é /velocity.
+    volumes:
+      - ./config/velocity.toml:/velocity/velocity.toml
+      - ./config/forwarding.secret:/velocity/forwarding.secret
+    
+    # NÃO definimos 'command' ou 'working_dir', para deixar o script da imagem funcionar.
     
     networks:
       - "minecraft-net"
@@ -37,7 +35,7 @@ services:
       TYPE: "PAPER"
       MEMORY: "10G"
       ONLINE_MODE: "false"
-      # A configuração do Paper para receber a conexão do proxy está correta e permanece.
+      # A configuração do Paper está correta e permanece a mesma.
       YAML_MODS: |
         - file: config/paper-global.yml
           path: proxies.velocity.enabled
