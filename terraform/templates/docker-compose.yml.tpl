@@ -20,7 +20,7 @@ services:
       - "minecraft-net"
     depends_on:
       paper:
-        condition: service_healthy # Adicionada condição de saúde para estabilidade
+        condition: service_healthy
 
   paper:
     image: papermc/paper:latest
@@ -28,16 +28,17 @@ services:
     restart: unless-stopped
     volumes:
       - paper-data:/app
-      
-    # --- CORREÇÃO FINAL E ASSERTIVA ---
-    # Usamos a variável de ambiente documentada para alocar memória,
-    # em vez de substituir o comando de arranque.
     environment:
       EULA: "true"
-      MEMORY: "10G" # Ex: "10G", "2048M"
-      
-    # --- REMOVIDO ---
-    # O 'command' customizado foi removido para deixar a imagem usar o seu padrão.
-    
+      MEMORY: "10G"
     networks:
       - "minecraft-net"
+      
+    # --- CORREÇÃO FINAL E ASSERTIVA ---
+    # Adicionamos uma verificação de saúde para que o 'depends_on' funcione.
+    # O Docker irá verificar se a porta 25565 está a aceitar conexões dentro do contêiner.
+    healthcheck:
+      test: ["CMD", "mc-health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
