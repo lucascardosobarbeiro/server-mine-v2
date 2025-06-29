@@ -6,6 +6,7 @@ networks:
 
 services:
   velocity:
+    # Usamos a tag 'latest' da imagem oficial para agilidade e atualizações.
     image: papermc/velocity:latest
     container_name: velocity-proxy
     restart: unless-stopped
@@ -13,11 +14,12 @@ services:
       - "25565:25565"
     volumes:
       # Montamos a nossa pasta de config local diretamente para /velocity no contêiner.
-      # Isto coloca velocity.toml e forwarding.secret no local que a imagem espera.
+      # Isto coloca velocity.toml e forwarding.secret no local que o processo Java espera.
       - ./config:/velocity
     
-    # --- A MUDANÇA ASSERTIVA ---
+    # --- A MUDANÇA ASSERTIVA E FINAL ---
     # Ignoramos qualquer script de inicialização e executamos o Java diretamente.
+    # Isto garante que os nossos ficheiros de configuração sejam lidos.
     working_dir: /velocity
     command: java -jar velocity.jar
     
@@ -35,6 +37,7 @@ services:
       TYPE: "PAPER"
       MEMORY: "10G"
       ONLINE_MODE: "false"
+      # A configuração do Paper para receber a conexão do proxy está correta e permanece.
       YAML_MODS: |
         - file: config/paper-global.yml
           path: proxies.velocity.enabled
