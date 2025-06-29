@@ -12,7 +12,6 @@ services:
     ports:
       - "25565:25565"
     environment:
-      # --- CONFIGURAÇÃO ASSERTIVA 100% VIA VARIÁVEIS DE AMBIENTE ---
       TYPE: "VELOCITY"
       VELOCITY_ONLINE_MODE: "true"
       VELOCITY_PLAYER_INFO_FORWARDING_MODE: "MODERN"
@@ -37,8 +36,22 @@ services:
       EULA: "TRUE"
       TYPE: "PAPER"
       MEMORY: "10G"
-      # O servidor Paper DEVE estar em modo offline para delegar a autenticação.
       ONLINE_MODE: "false"
-      
-      # --- A CORREÇÃO FINAL ---
-      # Esta única variável instrui a imagem a configurar TODOS os ficheiros
+      BUNGEECORD: "TRUE"
+    secrets:
+      - velocity_secret
+    networks:
+      - "minecraft-net"
+    healthcheck:
+      test: ["CMD", "mc-monitor", "status", "--host=localhost", "--port=25565"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+# --- CORREÇÃO FINAL E ASSERTIVA ---
+# Esta secção de nível superior define o segredo, tornando-o disponível
+# para todos os serviços que o referenciam.
+secrets:
+  velocity_secret:
+    file: ./config/forwarding.secret
