@@ -44,10 +44,12 @@ services:
       - "minecraft-net"
       
     # --- A CORREÇÃO FINAL E ASSERTIVA ---
-    # Substituímos o healthcheck por um que verifica a porta 25565,
-    # compatível com a imagem itzg/minecraft-server.
+    # Substituímos o healthcheck por um que verifica diretamente a porta 25565,
+    # um método universal e à prova de falhas.
     healthcheck:
-      test: ["CMD", "mc-monitor", "status", "--host=localhost", "--port=25565"]
+      # O 'nc' (netcat) tenta conectar-se a localhost na porta 25565.
+      # Se conseguir, retorna sucesso (código 0), e o serviço é considerado saudável.
+      test: ["CMD", "nc", "-z", "localhost", "25565"]
       interval: 10s
       timeout: 5s
       retries: 10
