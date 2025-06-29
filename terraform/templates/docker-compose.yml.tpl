@@ -1,42 +1,44 @@
-# A linha 'version' foi removida para seguir as práticas modernas do Docker Compose.
+# A linha 'version' foi removida para seguir as práticas modernas.
 networks:
   minecraft-net:
     driver: bridge
 
-volumes:
-  # Definimos os volumes que irão persistir os dados e configurações.
-  paper-data:
-  velocity-data:
-
 services:
-  velocity:
-    # IMAGEM OFICIAL E MINIMALISTA DO VELOCITY
-    image: papermc/velocity:latest
+  proxy:
+    # Usamos a imagem correta, itzg/mc-proxy, conforme a documentação.
+    image: itzg/mc-proxy
     container_name: velocity-proxy
     restart: unless-stopped
     ports:
       - "25565:25565"
-    volumes:
-      # Montamos um volume dedicado para os dados/configurações do Velocity.
-      # A configuração será feita manualmente aqui.
-      - velocity-data:/app
+    environment:
+      # --- CONFIGURAÇÃO ASSERTIVA 100% VIA VARIÁVEIS DE AMBIENTE ---
+      TYPE: "VELOCITY"
+      VELOCITY_ONLINE_MODE: "true"
+      VELOCITY_PLAYER_INFO_FORWARDING_MODE: "MODERN"
+      VELOCITY_FORWARDING_SECRET_PATH: "/run/secrets/velocity_secret"
+      VELOCITY_SERVERS: "sobrevivencia=mc-sobrevivencia:25565"
+      VELOCITY_TRY_SERVERS: "sobrevivencia"
+    secrets:
+      - velocity_secret
     networks:
       - "minecraft-net"
     depends_on:
-      - paper
+      mc-sobrevivencia:
+        condition: service_healthy
 
-  # --- A CORREÇÃO FINAL ESTÁ AQUI ---
-  # O nome do serviço agora é 'paper', exatamente como o pipeline espera.
-  paper:
-    # IMAGEM OFICIAL E MINIMALISTA DO PAPER
-    image: papermc/paper:latest
-    container_name: paper-server
+  mc-sobrevivencia:
+    image: itzg/minecraft-server
+    container_name: mc-sobrevivencia
     restart: unless-stopped
     volumes:
-      # Montamos um volume dedicado para os dados/configurações do Paper.
-      - paper-data:/app
+      - ./sobrevivencia-data:/data
     environment:
-      # A imagem 'papermc/paper' usa esta variável para definir a memória.
+      EULA: "TRUE"
+      TYPE: "PAPER"
       MEMORY: "10G"
-    networks:
-      - "minecraft-net"
+      # O servidor Paper DEVE estar em modo offline para delegar a autenticação.
+      ONLINE_MODE: "false"
+      
+      # --- A CORREÇÃO FINAL ---
+      # Esta única variável instrui a imagem a configurar TODOS os ficheiros
