@@ -1,4 +1,4 @@
-name: Deploy Minecraft Server Updates
+name: Deploy Minecraft Services
 on:
   push:
     branches:
@@ -7,7 +7,6 @@ env:
   GCP_PROJECT_ID: server-mine-463823
   GCP_ZONE: southamerica-east1-a
   INSTANCE_NAME: minecraft-server-host
-  REMOTE_DIR: /mnt/data/minecraft
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -18,38 +17,18 @@ jobs:
     - name: 'Checkout code'
       uses: 'actions/checkout@v4'
     - name: 'Authenticate to Google Cloud'
-      id: 'auth'
       uses: 'google-github-actions/auth@v2'
       with:
         workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
         service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
-    - name: 'Install NumPy to improve IAP tunnel performance'
-      run: python -m pip install numpy
-    - name: 'Prepare configuration files'
+    - name: 'Prepare and Copy docker-compose.yml'
       run: |
-        echo "Generating configuration files..."
-        mkdir -p terraform/config
-        echo "${{ secrets.VELOCITY_FORWARDING_SECRET }}" > terraform/config/forwarding.secret
-        cp terraform/templates/docker-compose.yml.tpl terraform/docker-compose.yml
-    - name: 'Copy configuration files to VM'
+        cp terraform/templates/docker-compose.yml.tpl docker-compose.yml
+        gcloud compute scp docker-compose.yml ${{ env.INSTANCE_NAME }}:~ --project=${{ env.GCP_PROJECT_ID }} --zone=${{ env.GCP_ZONE }} --tunnel-through-iap
+    - name: 'Deploy Services on VM'
       run: |
-        echo "Copying configuration files to VM via IAP tunnel..."
-        gcloud compute scp \
-          terraform/docker-compose.yml \
-          terraform/config/forwarding.secret \
-          ${{ env.INSTANCE_NAME }}:~ \
-          --project=${{ env.GCP_PROJECT_ID }} \
-          --zone=${{ env.GCP_ZONE }} \
-          --tunnel-through-iap
-    - name: 'Stop, Clean, and Restart Services on VM'
-      run: |
-        echo "Stopping old containers and cleaning environment..."
         gcloud compute ssh ${{ env.INSTANCE_NAME }} --zone ${{ env.GCP_ZONE }} --project=${{ env.GCP_PROJECT_ID }} --tunnel-through-iap -- \
-        "sudo mkdir -p /mnt/data/minecraft/config && \
-         cd /mnt/data/minecraft || true && \
-         sudo docker compose down && \
-         sudo docker rm -f mc-sobrevivencia velocity-proxy || true && \
+        "sudo mkdir -p /mnt/data/minecraft && \
          sudo mv ~/docker-compose.yml /mnt/data/minecraft/ && \
-         sudo mv ~/forwarding.secret /mnt/data/minecraft/config/ && \
-         echo 'Starting new services...' && \
-         sudo docker compose up -d"
+         cd /mnt/data/minecraft && \
+         sudo docker compose up -d --force-recreate"
