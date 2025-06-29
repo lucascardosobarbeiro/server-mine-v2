@@ -1,43 +1,62 @@
+# A linha 'version' foi removida.
 networks:
   minecraft-net:
     driver: bridge
 
-volumes:
-  paper-data:
-
 services:
-  velocity:
-    # IMAGEM OFICIAL E MINIMALISTA DO VELOCITY
-    image: papermc/velocity:latest
+  proxy:
+    # Usamos a imagem correta, itzg/mc-proxy, conforme a documentação.
+    image: itzg/mc-proxy
     container_name: velocity-proxy
     restart: unless-stopped
     ports:
       - "25565:25565"
-    volumes:
-      # Montamos cada ficheiro individualmente para garantir que sejam lidos.
-      - ./config/velocity.toml:/velocity/velocity.toml
-      - ./config/forwarding.secret:/velocity/forwarding.secret
+    environment:
+      # --- CONFIGURAÇÃO ASSERTIVA 100% VIA VARIÁVEIS DE AMBIENTE ---
+      TYPE: "VELOCITY"
+      VELOCITY_ONLINE_MODE: "true"
+      VELOCITY_PLAYER_INFO_FORWARDING_MODE: "MODERN"
+      VELOCITY_FORWARDING_SECRET_PATH: "/run/secrets/velocity_secret"
+      VELOCITY_SERVERS: "sobrevivencia=mc-sobrevivencia:25565"
+      VELOCITY_TRY_SERVERS: "sobrevivencia"
+    secrets:
+      - velocity_secret
     networks:
       - "minecraft-net"
     depends_on:
-      paper:
+      mc-sobrevivencia:
         condition: service_healthy
 
-  paper:
-    # IMAGEM OFICIAL E MINIMALISTA DO PAPER
-    image: papermc/paper:latest
-    container_name: paper-server
+  mc-sobrevivencia:
+    image: itzg/minecraft-server
+    container_name: mc-sobrevivencia
     restart: unless-stopped
     volumes:
-      - paper-data:/app
+      - ./sobrevivencia-data:/data
     environment:
-      # A imagem 'papermc/paper' usa esta variável para definir a memória.
+      EULA: "TRUE"
+      TYPE: "PAPER"
       MEMORY: "10G"
+      # O servidor Paper DEVE estar em modo offline para delegar a autenticação.
+      ONLINE_MODE: "false"
+      # Esta variável única configura corretamente o Paper para o proxy.
+      BUNGEECORD: "TRUE"
+    secrets:
+      - velocity_secret
     networks:
       - "minecraft-net"
+      
+    # --- A CORREÇÃO FINAL E ASSERTIVA ---
+    # Substituímos o healthcheck por um que usa a ferramenta 'mc-monitor',
+    # que vem incluída na imagem itzg/minecraft-server e é a forma documentada.
     healthcheck:
-      # Esta imagem vem com uma ferramenta de verificação de saúde.
-      test: ["CMD", "mc-health"]
+      test: ["CMD", "mc-monitor", "status", "--host=localhost", "--port=25565"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
+
+# A seção 'secrets' global para o forwarding.secret.
+secrets:
+  velocity_secret:
+    file: ./config/forwarding.secret
