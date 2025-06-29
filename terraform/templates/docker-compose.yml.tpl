@@ -6,34 +6,17 @@ networks:
 
 services:
   velocity:
-    # Voltamos para a imagem itzg, que é altamente configurável via 'env'.
-    image: itzg/bungeecord
+    # Usamos a imagem oficial para máxima compatibilidade e previsibilidade.
+    image: papermc/velocity:latest
     container_name: velocity-proxy
     restart: unless-stopped
     ports:
       - "25565:25565"
-    
-    # --- A MUDANÇA ASSERTIVA E FINAL ---
-    # Configuramos TUDO via variáveis de ambiente. A imagem irá gerar o seu
-    # próprio velocity.toml internamente com base nestas instruções.
-    environment:
-      TYPE: "VELOCITY"
-      # Força a porta correta.
-      SERVER_PORT: "25565"
-      # Define o modo de encaminhamento de jogador.
-      VELOCITY_PLAYER_INFO_FORWARDING_MODE: "MODERN"
-      # Aponta para o ficheiro de segredo que vamos montar.
-      VELOCITY_FORWARDING_SECRET_PATH: "/server/forwarding.secret"
-      # Define o servidor de backend.
-      VELOCITY_SERVERS: "sobrevivencia=sobrevivencia:25565"
-      # Define o servidor padrão para onde os jogadores são enviados.
-      VELOCITY_TRY_SERVERS: "sobrevivencia"
-
-    # Montamos apenas o ficheiro de segredo, sem a flag 'read-only'
-    # para evitar o erro de permissão 'chown' que tivemos no início.
     volumes:
-      - ./config/forwarding.secret:/server/forwarding.secret
-
+      # Montamos cada ficheiro individualmente para garantir que sejam lidos
+      # nos seus locais padrão, sem ambiguidade.
+      - ./config/velocity.toml:/velocity/velocity.toml
+      - ./config/forwarding.secret:/velocity/forwarding.secret
     networks:
       - "minecraft-net"
 
@@ -47,15 +30,20 @@ services:
       EULA: "TRUE"
       TYPE: "PAPER"
       MEMORY: "10G"
+      # O servidor Paper DEVE estar em modo offline para delegar a autenticação ao proxy.
       ONLINE_MODE: "false"
-      # A configuração do Paper está correta e permanece a mesma.
+      
+      # --- CONFIGURAÇÃO ASSERTIVA BASEADA NA DOCUMENTAÇÃO ---
+      # Injeta a configuração de proxy diretamente no ficheiro paper-global.yml.
       YAML_MODS: |
         - file: config/paper-global.yml
           path: proxies.velocity.enabled
           value: true
+        # Esta linha alinha o estado online do Paper (para o proxy) com o do Velocity.
         - file: config/paper-global.yml
           path: proxies.velocity.online-mode
           value: true
+        # Lê o segredo do ficheiro montado pelo Docker Secrets.
         - file: config/paper-global.yml
           path: proxies.velocity.secret
           value: !!str `cat /run/secrets/velocity_secret`
