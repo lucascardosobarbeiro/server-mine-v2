@@ -1,82 +1,49 @@
-# A linha 'version' foi removida para seguir as práticas modernas do Docker Compose.
+# A linha 'version' foi removida.
 networks:
   minecraft-net:
     driver: bridge
 
+volumes:
+  paper-data:
+
 services:
-  proxy:
-    # Usamos a imagem correta, itzg/mc-proxy, conforme a documentação.
-    image: itzg/mc-proxy
+  velocity:
+    image: papermc/velocity:latest
     container_name: velocity-proxy
     restart: unless-stopped
     ports:
-      # Expõe a porta do proxy para o mundo exterior.
       - "25565:25565"
-    environment:
-      # --- CONFIGURAÇÃO ASSERTIVA 100% VIA VARIÁVEIS DE AMBIENTE ---
-      # Define o tipo de proxy a ser executado.
-      TYPE: "VELOCITY"
-      
-      # Força o modo online, como requisitado pela documentação do Velocity.
-      VELOCITY_ONLINE_MODE: "true"
-      
-      # Habilita o modo de encaminhamento moderno e seguro.
-      VELOCITY_PLAYER_INFO_FORWARDING_MODE: "MODERN"
-      
-      # Aponta para o ficheiro de segredo que o Docker Secrets irá montar.
-      VELOCITY_FORWARDING_SECRET_PATH: "/run/secrets/velocity_secret"
-      
-      # A CHAVE: Diz ao Velocity para encontrar o servidor de jogo usando seu nome de serviço.
-      # O formato é "nome_no_velocity=nome_do_serviço_docker:porta".
-      VELOCITY_SERVERS: "sobrevivencia=mc-sobrevivencia:25565"
-      
-      # Define o servidor padrão para onde os jogadores são enviados.
-      VELOCITY_TRY_SERVERS: "sobrevivencia"
+    volumes:
+      # Montamos cada ficheiro individualmente para garantir que estejam no local correto.
+      - ./config/velocity.toml:/velocity/velocity.toml
+      - ./config/forwarding.secret:/velocity/forwarding.secret
+    
+    # --- A CORREÇÃO FINAL BASEADA NA ISSUE #1347 ---
+    # Tomamos controlo do comando para adicionar o argumento '--velocity-config'.
+    # Isto FORÇA o Velocity a ler o nosso ficheiro de configuração.
+    working_dir: /velocity
+    command: >
+      java -jar velocity.jar --velocity-config /velocity/velocity.toml
 
-    secrets:
-      - velocity_secret
     networks:
       - "minecraft-net"
-    # Garante que o servidor Paper esteja pronto antes do proxy tentar se conectar.
-    # CORREÇÃO: Aponta para o nome do serviço 'mc-sobrevivencia'.
     depends_on:
-      mc-sobrevivencia:
+      paper:
         condition: service_healthy
 
-  mc-sobrevivencia:
-    image: itzg/minecraft-server
-    container_name: mc-sobrevivencia
+  paper:
+    image: papermc/paper:latest
+    container_name: paper-server
     restart: unless-stopped
-    # A porta do servidor Paper NÃO é mais exposta ao exterior.
     volumes:
-      - ./sobrevivencia-data:/data
+      - paper-data:/app
     environment:
-      EULA: "TRUE"
-      TYPE: "PAPER"
       MEMORY: "10G"
-      # O servidor Paper DEVE estar em modo offline para delegar a autenticação ao proxy.
-      ONLINE_MODE: "false"
-      
-      # --- CONFIGURAÇÃO ASSERTIVA DO PAPER (conforme documentação do itzg e PaperMC) ---
-      # Esta única variável instrui a imagem a configurar TODOS os ficheiros
-      # necessários (spigot.yml, paper-global.yml) para aceitar uma conexão de proxy.
-      BUNGEECORD: "TRUE"
-      
-    secrets:
-      # O segredo ainda é necessário para o Velocity, mas a configuração
-      # principal é feita pela variável BUNGEECORD.
-      - velocity_secret
     networks:
       - "minecraft-net"
     healthcheck:
-      # Verificação de saúde compatível com a imagem itzg.
-      test: ["CMD", "mc-monitor", "status", "--host=localhost", "--port=25565"]
+      # A verificação de saúde correta para a imagem oficial do Paper.
+      test: ["CMD", "mc-health"]
       interval: 10s
       timeout: 5s
-      retries: 10
-      start_period: 30s
-
-# A seção 'secrets' global para o forwarding.secret.
-secrets:
-  velocity_secret:
-    file: ./config/forwarding.secret
+      retries: 5
