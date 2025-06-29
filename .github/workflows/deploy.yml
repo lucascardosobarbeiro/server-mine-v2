@@ -50,7 +50,7 @@ jobs:
           --tunnel-through-iap
 
     # --- CORREÇÃO FINAL E ASSERTIVA ---
-    - name: 'Initial Server Setup and Deploy'
+    - name: 'Deploy Services and Apply Runtime Configuration'
       run: |
         gcloud compute ssh ${{ env.INSTANCE_NAME }} --zone ${{ env.GCP_ZONE }} --project=${{ env.GCP_PROJECT_ID }} --tunnel-through-iap -- \
         "sudo mkdir -p ${{ env.REMOTE_DIR }}/config && \
@@ -59,33 +59,20 @@ jobs:
          sudo mv ~/forwarding.secret ${{ env.REMOTE_DIR }}/config/ && \
          cd ${{ env.REMOTE_DIR }} && \
          \
-         echo 'Starting Paper service to generate configs...' && \
-         sudo docker compose up -d paper && \
+         echo 'Starting/updating all services...' && \
+         sudo docker compose up -d --force-recreate && \
          \
-         echo 'Waiting for server.properties to be created...' && \
-         timeout=90 && \
-         start_time=\$(date +%s) && \
-         file_path='/var/lib/docker/volumes/minecraft_paper-data/_data/server.properties' && \
-         while ! sudo test -f \$file_path; do \
-           current_time=\$(date +%s) && \
-           elapsed_time=\$((current_time - start_time)) && \
-           if [ \$elapsed_time -ge \$timeout ]; then \
-             echo 'ERROR: Timed out waiting for server.properties.' && \
-             echo '--- Displaying Paper server logs for debugging ---' && \
-             sudo docker logs paper-server && \
-             exit 1; \
-           fi; \
-           sleep 5; \
-           echo 'Still waiting...'; \
-         done && \
+         echo 'Waiting for Paper server to become healthy...' && \
+         timeout 90s bash -c 'while [[ \"\$(sudo docker inspect -f {{.State.Health.Status}} paper-server)\" != \"healthy\" ]]; do echo -n . && sleep 5; done' || \
+           (echo 'ERROR: Timed out waiting for Paper server to become healthy. Displaying logs...' && sudo docker logs paper-server && exit 1) && \
          \
-         echo 'Paper config files created. Stopping service for modification...' && \
-         sudo docker compose stop paper && \
-         \
-         echo 'Configuring Paper to trust Velocity...' && \
-         sudo sed -i 's/online-mode=true/online-mode=false/g' \$file_path && \
+         echo 'Paper server is healthy. Applying runtime configurations...' && \
+         sudo docker compose exec paper rcon-cli op ${{ vars.MINECRAFT_ADMIN_USER || 'SeuNomeDeUsuario' }} && \
+         sudo docker compose exec paper rcon-cli paper config set proxies.velocity.enabled true && \
+         sudo docker compose exec paper rcon-cli paper config set proxies.velocity.online-mode true && \
          SECRET_KEY=\$(cat ${{ env.REMOTE_DIR }}/config/forwarding.secret) && \
-         echo -e '\\nproxies:\\n  velocity:\\n    enabled: true\\n    online-mode: true\\n    secret: \"'\$SECRET_KEY'\"' | sudo tee -a /var/lib/docker/volumes/minecraft_paper-data/_data/config/paper-global.yml > /dev/null && \
+         sudo docker compose exec paper rcon-cli paper config set proxies.velocity.secret \"\$SECRET_KEY\" && \
          \
-         echo 'Restarting all services with final configuration...' && \
-         sudo docker compose up -d --force-recreate"
+         echo 'Configuration applied. Restarting Paper server to apply changes...' && \
+         sudo docker compose restart paper && \
+         echo 'Deployment finished successfully!'"
