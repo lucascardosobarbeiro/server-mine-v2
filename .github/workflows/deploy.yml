@@ -33,11 +33,9 @@ jobs:
       run: |
         echo "Generating all configuration files..."
         mkdir -p terraform/config
-        # Gera os ficheiros do proxy
         echo "${{ secrets.VELOCITY_FORWARDING_SECRET }}" > terraform/config/forwarding.secret
         cp terraform/templates/velocity.toml.tpl terraform/config/velocity.toml
         sed -i 's/__SERVER_IP__/${{ env.SERVER_IP }}/g' terraform/config/velocity.toml
-        # Gera o docker-compose
         cp terraform/templates/docker-compose.yml.tpl terraform/docker-compose.yml
     - name: 'Copy Configuration Files to VM'
       run: |
@@ -50,6 +48,8 @@ jobs:
           --project=${{ env.GCP_PROJECT_ID }} \
           --zone=${{ env.GCP_ZONE }} \
           --tunnel-through-iap
+
+    # --- CORREÇÃO FINAL E ASSERTIVA ---
     - name: 'Initial Server Setup and Deploy'
       run: |
         gcloud compute ssh ${{ env.INSTANCE_NAME }} --zone ${{ env.GCP_ZONE }} --project=${{ env.GCP_PROJECT_ID }} --tunnel-through-iap -- \
@@ -58,13 +58,34 @@ jobs:
          sudo mv ~/velocity.toml ${{ env.REMOTE_DIR }}/config/ && \
          sudo mv ~/forwarding.secret ${{ env.REMOTE_DIR }}/config/ && \
          cd ${{ env.REMOTE_DIR }} && \
-         echo 'Starting services for the first time...' && \
+         \
+         echo 'Starting Paper service to generate configs...' && \
          sudo docker compose up -d paper && \
-         echo 'Waiting for Paper server to generate configs...' && sleep 30 && \
+         \
+         echo 'Waiting for server.properties to be created...' && \
+         timeout=90 && \
+         start_time=\$(date +%s) && \
+         file_path='/var/lib/docker/volumes/minecraft_paper-data/_data/server.properties' && \
+         while ! sudo test -f \$file_path; do \
+           current_time=\$(date +%s) && \
+           elapsed_time=\$((current_time - start_time)) && \
+           if [ \$elapsed_time -ge \$timeout ]; then \
+             echo 'ERROR: Timed out waiting for server.properties.' && \
+             echo '--- Displaying Paper server logs for debugging ---' && \
+             sudo docker logs paper-server && \
+             exit 1; \
+           fi; \
+           sleep 5; \
+           echo 'Still waiting...'; \
+         done && \
+         \
+         echo 'Paper config files created. Stopping service for modification...' && \
          sudo docker compose stop paper && \
+         \
          echo 'Configuring Paper to trust Velocity...' && \
-         sudo sed -i 's/online-mode=true/online-mode=false/g' /var/lib/docker/volumes/minecraft_paper-data/_data/server.properties && \
-         SECRET_KEY=$(cat ${{ env.REMOTE_DIR }}/config/forwarding.secret) && \
-         echo -e '\\nproxies:\\n  velocity:\\n    enabled: true\\n    online-mode: true\\n    secret: \"'$SECRET_KEY'\"' | sudo tee -a /var/lib/docker/volumes/minecraft_paper-data/_data/config/paper-global.yml > /dev/null && \
+         sudo sed -i 's/online-mode=true/online-mode=false/g' \$file_path && \
+         SECRET_KEY=\$(cat ${{ env.REMOTE_DIR }}/config/forwarding.secret) && \
+         echo -e '\\nproxies:\\n  velocity:\\n    enabled: true\\n    online-mode: true\\n    secret: \"'\$SECRET_KEY'\"' | sudo tee -a /var/lib/docker/volumes/minecraft_paper-data/_data/config/paper-global.yml > /dev/null && \
+         \
          echo 'Restarting all services with final configuration...' && \
          sudo docker compose up -d --force-recreate"
