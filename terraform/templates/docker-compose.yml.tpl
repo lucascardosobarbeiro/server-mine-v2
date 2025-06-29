@@ -11,8 +11,11 @@ services:
     restart: unless-stopped
     ports:
       - "25565:25565"
+    # --- CORREÇÃO FINAL E ASSERTIVA ---
+    # Montamos cada ficheiro individualmente para garantir que sejam lidos.
     volumes:
-      - ./config:/velocity/config
+      - ./config/velocity.toml:/velocity/velocity.toml
+      - ./config/forwarding.secret:/velocity/forwarding.secret
     networks:
       - "minecraft-net"
 
