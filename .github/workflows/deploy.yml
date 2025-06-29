@@ -1,14 +1,16 @@
-name: Deploy Minecraft Services
+name: Build and Deploy Minecraft Server
 on:
   push:
     branches:
       - main
 env:
   GCP_PROJECT_ID: server-mine-463823
+  GCP_REGION: southamerica-east1 # Mude para a sua região
   GCP_ZONE: southamerica-east1-a
   INSTANCE_NAME: minecraft-server-host
+  REMOTE_DIR: /mnt/data/minecraft
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: 'read'
@@ -21,14 +23,42 @@ jobs:
       with:
         workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
         service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
-    - name: 'Prepare and Copy docker-compose.yml'
+    - name: 'Login to Google Artifact Registry'
+      run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
+    - name: 'Prepare Configuration Files'
       run: |
-        cp terraform/templates/docker-compose.yml.tpl docker-compose.yml
+        echo "Generating all configuration files..."
+        mkdir -p terraform/config
+        # Gera ficheiros do Velocity
+        echo "${{ secrets.VELOCITY_FORWARDING_SECRET }}" > terraform/config/forwarding.secret
+        cp terraform/templates/velocity/velocity.toml.tpl terraform/config/velocity.toml
+        # Gera ficheiros do Paper
+        cp terraform/templates/paper/server.properties.tpl terraform/config/server.properties
+        cp terraform/templates/paper/paper-global.yml.tpl terraform/config/paper-global.yml
+        sed -i 's/__VELOCITY_SECRET__/${{ secrets.VELOCITY_FORWARDING_SECRET }}/g' terraform/config/paper-global.yml
+    - name: 'Build and Push Velocity Image'
+      run: |
+        cp terraform/config/velocity.toml terraform/templates/velocity/
+        cp terraform/config/forwarding.secret terraform/templates/velocity/
+        docker build -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/minecraft-repo/velocity-proxy:latest ./terraform/templates/velocity
+        docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/minecraft-repo/velocity-proxy:latest
+    - name: 'Build and Push Paper Image'
+      run: |
+        mkdir -p terraform/templates/paper/config
+        cp terraform/config/server.properties terraform/templates/paper/
+        cp terraform/config/paper-global.yml terraform/templates/paper/config/
+        docker build -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/minecraft-repo/paper-server:latest ./terraform/templates/paper
+        docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/minecraft-repo/paper-server:latest
+    - name: 'Deploy to VM'
+      run: |
+        sed -e 's|__GCP_REGION__|${{ env.GCP_REGION }}|g' \
+            -e 's|__GCP_PROJECT_ID__|${{ env.GCP_PROJECT_ID }}|g' \
+            terraform/templates/docker-compose.yml.tpl > docker-compose.yml
         gcloud compute scp docker-compose.yml ${{ env.INSTANCE_NAME }}:~ --project=${{ env.GCP_PROJECT_ID }} --zone=${{ env.GCP_ZONE }} --tunnel-through-iap
-    - name: 'Deploy Services on VM'
-      run: |
         gcloud compute ssh ${{ env.INSTANCE_NAME }} --zone ${{ env.GCP_ZONE }} --project=${{ env.GCP_PROJECT_ID }} --tunnel-through-iap -- \
-        "sudo mkdir -p /mnt/data/minecraft && \
-         sudo mv ~/docker-compose.yml /mnt/data/minecraft/ && \
-         cd /mnt/data/minecraft && \
+        "sudo mkdir -p ${{ env.REMOTE_DIR }} && \
+         sudo mv ~/docker-compose.yml ${{ env.REMOTE_DIR }}/ && \
+         cd ${{ env.REMOTE_DIR }} && \
+         gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev && \
+         sudo docker compose pull && \
          sudo docker compose up -d --force-recreate"
