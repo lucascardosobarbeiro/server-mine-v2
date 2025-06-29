@@ -1,11 +1,9 @@
-# A linha 'version' foi removida para seguir as práticas modernas.
 networks:
   minecraft-net:
     driver: bridge
 
 services:
   proxy:
-    # Usamos a imagem correta, itzg/mc-proxy, conforme a documentação.
     image: itzg/mc-proxy
     container_name: velocity-proxy
     restart: unless-stopped
@@ -16,7 +14,10 @@ services:
       TYPE: "VELOCITY"
       VELOCITY_ONLINE_MODE: "true"
       VELOCITY_PLAYER_INFO_FORWARDING_MODE: "MODERN"
+      # Aponta para o ficheiro de segredo que será montado pelo Docker Secrets.
+      # O Docker Secrets é um método diferente e mais robusto que os volumes.
       VELOCITY_FORWARDING_SECRET_PATH: "/run/secrets/velocity_secret"
+      # A CHAVE: Diz ao Velocity para encontrar o servidor usando seu nome de serviço.
       VELOCITY_SERVERS: "sobrevivencia=mc-sobrevivencia:25565"
       VELOCITY_TRY_SERVERS: "sobrevivencia"
     secrets:
@@ -37,19 +38,17 @@ services:
       EULA: "TRUE"
       TYPE: "PAPER"
       MEMORY: "10G"
+      # O servidor Paper DEVE estar em modo offline para delegar a autenticação.
       ONLINE_MODE: "false"
-      # Esta única variável instrui a imagem a configurar TODOS os ficheiros
+      # Esta única variável instrui a imagem a configurar todos os ficheiros
       # necessários para aceitar uma conexão de proxy.
       BUNGEECORD: "TRUE"
     secrets:
       - velocity_secret
     networks:
       - "minecraft-net"
-      
-    # --- A CORREÇÃO FINAL E ASSERTIVA ---
-    # Substituímos o healthcheck por um que usa a ferramenta 'mc-monitor',
-    # que vem incluída na imagem itzg/minecraft-server e é a forma documentada.
     healthcheck:
+      # Verificação de saúde compatível com a imagem itzg.
       test: ["CMD", "mc-monitor", "status", "--host=localhost", "--port=25565"]
       interval: 10s
       timeout: 5s
@@ -59,4 +58,5 @@ services:
 # A seção 'secrets' global para o forwarding.secret.
 secrets:
   velocity_secret:
-    file: ./config/forwarding.secret
+    # O Docker irá procurar por um ficheiro com este nome.
+    file: ./forwarding.secret

@@ -1,4 +1,4 @@
-name: Deploy Minecraft Server Updates
+name: Deploy Minecraft Server
 on:
   push:
     branches:
@@ -18,47 +18,31 @@ jobs:
     - name: 'Checkout code'
       uses: 'actions/checkout@v4'
     - name: 'Authenticate to Google Cloud'
-      id: 'auth'
       uses: 'google-github-actions/auth@v2'
       with:
         workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
         service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
-    - name: 'Install NumPy to improve IAP tunnel performance'
-      run: python -m pip install numpy
-    - name: 'Prepare configuration files'
+    - name: 'Create secret file from GitHub Secret'
+      run: echo "${{ secrets.VELOCITY_FORWARDING_SECRET }}" > terraform/forwarding.secret
+    - name: 'Copy Files to VM'
       run: |
-        echo "Generating configuration files..."
-        mkdir -p terraform/config
-        echo "${{ secrets.VELOCITY_FORWARDING_SECRET }}" > terraform/config/forwarding.secret
-        cp terraform/templates/docker-compose.yml.tpl terraform/docker-compose.yml
-    - name: 'Copy configuration files to VM'
-      run: |
-        echo "Copying configuration files to VM via IAP tunnel..."
+        echo "Copying docker-compose.yml and secret file to VM..."
         gcloud compute scp \
           terraform/docker-compose.yml \
-          terraform/config/forwarding.secret \
+          terraform/forwarding.secret \
           ${{ env.INSTANCE_NAME }}:~ \
           --project=${{ env.GCP_PROJECT_ID }} \
           --zone=${{ env.GCP_ZONE }} \
           --tunnel-through-iap
-
-    # --- CORREÇÃO FINAL E ASSERTIVA ---
-    - name: 'Clean, Replace, and Restart Services on VM'
+    - name: 'Stop, Clean, and Restart Services on VM'
       run: |
-        echo "Stopping services and cleaning old configurations..."
+        echo "Stopping old containers and cleaning environment..."
         gcloud compute ssh ${{ env.INSTANCE_NAME }} --zone ${{ env.GCP_ZONE }} --project=${{ env.GCP_PROJECT_ID }} --tunnel-through-iap -- \
-        "cd /mnt/data/minecraft || true && \
+        "sudo mkdir -p /mnt/data/minecraft && \
+         cd /mnt/data/minecraft || true && \
          sudo docker compose down && \
-         \
-         echo 'Deleting old configuration...' && \
-         sudo rm -f /mnt/data/minecraft/docker-compose.yml && \
-         sudo rm -rf /mnt/data/minecraft/config && \
-         \
-         echo 'Moving new configuration into place...' && \
-         sudo mkdir -p /mnt/data/minecraft/config && \
+         sudo docker rm -f mc-sobrevivencia velocity-proxy || true && \
          sudo mv ~/docker-compose.yml /mnt/data/minecraft/ && \
-         sudo mv ~/forwarding.secret /mnt/data/minecraft/config/ && \
-         \
-         echo 'Starting new services with clean configuration...' && \
-         cd /mnt/data/minecraft && \
+         sudo mv ~/forwarding.secret /mnt/data/minecraft/ && \
+         echo 'Starting new services...' && \
          sudo docker compose up -d"
