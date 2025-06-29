@@ -2,61 +2,37 @@ networks:
   minecraft-net:
     driver: bridge
 
+volumes:
+  # Definimos volumes nomeados. O Docker irá gerir estes diretórios para nós.
+  paper-data:
+  velocity-data:
+
 services:
-  proxy:
-    image: itzg/mc-proxy
+  velocity:
+    # IMAGEM OFICIAL E MINIMALISTA DO VELOCITY
+    image: papermc/velocity:latest
     container_name: velocity-proxy
     restart: unless-stopped
     ports:
       - "25565:25565"
-    environment:
-      # --- CONFIGURAÇÃO ASSERTIVA 100% VIA VARIÁVEIS DE AMBIENTE ---
-      TYPE: "VELOCITY"
-      VELOCITY_ONLINE_MODE: "true"
-      VELOCITY_PLAYER_INFO_FORWARDING_MODE: "MODERN"
-      # Aponta para o ficheiro de segredo que será montado pelo Docker Secrets.
-      # O Docker Secrets é um método diferente e mais robusto que os volumes.
-      VELOCITY_FORWARDING_SECRET_PATH: "/run/secrets/velocity_secret"
-      # A CHAVE: Diz ao Velocity para encontrar o servidor usando seu nome de serviço.
-      VELOCITY_SERVERS: "sobrevivencia=mc-sobrevivencia:25565"
-      VELOCITY_TRY_SERVERS: "sobrevivencia"
-    secrets:
-      - velocity_secret
+    volumes:
+      # Montamos um volume dedicado onde a configuração viverá.
+      - velocity-data:/app
     networks:
       - "minecraft-net"
     depends_on:
-      mc-sobrevivencia:
-        condition: service_healthy
+      - paper
 
-  mc-sobrevivencia:
-    image: itzg/minecraft-server
-    container_name: mc-sobrevivencia
+  paper:
+    # IMAGEM OFICIAL E MINIMALISTA DO PAPER
+    image: papermc/paper:latest
+    container_name: paper-server
     restart: unless-stopped
     volumes:
-      - ./sobrevivencia-data:/data
+      # Montamos um volume dedicado onde os dados e configs do jogo viverão.
+      - paper-data:/app
     environment:
-      EULA: "TRUE"
-      TYPE: "PAPER"
+      # A imagem 'papermc/paper' usa esta variável para definir a memória.
       MEMORY: "10G"
-      # O servidor Paper DEVE estar em modo offline para delegar a autenticação.
-      ONLINE_MODE: "false"
-      # Esta única variável instrui a imagem a configurar todos os ficheiros
-      # necessários para aceitar uma conexão de proxy.
-      BUNGEECORD: "TRUE"
-    secrets:
-      - velocity_secret
     networks:
       - "minecraft-net"
-    healthcheck:
-      # Verificação de saúde compatível com a imagem itzg.
-      test: ["CMD", "mc-monitor", "status", "--host=localhost", "--port=25565"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-
-# A seção 'secrets' global para o forwarding.secret.
-secrets:
-  velocity_secret:
-    # O Docker irá procurar por um ficheiro com este nome.
-    file: ./forwarding.secret
