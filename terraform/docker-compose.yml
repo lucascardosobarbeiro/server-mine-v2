@@ -16,8 +16,6 @@ services:
       TYPE: "PAPER"
       MEMORY: "10G"
       ONLINE_MODE: "true"
-      VELOCITY_ENABLED: "true"
-      VELOCITY_SECRET: "USE_FROM_FILE" # ignora, usa via arquivo
     networks:
       - minecraft-net
 

@@ -30,35 +30,23 @@ jobs:
           workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
           service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
 
-      - name: Debug token claims (opcional)
-        run: echo "${{ steps.auth.outputs.access_token }}" | cut -d '.' -f2 | base64 -d | jq || true
-
-      - name: Install NumPy to improve IAP tunnel performance
+      - name: Instalar NumPy para IAP
         run: python -m pip install numpy
 
-      - name: Prepare Velocity config
+      - name: Injetar segredo do Velocity
         run: |
-          echo "Injetando arquivos de configuração do Velocity..."
-          mkdir -p ./terraform/velocity
-          echo "${{ secrets.VELOCITY_FORWARDING_SECRET }}" > ./terraform/velocity/forwarding.secret
+          mkdir -p terraform/velocity
+          echo "${{ secrets.VELOCITY_FORWARDING_SECRET }}" > terraform/velocity/forwarding.secret
 
-      - name: Copy docker-compose.yml to VM
+      - name: Copiar arquivos para VM via IAP
         run: |
-          echo "Copiando docker-compose.yml via IAP..."
           gcloud compute scp terraform/docker-compose.yml ${{ env.INSTANCE_NAME }}:~ \
-            --project=${{ env.GCP_PROJECT_ID }} \
-            --zone=${{ env.GCP_ZONE }} \
-            --tunnel-through-iap
+            --project=${{ env.GCP_PROJECT_ID }} --zone=${{ env.GCP_ZONE }} --tunnel-through-iap
 
-      - name: Copy Velocity config to VM
-        run: |
-          echo "Copiando pasta 'velocity' com configs para a VM..."
           gcloud compute scp --recurse terraform/velocity ${{ env.INSTANCE_NAME }}:~ \
-            --project=${{ env.GCP_PROJECT_ID }} \
-            --zone=${{ env.GCP_ZONE }} \
-            --tunnel-through-iap
+            --project=${{ env.GCP_PROJECT_ID }} --zone=${{ env.GCP_ZONE }} --tunnel-through-iap
 
-      - name: Stop, Clean, and Restart Service on VM
+      - name: Reiniciar containers na VM
         run: |
           echo "Limpando containers e iniciando novamente..."
           gcloud compute ssh ${{ env.INSTANCE_NAME }} \
@@ -66,10 +54,11 @@ jobs:
             --project=${{ env.GCP_PROJECT_ID }} \
             --tunnel-through-iap -- \
             "sudo mkdir -p /mnt/data/minecraft && \
+             sudo rm -rf /mnt/data/minecraft/velocity && \
              cd /mnt/data/minecraft || true && \
              sudo docker compose down && \
              sudo docker rm -f mc-sobrevivencia velocity-proxy || true && \
              sudo mv ~/docker-compose.yml /mnt/data/minecraft/ && \
              sudo mv ~/velocity /mnt/data/minecraft/ && \
              echo 'Starting new service...' && \
-             sudo docker compose up -d"
+             sudo docker compose up -d --force-recreate"
