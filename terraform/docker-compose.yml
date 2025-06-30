@@ -1,3 +1,5 @@
+# docker-compose.yml
+
 networks:
   minecraft-net:
     driver: bridge
@@ -8,7 +10,7 @@ services:
     container_name: mc-sobrevivencia
     restart: unless-stopped
     ports:
-      - "25566:25565"
+      - "25566:25565"  # Porta interna continua 25565, mas exposta na 25566 para não conflitar com o Velocity
     volumes:
       - ./sobrevivencia-data:/data
     environment:
@@ -24,11 +26,11 @@ services:
       - velocity-proxy
 
   velocity-proxy:
-    image: itzg/bungeecord:velocity
+    image: itzg/velocity
     container_name: velocity-proxy
     restart: unless-stopped
     ports:
-      - "25565:25577"
+      - "25565:25577"  # Porta principal do proxy
     volumes:
       - ./velocity:/config
     environment:
