@@ -1,29 +1,38 @@
-# A linha 'version' foi removida para seguir as práticas modernas.
+# docker-compose.yml - com Velocity + Paper conectados
 networks:
   minecraft-net:
     driver: bridge
 
 services:
+  velocity-proxy:
+    image: itzg/bungeecord
+    container_name: velocity-proxy
+    restart: unless-stopped
+    ports:
+      - "25565:25565"  # Entrada principal dos jogadores
+    volumes:
+      - ./velocity/velocity.toml:/config/velocity.toml
+      - ./velocity/forwarding.secret:/config/forwarding.secret
+    environment:
+      TYPE: "VELOCITY"
+      MEMORY: "1G"
+    networks:
+      - minecraft-net
+
   mc-sobrevivencia:
     image: itzg/minecraft-server
     container_name: mc-sobrevivencia
     restart: unless-stopped
-    
-    # Expomos a porta do servidor de jogo diretamente para o mundo exterior.
-    ports:
-      - "25565:25565"
-
+    expose:
+      - "25565"
     volumes:
-      # Usamos um diretório local para persistir os dados do mundo.
       - ./sobrevivencia-data:/data
-      
     environment:
       EULA: "TRUE"
       TYPE: "PAPER"
       MEMORY: "10G"
-      
-      # O servidor agora fará sua própria autenticação (modo premium).
-      ONLINE_MODE: "true"
-      
+      ONLINE_MODE: "false"  # ESSENCIAL para funcionar com proxy
+      VELOCITY_SUPPORT: "true"
+      VELOCITY_SECRET: "${VELOCITY_FORWARDING_SECRET}"
     networks:
-      - "minecraft-net"
+      - minecraft-net
