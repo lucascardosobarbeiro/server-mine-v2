@@ -4,11 +4,19 @@ player-info-forwarding-mode = "modern"
 forwarding-secret-file = "/config/forwarding.secret"
 online-mode = true
 
+# Defina seus servidores
 [servers]
 survivencia = "mc-sobrevivencia:25565"
 
+# Ordem de fallback
+try = ["survivencia"]
+
+# Se quiser que um domínio leve direto ao servidor:
 [forced-hosts]
-"127.0.0.1" = ["survivencia"]
+"yourdomain.com" = ["survivencia"]
+
+# Configura fallback-server corretamente (nome deve existir)
+fallback-server = "survivencia"
 
 [advanced]
 compression-threshold = 256
