@@ -1,38 +1,35 @@
-# docker-compose.yml - com Velocity + Paper conectados
 networks:
   minecraft-net:
     driver: bridge
 
 services:
-  velocity-proxy:
-    image: itzg/bungeecord
-    container_name: velocity-proxy
-    restart: unless-stopped
-    ports:
-      - "25565:25565"  # Entrada principal dos jogadores
-    volumes:
-      - ./velocity/velocity.toml:/config/velocity.toml
-      - ./velocity/forwarding.secret:/config/forwarding.secret
-    environment:
-      TYPE: "VELOCITY"
-      MEMORY: "1G"
-    networks:
-      - minecraft-net
-
   mc-sobrevivencia:
     image: itzg/minecraft-server
     container_name: mc-sobrevivencia
     restart: unless-stopped
-    expose:
-      - "25565"
+    ports:
+      - "25565:25565"
     volumes:
       - ./sobrevivencia-data:/data
     environment:
       EULA: "TRUE"
       TYPE: "PAPER"
       MEMORY: "10G"
-      ONLINE_MODE: "false"  # ESSENCIAL para funcionar com proxy
-      VELOCITY_SUPPORT: "true"
-      VELOCITY_SECRET: "${VELOCITY_FORWARDING_SECRET}"
+      ONLINE_MODE: "true"
+      VELOCITY_ENABLED: "true"
+      VELOCITY_SECRET: "USE_FROM_FILE" # ignora, usa via arquivo
+    networks:
+      - minecraft-net
+
+  velocity-proxy:
+    image: itzg/bungeecord
+    container_name: velocity-proxy
+    restart: unless-stopped
+    ports:
+      - "25577:25577"
+    volumes:
+      - ./velocity:/config
+    environment:
+      TYPE: VELOCITY
     networks:
       - minecraft-net
