@@ -8,7 +8,7 @@ services:
     container_name: mc-sobrevivencia
     restart: unless-stopped
     ports:
-      - "25565:25565"
+      - "25566:25565"
     volumes:
       - ./sobrevivencia-data:/data
     environment:
@@ -16,18 +16,22 @@ services:
       TYPE: "PAPER"
       MEMORY: "10G"
       ONLINE_MODE: "true"
+      VELOCITY_ENABLED: "true"
+      VELOCITY_SECRET_FILE: "/velocity/forwarding.secret"
     networks:
       - minecraft-net
+    depends_on:
+      - velocity-proxy
 
   velocity-proxy:
-    image: itzg/bungeecord
+    image: itzg/bungeecord:velocity
     container_name: velocity-proxy
     restart: unless-stopped
     ports:
-      - "25577:25577"
+      - "25565:25577"
     volumes:
       - ./velocity:/config
     environment:
-      TYPE: VELOCITY
+      MEMORY: "1G"
     networks:
       - minecraft-net

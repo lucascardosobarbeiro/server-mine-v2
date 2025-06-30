@@ -1,3 +1,5 @@
+### 1. .github/workflows/deploy.yml (pipeline completa)
+
 name: Deploy Minecraft Server
 
 on:
@@ -30,35 +32,34 @@ jobs:
           workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
           service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
 
-      - name: Instalar NumPy para IAP
+      - name: Debug token claims
+        run: echo "${{ steps.auth.outputs.access_token }}" | cut -d '.' -f2 | base64 -d | jq
+
+      - name: Install NumPy
         run: python -m pip install numpy
 
-      - name: Injetar segredo do Velocity
+      - name: Prepare Velocity and Paper config
         run: |
-          mkdir -p terraform/velocity
-          echo "${{ secrets.VELOCITY_FORWARDING_SECRET }}" > terraform/velocity/forwarding.secret
+          echo "Injecting secrets into config files..."
+          sed "s/__VELOCITY_SECRET__/${{ secrets.VELOCITY_FORWARDING_SECRET }}/g" terraform/velocity/forwarding.secret.tpl > terraform/velocity/forwarding.secret
+          sed "s/__VELOCITY_SECRET__/${{ secrets.VELOCITY_FORWARDING_SECRET }}/g" terraform/velocity/velocity.toml.tpl > terraform/velocity/velocity.toml
 
-      - name: Copiar arquivos para VM via IAP
+      - name: Copy files to VM
         run: |
-          gcloud compute scp terraform/docker-compose.yml ${{ env.INSTANCE_NAME }}:~ \
-            --project=${{ env.GCP_PROJECT_ID }} --zone=${{ env.GCP_ZONE }} --tunnel-through-iap
+          gcloud compute scp terraform/docker-compose.yml terraform/velocity/velocity.toml terraform/velocity/forwarding.secret ${{ env.INSTANCE_NAME }}:~ --project=${{ env.GCP_PROJECT_ID }} --zone=${{ env.GCP_ZONE }} --tunnel-through-iap
 
-          gcloud compute scp --recurse terraform/velocity ${{ env.INSTANCE_NAME }}:~ \
-            --project=${{ env.GCP_PROJECT_ID }} --zone=${{ env.GCP_ZONE }} --tunnel-through-iap
-
-      - name: Reiniciar containers na VM
+      - name: Restart Minecraft Services
         run: |
-          echo "Limpando containers e iniciando novamente..."
           gcloud compute ssh ${{ env.INSTANCE_NAME }} \
             --zone ${{ env.GCP_ZONE }} \
             --project=${{ env.GCP_PROJECT_ID }} \
             --tunnel-through-iap -- \
-            "sudo mkdir -p /mnt/data/minecraft && \
-             sudo rm -rf /mnt/data/minecraft/velocity && \
-             cd /mnt/data/minecraft || true && \
-             sudo docker compose down && \
-             sudo docker rm -f mc-sobrevivencia velocity-proxy || true && \
+            "echo 'Limpando containers e iniciando novamente...' && \
+             sudo mkdir -p /mnt/data/minecraft/velocity && \
              sudo mv ~/docker-compose.yml /mnt/data/minecraft/ && \
-             sudo mv ~/velocity /mnt/data/minecraft/ && \
-             echo 'Starting new service...' && \
-             sudo docker compose up -d --force-recreate"
+             sudo mv ~/velocity.toml /mnt/data/minecraft/velocity/ && \
+             sudo mv ~/forwarding.secret /mnt/data/minecraft/velocity/ && \
+             cd /mnt/data/minecraft && \
+             sudo docker compose down || true && \
+             sudo docker rm -f mc-sobrevivencia velocity-proxy || true && \
+             sudo docker compose up -d"
