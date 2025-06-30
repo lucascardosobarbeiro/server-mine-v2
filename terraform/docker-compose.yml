@@ -1,5 +1,3 @@
-# docker-compose.yml
-
 networks:
   minecraft-net:
     driver: bridge
@@ -10,7 +8,7 @@ services:
     container_name: mc-sobrevivencia
     restart: unless-stopped
     ports:
-      - "25566:25565"  # Porta interna continua 25565, mas exposta na 25566 para não conflitar com o Velocity
+      - "25566:25565"
     volumes:
       - ./sobrevivencia-data:/data
     environment:
@@ -26,14 +24,16 @@ services:
       - velocity-proxy
 
   velocity-proxy:
-    image: itzg/velocity
+    image: itzg/mc-proxy:latest
     container_name: velocity-proxy
     restart: unless-stopped
     ports:
-      - "25565:25577"  # Porta principal do proxy
+      - "25565:25577"
     volumes:
       - ./velocity:/config
     environment:
-      MEMORY: "1G"
+      TYPE: "VELOCITY"
+      VELOCITY_VERSION: "latest"
+      VELOCITY_BUILD_ID: "latest"
     networks:
       - minecraft-net
