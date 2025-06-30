@@ -1,28 +1,21 @@
-### 4. terraform/velocity/velocity.toml.tpl (Velocity config com forwarding)
+config-version = "2.7"
+bind = "0.0.0.0:25577"
+player-info-forwarding-mode = "modern"
+forwarding-secret-file = "/config/forwarding.secret"
+online-mode = true
 
 [servers]
-  [servers.sobrevivencia]
-    address = "mc-sobrevivencia:25565"
-    try = ["mc-sobrevivencia"]
-    motd = "Servidor Sobrevivência"
-    restricted = false
+survivencia = "mc-sobrevivencia:25565"
 
 [forced-hosts]
-  "" = "sobrevivencia"
+"127.0.0.1" = ["survivencia"]
 
 [advanced]
-  forwarding-secret-file = "/config/forwarding.secret"
-
-[server]
-  bind = "0.0.0.0:25577"
+compression-threshold = 256
+login-ratelimit = 3000
+connection-timeout = 5000
+read-timeout = 30000
 
 [query]
-  enabled = true
-  port = 25577
-
-[metrics]
-  enabled = false
-
-[logging]
-  console-format = "[%d{HH:mm:ss}] [%level]: %msg%n"
-  level = "INFO"
+enabled = true
+port = 25577
