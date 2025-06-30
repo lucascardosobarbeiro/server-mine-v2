@@ -1,38 +1,29 @@
+# A linha 'version' foi removida para seguir as práticas modernas.
 networks:
   minecraft-net:
     driver: bridge
 
-volumes:
-  # Definimos volumes nomeados. O Docker irá gerir estes diretórios para nós.
-  paper-data:
-  velocity-data:
-
 services:
-  velocity:
-    # IMAGEM OFICIAL E MINIMALISTA DO VELOCITY
-    image: papermc/velocity:latest
-    container_name: velocity-proxy
+  mc-sobrevivencia:
+    image: itzg/minecraft-server
+    container_name: mc-sobrevivencia
     restart: unless-stopped
+    
+    # Expomos a porta do servidor de jogo diretamente para o mundo exterior.
     ports:
       - "25565:25565"
-    volumes:
-      # Montamos um volume dedicado onde a configuração viverá.
-      - velocity-data:/app
-    networks:
-      - "minecraft-net"
-    depends_on:
-      - paper
 
-  paper:
-    # IMAGEM OFICIAL E MINIMALISTA DO PAPER
-    image: papermc/paper:latest
-    container_name: paper-server
-    restart: unless-stopped
     volumes:
-      # Montamos um volume dedicado onde os dados e configs do jogo viverão.
-      - paper-data:/app
+      # Usamos um diretório local para persistir os dados do mundo.
+      - ./sobrevivencia-data:/data
+      
     environment:
-      # A imagem 'papermc/paper' usa esta variável para definir a memória.
+      EULA: "TRUE"
+      TYPE: "PAPER"
       MEMORY: "10G"
+      
+      # O servidor agora fará sua própria autenticação (modo premium).
+      ONLINE_MODE: "true"
+      
     networks:
       - "minecraft-net"
