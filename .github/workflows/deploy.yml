@@ -1,5 +1,3 @@
-### 1. .github/workflows/deploy.yml (pipeline usando secrets do GitHub)
-
 name: Deploy Minecraft Server
 
 on:
@@ -35,11 +33,10 @@ jobs:
       - name: Debug token claims
         run: echo "${{ steps.auth.outputs.access_token }}" | cut -d '.' -f2 | base64 -d | jq
 
-      - name: Prepare Velocity and Paper config
+      - name: Prepare configs
         run: |
-          echo "Injecting secrets from GitHub into templates..."
-          sed "s/__VELOCITY_SECRET__/${{ secrets.VELOCITY_SECRET }}/g" terraform/velocity/forwarding.secret.tpl > terraform/velocity/forwarding.secret
-          sed "s/__VELOCITY_SECRET__/${{ secrets.VELOCITY_SECRET }}/g" terraform/velocity/velocity.toml.tpl > terraform/velocity/velocity.toml
+          cp terraform/velocity/forwarding.secret.tpl terraform/velocity/forwarding.secret
+          cp terraform/velocity/velocity.toml.tpl terraform/velocity/velocity.toml
 
       - name: Copy files to VM
         run: |
@@ -53,7 +50,7 @@ jobs:
             --zone ${{ env.GCP_ZONE }} \
             --project=${{ env.GCP_PROJECT_ID }} \
             --tunnel-through-iap -- \
-            "echo 'Limpando containers e iniciando novamente...' && \
+            "echo 'Reiniciando containers com configs atualizadas...' && \
              sudo mkdir -p /mnt/data/minecraft/velocity /mnt/data/minecraft/paper/configs && \
              sudo mv ~/docker-compose.yml /mnt/data/minecraft/ && \
              sudo mv ~/velocity.toml /mnt/data/minecraft/velocity/ && \
