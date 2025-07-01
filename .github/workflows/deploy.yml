@@ -30,44 +30,31 @@ jobs:
           workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
           service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
 
-      - name: Debug token claims
-        run: echo "${{ steps.auth.outputs.access_token }}" | cut -d '.' -f2 | base64 -d | jq
-
-      - name: Install NumPy for IAP
-        run: python -m pip install numpy
-
       - name: Prepare Velocity and Paper config
         run: |
-          echo "Injecting secrets into config files..."
+          echo "Injecting secrets into template files..."
           sed "s/__VELOCITY_SECRET__/${{ secrets.VELOCITY_FORWARDING_SECRET }}/g" terraform/velocity/forwarding.secret.tpl > terraform/velocity/forwarding.secret
           sed "s/__VELOCITY_SECRET__/${{ secrets.VELOCITY_FORWARDING_SECRET }}/g" terraform/velocity/velocity.toml.tpl > terraform/velocity/velocity.toml
-          sed "s/__VELOCITY_SECRET__/${{ secrets.VELOCITY_FORWARDING_SECRET }}/g" terraform/paper/configs/paper-global.yml.tpl > terraform/paper/configs/paper-global.yml
 
       - name: Copy files to VM
         run: |
-          gcloud compute scp \
-            terraform/docker-compose.yml \
-            terraform/velocity/velocity.toml \
-            terraform/velocity/forwarding.secret \
-            terraform/paper/configs/paper-global.yml \
-            ${{ env.INSTANCE_NAME }}:~ \
-            --project=${{ env.GCP_PROJECT_ID }} \
-            --zone=${{ env.GCP_ZONE }} \
-            --tunnel-through-iap
+          gcloud compute scp terraform/docker-compose.yml terraform/velocity/velocity.toml terraform/velocity/forwarding.secret \
+            terraform/paper/configs/paper-global.yml.tpl terraform/paper/configs/server.properties.tpl \
+            ${{ env.INSTANCE_NAME }}:~ --project=${{ env.GCP_PROJECT_ID }} --zone=${{ env.GCP_ZONE }} --tunnel-through-iap
 
       - name: Restart Minecraft Services
         run: |
-          echo "Restarting services..."
           gcloud compute ssh ${{ env.INSTANCE_NAME }} \
             --zone ${{ env.GCP_ZONE }} \
             --project=${{ env.GCP_PROJECT_ID }} \
             --tunnel-through-iap -- \
-            "sudo mkdir -p /mnt/data/minecraft/velocity && \
-             sudo mkdir -p /mnt/data/minecraft/paper/config && \
+            "echo 'Limpando containers e iniciando novamente...' && \
+             sudo mkdir -p /mnt/data/minecraft/velocity /mnt/data/minecraft/paper/configs && \
              sudo mv ~/docker-compose.yml /mnt/data/minecraft/ && \
              sudo mv ~/velocity.toml /mnt/data/minecraft/velocity/ && \
              sudo mv ~/forwarding.secret /mnt/data/minecraft/velocity/ && \
-             sudo mv ~/paper-global.yml /mnt/data/minecraft/paper/config/paper-global.yml && \
+             sudo mv ~/paper-global.yml.tpl /mnt/data/minecraft/paper/configs/paper-global.yml && \
+             sudo mv ~/server.properties.tpl /mnt/data/minecraft/paper/configs/server.properties && \
              cd /mnt/data/minecraft && \
              sudo docker compose down || true && \
              sudo docker rm -f mc-sobrevivencia velocity-proxy || true && \

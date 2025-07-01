@@ -1,4 +1,4 @@
 velocity:
   enabled: true
   online-mode: true
-  secret: __VELOCITY_SECRET__
+  secret: ${VELOCITY_SECRET}
