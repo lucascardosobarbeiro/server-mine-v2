@@ -9,6 +9,7 @@ env:
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GCP_ZONE:      ${{ secrets.GCP_ZONE }}
   INSTANCE_NAME: ${{ secrets.INSTANCE_NAME }}
+  FORWARDING_SECRET: ${{ secrets.FORWARDING_SECRET }}
   FORWARDING_SECRET_FILE: "/config/forwarding.secret"
 
 jobs:
@@ -37,6 +38,7 @@ jobs:
       - name: Generate forwarding.secret from template
         run: |
           mkdir -p terraform/velocity
+          # Usa FORWARDING_SECRET definido nos env
           envsubst '${FORWARDING_SECRET}' < terraform/velocity/forwarding.secret.template > terraform/velocity/forwarding.secret
 
       - name: Generate paper-global.yml from template
