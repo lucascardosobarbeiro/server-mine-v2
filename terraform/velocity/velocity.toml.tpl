@@ -8,17 +8,11 @@ player-info-forwarding-mode = "modern"
 online-mode = true
 
 [servers]
-survivencia = "mc-sobrevivencia:25565"
-lobby = "mc-sobrevivencia:25565"
-minigames = "mc-sobrevivencia:25565"
-factions = "mc-sobrevivencia:25565"
-
-try = ["survivencia"]
+sobrevivencia = "mc-sobrevivencia:25565"
+try = ["sobrevivencia"]
 
 [forced-hosts]
-"lobby.example.com" = "lobby"
-"factions.example.com" = "factions"
-"minigames.example.com" = "minigames"
+"mc.example.com" = "sobrevivencia"
 
 [advanced]
 forwarding-secret-file = "/config/forwarding.secret"

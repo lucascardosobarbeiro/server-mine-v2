@@ -5,6 +5,5 @@ enable-command-block=true
 gamemode=survival
 motd=Servidor Sobrevivencia
 
-# Velocity mode
 enable-proxy-connections=true
 proxy-protocol=false

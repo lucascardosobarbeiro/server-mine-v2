@@ -6,7 +6,7 @@ networks:
 
 services:
   mc-sobrevivencia:
-    image: itzg/minecraft-server
+    image: itzg/minecraft-server:java21
     container_name: mc-sobrevivencia
     restart: unless-stopped
     ports:
@@ -37,7 +37,6 @@ services:
     volumes:
       - ./velocity:/config
     environment:
-      TYPE: "VELOCITY"
       MEMORY: "1G"
     networks:
       - minecraft-net
