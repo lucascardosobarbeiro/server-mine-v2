@@ -63,7 +63,7 @@ resource "google_project_iam_member" "instance_admin_for_sa" {
 
 
 # =================================================================================
-# Permissões para o seu UTILIZADOR HUMANO (lcb.barbeiro@gmail.com)
+# Permissões para o seu UTILIZADOR HUMANO 
 # =================================================================================
 
 resource "google_project_iam_member" "iap_ssh_access" {
