@@ -2,7 +2,9 @@ proxies:
   velocity:
     enabled: true
     online-mode: false
-    secret: "fae35b70d19426c8"
+    secret: ${FORWARDING_SECRET}
+    support-flattening: true
+
 settings:
   bungeecord: false
 prevent-proxy-connections: false
