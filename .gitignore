@@ -5,4 +5,5 @@
 Thumbs.db
 
 
-terraform/velocity/forwarding.secret
+# terraform/velocity/forwarding.secret
+
