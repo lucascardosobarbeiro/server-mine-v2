@@ -5,6 +5,22 @@ networks:
     driver: bridge
 
 services:
+  velocity-proxy:
+    image: itzg/mc-proxy:latest
+    container_name: velocity-proxy
+    restart: unless-stopped
+    ports:
+      - "25565:25577"
+    volumes:
+      - ./velocity/velocity.toml:/config/velocity.toml
+      - ./velocity/forwarding.secret:/config/forwarding.secret
+    environment:
+      TYPE: VELOCITY
+      VELOCITY_VERSION: "latest"
+      MEMORY: "1G"
+    networks:
+      - minecraft-net
+
   mc-sobrevivencia:
     image: itzg/minecraft-server
     container_name: mc-sobrevivencia
@@ -15,29 +31,14 @@ services:
       - ./sobrevivencia-data:/data
       - ./paper/configs/server.properties:/config/server.properties
       - ./paper/configs/paper-global.yml:/config/paper-global.yml
-      - ./velocity/forwarding.secret:/velocity/forwarding.secret
     environment:
       EULA: "TRUE"
       TYPE: "PAPER"
       MEMORY: "10G"
       ONLINE_MODE: "false"
       VELOCITY_ENABLED: "true"
-      VELOCITY_SECRET_FILE: "/velocity/forwarding.secret"
+      VELOCITY_SECRET_FILE: "/config/forwarding.secret"
     networks:
       - minecraft-net
     depends_on:
       - velocity-proxy
-
-  velocity-proxy:
-    image: itzg/mc-proxy:latest
-    container_name: velocity-proxy
-    restart: unless-stopped
-    ports:
-      - "25565:25577"
-    volumes:
-      - ./velocity:/config
-    environment:
-      TYPE: "VELOCITY"
-      MEMORY: "1G"
-    networks:
-      - minecraft-net
