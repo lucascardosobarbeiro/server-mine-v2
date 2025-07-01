@@ -1,12 +1,10 @@
-### 2. terraform/docker-compose.yml (corrigido)
-
 networks:
   minecraft-net:
     driver: bridge
 
 services:
   mc-sobrevivencia:
-    image: itzg/minecraft-server:java21
+    image: itzg/minecraft-server
     container_name: mc-sobrevivencia
     restart: unless-stopped
     ports:
@@ -38,5 +36,6 @@ services:
       - ./velocity:/config
     environment:
       MEMORY: "1G"
+      TYPE: "VELOCITY"  # <-- ESSENCIAL: força o modo correto
     networks:
       - minecraft-net
