@@ -1,6 +1,6 @@
 bind = "0.0.0.0:25577"
 player-info-forwarding-mode = "modern"
-forwarding-secret-file = "/config/forwarding.secret"
+forwarding-secret-file = "forwarding.secret"
 
 [servers]
 survivencia = "mc-sobrevivencia:25565"

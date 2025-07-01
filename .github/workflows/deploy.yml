@@ -21,6 +21,10 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Install NumPy to optimize IAP tunnel
+        run: |
+          python3 -m pip install numpy --user
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
@@ -35,7 +39,6 @@ jobs:
             terraform/velocity/forwarding.secret \
             terraform/paper/configs/server.properties \
             terraform/paper/configs/paper-global.yml \
-            terraform/paper/configs/spigot.yml \
             $INSTANCE_NAME:~ --zone=$GCP_ZONE --project=$GCP_PROJECT_ID --tunnel-through-iap
 
       - name: Restart Minecraft containers
@@ -47,7 +50,6 @@ jobs:
              sudo mv ~/forwarding.secret /mnt/data/minecraft/velocity/ && \
              sudo mv ~/server.properties /mnt/data/minecraft/paper/configs/ && \
              sudo mv ~/paper-global.yml /mnt/data/minecraft/paper/configs/ && \
-             sudo mv ~/spigot.yml /mnt/data/minecraft/paper/configs/ && \
              cd /mnt/data/minecraft && \
              sudo docker compose down || true && \
              sudo docker compose up -d"
