@@ -66,11 +66,15 @@ jobs:
             --zone ${{ env.GCP_ZONE }} \
             --project ${{ env.GCP_PROJECT_ID }} \
             --tunnel-through-iap --command="
-              sudo mkdir -p /mnt/data/minecraft/velocity /mnt/data/minecraft/paper/configs && \
+              # Remove previous config dirs if exist to allow clean mv
+              sudo rm -rf /mnt/data/minecraft/velocity /mnt/data/minecraft/paper/configs && \
+              sudo mkdir -p /mnt/data/minecraft && \
+              # Move new compose and config directories into place
               sudo mv ~/deploy/docker-compose.yml /mnt/data/minecraft/ && \
-              sudo mv ~/deploy/velocity /mnt/data/minecraft/ && \
-              sudo mv ~/deploy/configs /mnt/data/minecraft/paper/ && \
+              sudo mv ~/deploy/velocity /mnt/data/minecraft/velocity && \
+              sudo mv ~/deploy/configs /mnt/data/minecraft/paper/configs && \
               cd /mnt/data/minecraft && \
+              # Restart containers
               sudo docker compose down || true && \
               sudo docker compose up -d
             "
