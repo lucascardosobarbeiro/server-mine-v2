@@ -1,4 +1,4 @@
-### 1. .github/workflows/deploy.yml (pipeline usando secrets do GitHub)
+# .github/workflows/deploy.yml
 
 name: Deploy Minecraft Server
 
@@ -11,7 +11,6 @@ env:
   GCP_PROJECT_ID: server-mine-463823
   GCP_ZONE: southamerica-east1-a
   INSTANCE_NAME: minecraft-server-host
-  REMOTE_DIR: /mnt/data/minecraft
 
 jobs:
   deploy:
@@ -21,46 +20,34 @@ jobs:
       id-token: 'write'
 
     steps:
-      - name: Checkout code
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Authenticate to Google Cloud
-        id: auth
         uses: google-github-actions/auth@v2
         with:
           token_format: 'access_token'
           workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
           service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
 
-      - name: Debug token claims
-        run: echo "${{ steps.auth.outputs.access_token }}" | cut -d '.' -f2 | base64 -d | jq
-
-      - name: Prepare Velocity and Paper config
+      - name: Copy config files to VM
         run: |
-          echo "Injecting secrets from GitHub into templates..."
-          sed "s/__VELOCITY_SECRET__/${{ secrets.VELOCITY_SECRET }}/g" terraform/velocity/forwarding.secret.tpl > terraform/velocity/forwarding.secret
-          sed "s/__VELOCITY_SECRET__/${{ secrets.VELOCITY_SECRET }}/g" terraform/velocity/velocity.toml.tpl > terraform/velocity/velocity.toml
+          gcloud compute scp terraform/docker-compose.yml \
+            terraform/velocity/velocity.toml \
+            terraform/velocity/forwarding.secret \
+            terraform/paper/configs/server.properties \
+            terraform/paper/configs/paper-global.yml \
+            $INSTANCE_NAME:~ --zone=$GCP_ZONE --project=$GCP_PROJECT_ID --tunnel-through-iap
 
-      - name: Copy files to VM
+      - name: Restart Minecraft containers
         run: |
-          gcloud compute scp terraform/docker-compose.yml terraform/velocity/velocity.toml terraform/velocity/forwarding.secret \
-            terraform/paper/configs/paper-global.yml.tpl terraform/paper/configs/server.properties.tpl \
-            ${{ env.INSTANCE_NAME }}:~ --project=${{ env.GCP_PROJECT_ID }} --zone=${{ env.GCP_ZONE }} --tunnel-through-iap
-
-      - name: Restart Minecraft Services
-        run: |
-          gcloud compute ssh ${{ env.INSTANCE_NAME }} \
-            --zone ${{ env.GCP_ZONE }} \
-            --project=${{ env.GCP_PROJECT_ID }} \
-            --tunnel-through-iap -- \
-            "echo 'Limpando containers e iniciando novamente...' && \
-             sudo mkdir -p /mnt/data/minecraft/velocity /mnt/data/minecraft/paper/configs && \
+          gcloud compute ssh $INSTANCE_NAME --zone $GCP_ZONE --project $GCP_PROJECT_ID --tunnel-through-iap -- \
+            "sudo mkdir -p /mnt/data/minecraft/velocity /mnt/data/minecraft/paper/configs && \
              sudo mv ~/docker-compose.yml /mnt/data/minecraft/ && \
              sudo mv ~/velocity.toml /mnt/data/minecraft/velocity/ && \
              sudo mv ~/forwarding.secret /mnt/data/minecraft/velocity/ && \
-             sudo mv ~/paper-global.yml.tpl /mnt/data/minecraft/paper/configs/paper-global.yml && \
-             sudo mv ~/server.properties.tpl /mnt/data/minecraft/paper/configs/server.properties && \
+             sudo mv ~/server.properties /mnt/data/minecraft/paper/configs/ && \
+             sudo mv ~/paper-global.yml /mnt/data/minecraft/paper/configs/ && \
              cd /mnt/data/minecraft && \
              sudo docker compose down || true && \
-             sudo docker rm -f mc-sobrevivencia velocity-proxy || true && \
              sudo docker compose up -d"

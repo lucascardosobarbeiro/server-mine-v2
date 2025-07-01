@@ -1,3 +1,5 @@
+version: "3.8"
+
 networks:
   minecraft-net:
     driver: bridge
@@ -11,8 +13,8 @@ services:
       - "25566:25565"
     volumes:
       - ./sobrevivencia-data:/data
-      - ./paper/configs/paper-global.yml:/config/paper-global.yml
       - ./paper/configs/server.properties:/config/server.properties
+      - ./paper/configs/paper-global.yml:/config/paper-global.yml
       - ./velocity/forwarding.secret:/velocity/forwarding.secret
     environment:
       EULA: "TRUE"
@@ -36,6 +38,5 @@ services:
       - ./velocity:/config
     environment:
       MEMORY: "1G"
-      TYPE: "VELOCITY"  # <-- ESSENCIAL: força o modo correto
     networks:
       - minecraft-net
