@@ -1,3 +1,5 @@
+### 1. .github/workflows/deploy.yml (pipeline usando secrets do GitHub)
+
 name: Deploy Minecraft Server
 
 on:
@@ -30,11 +32,14 @@ jobs:
           workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
           service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
 
+      - name: Debug token claims
+        run: echo "${{ steps.auth.outputs.access_token }}" | cut -d '.' -f2 | base64 -d | jq
+
       - name: Prepare Velocity and Paper config
         run: |
-          echo "Injecting secrets into template files..."
-          sed "s/__VELOCITY_SECRET__/${{ secrets.VELOCITY_FORWARDING_SECRET }}/g" terraform/velocity/forwarding.secret.tpl > terraform/velocity/forwarding.secret
-          sed "s/__VELOCITY_SECRET__/${{ secrets.VELOCITY_FORWARDING_SECRET }}/g" terraform/velocity/velocity.toml.tpl > terraform/velocity/velocity.toml
+          echo "Injecting secrets from GitHub into templates..."
+          sed "s/__VELOCITY_SECRET__/${{ secrets.VELOCITY_SECRET }}/g" terraform/velocity/forwarding.secret.tpl > terraform/velocity/forwarding.secret
+          sed "s/__VELOCITY_SECRET__/${{ secrets.VELOCITY_SECRET }}/g" terraform/velocity/velocity.toml.tpl > terraform/velocity/velocity.toml
 
       - name: Copy files to VM
         run: |

@@ -1,3 +1,5 @@
+### 2. terraform/docker-compose.yml (corrigido)
+
 networks:
   minecraft-net:
     driver: bridge
@@ -11,6 +13,9 @@ services:
       - "25566:25565"
     volumes:
       - ./sobrevivencia-data:/data
+      - ./paper/configs/paper-global.yml:/config/paper-global.yml
+      - ./paper/configs/server.properties:/config/server.properties
+      - ./velocity/forwarding.secret:/velocity/forwarding.secret
     environment:
       EULA: "TRUE"
       TYPE: "PAPER"
@@ -32,8 +37,6 @@ services:
     volumes:
       - ./velocity:/config
     environment:
-      TYPE: "VELOCITY"
-      VELOCITY_VERSION: "latest"
-      VELOCITY_BUILD_ID: "latest"
+      MEMORY: "1G"
     networks:
       - minecraft-net

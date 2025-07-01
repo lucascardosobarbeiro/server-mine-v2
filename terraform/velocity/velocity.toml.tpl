@@ -1,11 +1,11 @@
-# Obrigatório para versões recentes do Velocity
-config-version = "1.0"
+### 4. terraform/velocity/velocity.toml.tpl (corrigido)
 
 bind = "0.0.0.0:25577"
 motd = "Servidor Proxy Minecraft"
 show-max-players = 100
-online-mode = true
+
 player-info-forwarding-mode = "modern"
+online-mode = true
 
 [servers]
 survivencia = "mc-sobrevivencia:25565"
@@ -13,14 +13,12 @@ lobby = "mc-sobrevivencia:25565"
 minigames = "mc-sobrevivencia:25565"
 factions = "mc-sobrevivencia:25565"
 
-try = [ "survivencia" ]
+try = ["survivencia"]
 
 [forced-hosts]
-"lobby.example.com" = [ "lobby" ]
-"minigames.example.com" = [ "minigames" ]
-"factions.example.com" = [ "factions" ]
+"lobby.example.com" = "lobby"
+"factions.example.com" = "factions"
+"minigames.example.com" = "minigames"
 
 [advanced]
 forwarding-secret-file = "/config/forwarding.secret"
-
-log-level = "debug"
