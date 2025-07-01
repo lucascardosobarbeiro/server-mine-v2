@@ -37,27 +37,24 @@ jobs:
       - name: Generate forwarding.secret from template
         run: |
           mkdir -p terraform/velocity
-          envsubst '${FORWARDING_SECRET}' < terraform/velocity/forwarding.secret.template \
-            > terraform/velocity/forwarding.secret
+          envsubst '${FORWARDING_SECRET}' < terraform/velocity/forwarding.secret.template > terraform/velocity/forwarding.secret
 
       - name: Generate paper-global.yml from template
         run: |
           mkdir -p terraform/paper/configs
-          envsubst '${FORWARDING_SECRET}' < terraform/paper/configs/paper-global.yml.template \
-            > terraform/paper/configs/paper-global.yml
+          envsubst '${FORWARDING_SECRET}' < terraform/paper/configs/paper-global.yml.template > terraform/paper/configs/paper-global.yml
 
       - name: Generate velocity.toml from template
         run: |
           mkdir -p terraform/velocity
-          envsubst '${FORWARDING_SECRET_FILE}' < terraform/velocity/velocity.toml.template \
-            > terraform/velocity/velocity.toml
+          envsubst '${FORWARDING_SECRET_FILE}' < terraform/velocity/velocity.toml.template > terraform/velocity/velocity.toml
 
       - name: Copy config and compose files to VM
         run: |
-          gcloud compute scp \
+          gcloud compute scp --recurse \
             terraform/docker-compose.yml \
-            -r terraform/velocity \
-            -r terraform/paper/configs \
+            terraform/velocity \
+            terraform/paper/configs \
             ${{ env.INSTANCE_NAME }}:~/deploy/ \
             --zone=${{ env.GCP_ZONE }} \
             --project=${{ env.GCP_PROJECT_ID }} \
