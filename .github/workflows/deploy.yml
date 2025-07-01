@@ -6,9 +6,10 @@ on:
       - main
 
 env:
-  GCP_PROJECT_ID: server-mine-463823
-  GCP_ZONE: southamerica-east1-a
-  INSTANCE_NAME: minecraft-server-host
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_ZONE:      ${{ secrets.GCP_ZONE }}
+  INSTANCE_NAME: ${{ secrets.INSTANCE_NAME }}
+  FORWARDING_SECRET_FILE: "/config/forwarding.secret"
 
 jobs:
   deploy:
@@ -21,35 +22,58 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install NumPy to optimize IAP tunnel
+      - name: Install dependencies for IAP tunnel and envsubst
         run: |
           python3 -m pip install numpy --user
+          sudo apt-get update && sudo apt-get install -y gettext-base
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
           token_format: 'access_token'
-          workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
-          service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account:        ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
-      - name: Copy config files to VM
+      - name: Generate forwarding.secret from template
         run: |
-          gcloud compute scp terraform/docker-compose.yml \
-            terraform/velocity/velocity.toml \
-            terraform/velocity/forwarding.secret \
-            terraform/paper/configs/server.properties \
-            terraform/paper/configs/paper-global.yml \
-            $INSTANCE_NAME:~ --zone=$GCP_ZONE --project=$GCP_PROJECT_ID --tunnel-through-iap
+          mkdir -p terraform/velocity
+          envsubst '${FORWARDING_SECRET}' < terraform/velocity/forwarding.secret.template \
+            > terraform/velocity/forwarding.secret
+
+      - name: Generate paper-global.yml from template
+        run: |
+          mkdir -p terraform/paper/configs
+          envsubst '${FORWARDING_SECRET}' < terraform/paper/configs/paper-global.yml.template \
+            > terraform/paper/configs/paper-global.yml
+
+      - name: Generate velocity.toml from template
+        run: |
+          mkdir -p terraform/velocity
+          envsubst '${FORWARDING_SECRET_FILE}' < terraform/velocity/velocity.toml.template \
+            > terraform/velocity/velocity.toml
+
+      - name: Copy config and compose files to VM
+        run: |
+          gcloud compute scp \
+            terraform/docker-compose.yml \
+            -r terraform/velocity \
+            -r terraform/paper/configs \
+            ${{ env.INSTANCE_NAME }}:~/deploy/ \
+            --zone=${{ env.GCP_ZONE }} \
+            --project=${{ env.GCP_PROJECT_ID }} \
+            --tunnel-through-iap
 
       - name: Restart Minecraft containers
         run: |
-          gcloud compute ssh $INSTANCE_NAME --zone $GCP_ZONE --project $GCP_PROJECT_ID --tunnel-through-iap -- \
-            "sudo mkdir -p /mnt/data/minecraft/velocity /mnt/data/minecraft/paper/configs && \
-             sudo mv ~/docker-compose.yml /mnt/data/minecraft/ && \
-             sudo mv ~/velocity.toml /mnt/data/minecraft/velocity/ && \
-             sudo mv ~/forwarding.secret /mnt/data/minecraft/velocity/ && \
-             sudo mv ~/server.properties /mnt/data/minecraft/paper/configs/ && \
-             sudo mv ~/paper-global.yml /mnt/data/minecraft/paper/configs/ && \
-             cd /mnt/data/minecraft && \
-             sudo docker compose down || true && \
-             sudo docker compose up -d"
+          gcloud compute ssh ${{ env.INSTANCE_NAME }} \
+            --zone ${{ env.GCP_ZONE }} \
+            --project ${{ env.GCP_PROJECT_ID }} \
+            --tunnel-through-iap --command="
+              sudo mkdir -p /mnt/data/minecraft/velocity /mnt/data/minecraft/paper/configs && \
+              sudo mv ~/deploy/docker-compose.yml /mnt/data/minecraft/ && \
+              sudo mv ~/deploy/velocity /mnt/data/minecraft/ && \
+              sudo mv ~/deploy/configs /mnt/data/minecraft/paper/ && \
+              cd /mnt/data/minecraft && \
+              sudo docker compose down || true && \
+              sudo docker compose up -d
+            "
