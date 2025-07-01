@@ -6,3 +6,4 @@
 # Diretório de provedores do Terraform
 .terraform/
 
+terraform/velocity/forwarding.secret
