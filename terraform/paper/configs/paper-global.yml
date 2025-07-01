@@ -1,5 +1,8 @@
 proxies:
   velocity:
     enabled: true
-    online-mode: true
-    secret: /velocity/forwarding.secret
+    online-mode: false
+    secret: "fae35b70d19426c8"
+settings:
+  bungeecord: false
+prevent-proxy-connections: false

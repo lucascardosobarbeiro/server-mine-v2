@@ -1,53 +1,41 @@
-# .github/workflows/deploy.yml
-
-name: Deploy Minecraft Server
+name: Deploy Minecraft Proxy Infra
 
 on:
   push:
-    branches:
-      - main
-
-env:
-  GCP_PROJECT_ID: server-mine-463823
-  GCP_ZONE: southamerica-east1-a
-  INSTANCE_NAME: minecraft-server-host
+    branches: [ "main" ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: 'read'
-      id-token: 'write'
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          token_format: 'access_token'
-          workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
-          service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
+    - name: Setup Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        export_default_credentials: true
 
-      - name: Copy config files to VM
-        run: |
-          gcloud compute scp terraform/docker-compose.yml \
-            terraform/velocity/velocity.toml \
-            terraform/velocity/forwarding.secret \
-            terraform/paper/configs/server.properties \
-            terraform/paper/configs/paper-global.yml \
-            $INSTANCE_NAME:~ --zone=$GCP_ZONE --project=$GCP_PROJECT_ID --tunnel-through-iap
+    - name: Deploy configs to Minecraft VM
+      run: |
+        echo "📦 Enviando configs para a VM..."
+        
+        gcloud compute scp \
+          terraform/velocity/velocity.toml \
+          terraform/velocity/forwarding.secret \
+          terraform/paper/configs/server.properties \
+          terraform/paper/configs/paper-global.yml \
+          terraform/paper/configs/spigot.yml \
+          --zone=southamerica-east1-a \
+          lucas.barbeiro@minecraft-server-host:~ --tunnel-through-iap
 
-      - name: Restart Minecraft containers
-        run: |
-          gcloud compute ssh $INSTANCE_NAME --zone $GCP_ZONE --project $GCP_PROJECT_ID --tunnel-through-iap -- \
-            "sudo mkdir -p /mnt/data/minecraft/velocity /mnt/data/minecraft/paper/configs && \
-             sudo mv ~/docker-compose.yml /mnt/data/minecraft/ && \
-             sudo mv ~/velocity.toml /mnt/data/minecraft/velocity/ && \
-             sudo mv ~/forwarding.secret /mnt/data/minecraft/velocity/ && \
-             sudo mv ~/server.properties /mnt/data/minecraft/paper/configs/ && \
-             sudo mv ~/paper-global.yml /mnt/data/minecraft/paper/configs/ && \
-             cd /mnt/data/minecraft && \
-             sudo docker compose down || true && \
-             sudo docker compose up -d"
+    - name: Restart Minecraft containers remotely
+      run: |
+        echo "♻️ Reiniciando containers via SSH"
+        gcloud compute ssh lucas.barbeiro@minecraft-server-host \
+          --zone=southamerica-east1-a \
+          --tunnel-through-iap \
+          --command="cd ~/ && docker compose down -v && docker compose up -d --build"
