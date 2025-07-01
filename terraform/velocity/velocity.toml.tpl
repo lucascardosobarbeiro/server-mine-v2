@@ -22,3 +22,5 @@ try = [ "survivencia" ]
 
 [advanced]
 forwarding-secret-file = "/config/forwarding.secret"
+
+log-level = "debug"

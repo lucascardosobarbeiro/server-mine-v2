@@ -15,7 +15,7 @@ services:
       EULA: "TRUE"
       TYPE: "PAPER"
       MEMORY: "10G"
-      ONLINE_MODE: "true"
+      ONLINE_MODE: "false"
       VELOCITY_ENABLED: "true"
       VELOCITY_SECRET_FILE: "/velocity/forwarding.secret"
     networks:
