@@ -37,6 +37,7 @@ services:
     volumes:
       - ./velocity:/config
     environment:
+      TYPE: "VELOCITY"
       MEMORY: "1G"
     networks:
       - minecraft-net
