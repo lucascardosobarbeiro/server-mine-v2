@@ -12,17 +12,27 @@ services:
     ports:
       - "25566:25565"
     volumes:
+      # mundo e dados persistentes
       - ./sobrevivencia-data:/data
-      - ./paper/configs/server.properties:/config/server.properties
-      - ./paper/configs/paper-global.yml:/config/paper-global.yml
-      - ./velocity/forwarding.secret:/config/forwarding.secret
+
+      # configs gerados pelo CI
+      - ./terraform/paper/configs/server.properties:/config/server.properties
+      - ./terraform/paper/configs/paper-global.yml:/config/paper-global.yml
+
+      # segredo Velocity gerado pelo CI
+      - ./terraform/velocity/forwarding.secret:/config/forwarding.secret
+
+      # plugins baixados pelo CI via scripts/fetch-plugins.sh
+      - ./terraform/paper/plugins:/data/plugins
+
     environment:
-      EULA: "TRUE"
-      TYPE: "PAPER"
-      MEMORY: "10G"
-      ONLINE_MODE: "false"
-      VELOCITY_ENABLED: "true"
+      EULA:               "TRUE"
+      TYPE:               "PAPER"
+      MEMORY:             "10G"
+      ONLINE_MODE:        "false"
+      VELOCITY_ENABLED:   "true"
       VELOCITY_SECRET_FILE: "/config/forwarding.secret"
+
     networks:
       - minecraft-net
     depends_on:
@@ -35,9 +45,14 @@ services:
     ports:
       - "25565:25577"
     volumes:
-      - ./velocity:/config
+      # toda config do proxy (toml + secret)
+      - ./terraform/velocity:/config
+
+      # plugins do proxy, caso use algum
+      - ./terraform/velocity/plugins:/config/plugins
+
     environment:
-      TYPE: "VELOCITY"
+      TYPE:   "VELOCITY"
       MEMORY: "1G"
     networks:
       - minecraft-net

@@ -23,10 +23,9 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install dependencies for IAP tunnel and envsubst
+      - name: Install dependencies for IAP tunnel, envsubst and plugin fetch
         run: |
-          python3 -m pip install numpy --user
-          sudo apt-get update && sudo apt-get install -y gettext-base
+          sudo apt-get update && sudo apt-get install -y gettext-base jq curl
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -38,25 +37,36 @@ jobs:
       - name: Generate forwarding.secret from template
         run: |
           mkdir -p terraform/velocity
-          # Usa FORWARDING_SECRET definido nos env
-          envsubst '${FORWARDING_SECRET}' < terraform/velocity/forwarding.secret.template > terraform/velocity/forwarding.secret
+          envsubst '${FORWARDING_SECRET}' \
+            < terraform/velocity/forwarding.secret.template \
+            > terraform/velocity/forwarding.secret
 
       - name: Generate paper-global.yml from template
         run: |
           mkdir -p terraform/paper/configs
-          envsubst '${FORWARDING_SECRET}' < terraform/paper/configs/paper-global.yml.template > terraform/paper/configs/paper-global.yml
+          envsubst '${FORWARDING_SECRET}' \
+            < terraform/paper/configs/paper-global.yml.template \
+            > terraform/paper/configs/paper-global.yml
 
       - name: Generate velocity.toml from template
         run: |
           mkdir -p terraform/velocity
-          envsubst '${FORWARDING_SECRET_FILE}' < terraform/velocity/velocity.toml.template > terraform/velocity/velocity.toml
+          envsubst '${FORWARDING_SECRET_FILE}' \
+            < terraform/velocity/velocity.toml.template \
+            > terraform/velocity/velocity.toml
 
-      - name: Copy config and compose files to VM
+      - name: Download plugins via manifest
+        run: |
+          chmod +x terraform/scripts/fetch-plugins.sh
+          terraform/scripts/fetch-plugins.sh
+
+      - name: Copy configs, compose and plugins to VM
         run: |
           gcloud compute scp --recurse \
             terraform/docker-compose.yml \
             terraform/velocity \
             terraform/paper/configs \
+            terraform/paper/plugins \
             ${{ env.INSTANCE_NAME }}:~/deploy/ \
             --zone=${{ env.GCP_ZONE }} \
             --project=${{ env.GCP_PROJECT_ID }} \
@@ -68,17 +78,22 @@ jobs:
             --zone ${{ env.GCP_ZONE }} \
             --project ${{ env.GCP_PROJECT_ID }} \
             --tunnel-through-iap --command="
-              # Limpa configurações anteriores
-              sudo rm -rf /mnt/data/minecraft/velocity /mnt/data/minecraft/paper/configs && \
-              sudo mkdir -p /mnt/data/minecraft && \
-              # Move novos artefatos
-              sudo mv ~/deploy/docker-compose.yml /mnt/data/minecraft/ && \
-              sudo mv ~/deploy/velocity /mnt/data/minecraft/velocity && \
-              sudo mv ~/deploy/configs /mnt/data/minecraft/paper/configs && \
-              # Ajusta permissões para o Velocity migrar o secret
+              # clean old dirs
+              sudo rm -rf /mnt/data/minecraft/velocity \
+                           /mnt/data/minecraft/paper/configs \
+                           /mnt/data/minecraft/paper/plugins && \
+              # recreate required dirs
+              sudo mkdir -p /mnt/data/minecraft/paper/plugins && \
+              # move fresh artifacts
+              sudo mv ~/deploy/docker-compose.yml /mnt/data/minecraft/docker-compose.yml && \
+              sudo mv ~/deploy/velocity       /mnt/data/minecraft/velocity && \
+              sudo mv ~/deploy/configs        /mnt/data/minecraft/paper/configs && \
+              sudo mv ~/deploy/plugins        /mnt/data/minecraft/paper/plugins && \
+              # adjust permissions
               sudo chmod -R a+rwX /mnt/data/minecraft/velocity && \
+              sudo chmod -R a+rwX /mnt/data/minecraft/paper/plugins && \
+              # restart docker
               cd /mnt/data/minecraft && \
-              # Reinicia containers
               sudo docker compose down || true && \
               sudo docker compose up -d
             "
