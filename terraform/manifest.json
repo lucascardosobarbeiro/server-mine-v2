@@ -1,0 +1,11 @@
+{
+  "paper": [
+    {"name":"ViaVersion","url":"https://api.papermc.io/v2/projects/viaversion/versions/latest/download"},
+    {"name":"Geyser","url":"https://api.papermc.io/v2/projects/geyser/versions/latest/download"},
+    {"name":"EssentialsX","url":"https://api.papermc.io/v2/projects/essentialsx/versions/latest/download"},
+    {"name":"ViaBackwards","url":"https://api.papermc.io/v2/projects/viabackwards/versions/latest/download"},
+    {"name":"Chunky","url":"https://api.papermc.io/v2/projects/chunky/versions/latest/download"},
+    {"name":"Plan-Player-Analytics","url":"https://api.papermc.io/v2/projects/plan-player-analytics/versions/latest/download"}
+  ],
+  "velocity": []
+}
