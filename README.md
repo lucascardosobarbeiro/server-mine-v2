@@ -9,6 +9,7 @@
   <img src="https://img.shields.io/badge/GCP-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white" alt="GCP" />
   <img src="https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform&logoColor=white" alt="Terraform" />
   <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+
 </p>
 
 # Automated minecraft server + GCP + Docker compose + Actions + CI/CD + IAC
@@ -44,11 +45,7 @@ The core principle of this architecture is to allow for easy modifications and s
 
 This architecture is designed for automation and scalability, divided into three main layers: **Infrastructure (GCP & Terraform)**, **Application (Docker)**, and **CI/CD (GitHub Actions)**.
 
-### Architecture Diagram
 
-The diagram below illustrates the complete workflow, from local configuration to cloud deployment.
-
-![Project Architecture Diagram](https://i.imgur.com/8aGZ5Yc.png)
 
 ### 1. Infrastructure Layer (Provisioning with Terraform on GCP)
 
