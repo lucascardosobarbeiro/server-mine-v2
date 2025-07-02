@@ -3,7 +3,7 @@
 # Cria uma rede isolada para nossos recursos, em vez de usar a rede 'default' do GCP.
 # =================================================================================
 resource "google_compute_network" "minecraft_vpc" {
-  name = "minecraft-vpc"
+  name                    = "minecraft-vpc"
   # Boa prática de segurança: Desabilita a criação automática de sub-redes.
   # Nós criaremos nossa própria sub-rede manualmente, tendo controle total.
   auto_create_subnetworks = false
@@ -33,8 +33,8 @@ resource "google_compute_firewall" "allow_velocity_proxy" {
 
   # 'allow' define o que é permitido.
   allow {
-    protocol = "tcp"         # Protocolo de comunicação do Minecraft.
-    ports    = ["25565"]     # A única porta que os jogadores usarão.
+    protocol = "tcp"      # Protocolo de comunicação do Minecraft.
+    ports    = ["25565"]   # A única porta que os jogadores usarão.
   }
   # 'source_ranges' define de onde o tráfego pode vir.
   # "0.0.0.0/0" é um CIDR especial que significa "qualquer lugar da internet".
@@ -58,4 +58,23 @@ resource "google_compute_firewall" "allow_iap_ssh" {
   # pode sequer tentar se conectar à porta 22.
   source_ranges = ["35.235.240.0/20"]
   target_tags   = ["minecraft-server"]
+}
+
+# Regra 3: Permite acesso público ao painel web do plugin Plan.
+# Expõe a porta 8804 para que qualquer pessoa com o link possa ver as estatísticas.
+resource "google_compute_firewall" "allow_plan_webui" {
+  name    = "allow-plan-tcp-8804"
+  network = google_compute_network.minecraft_vpc.self_link # Aplica-se à nossa VPC.
+
+  # Define o que é permitido.
+  allow {
+    protocol = "tcp"
+    ports    = ["8804"] # Porta padrão do painel web do Plan.
+  }
+
+  # Permite que o tráfego venha de qualquer lugar da internet.
+  source_ranges = ["0.0.0.0/0"]
+
+  # Aplica esta regra à mesma VM do servidor de Minecraft.
+  target_tags = ["minecraft-server"]
 }

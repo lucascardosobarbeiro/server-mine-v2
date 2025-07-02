@@ -37,4 +37,4 @@ terraform/backend.tf
 # — Outros —
 terraform/velocity/plugins/
 terraform/paper/plugins/
-
+terraform/backend.tf

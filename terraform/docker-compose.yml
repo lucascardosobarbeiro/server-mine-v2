@@ -11,6 +11,7 @@ services:
     restart: unless-stopped
     ports:
       - "25566:25565"
+      - "8804:8804"   #Plan plugin stats
     volumes:
       # mundo + dados persistentes
       - ./sobrevivencia-data:/data
