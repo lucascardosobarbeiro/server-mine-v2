@@ -1,295 +1,199 @@
 <p align="center">
-  <img src="https://res.cloudinary.com/zenbusiness/image/upload/v1670445040/logaster/logaster-2020-06-image14-3.png" width="150" alt="Project Logo"/>
-</p>
-<!-- Badges -->
-<p align="center">
-  <img src="https://img.shields.io/badge/status-complete-green?style=for-the-badge" alt="Project Status: Complete"/>
-  <img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="License: MIT"/>
+  <img src="https://res.cloudinary.com/zenbusiness/image/upload/v1670445040/logaster/logaster-2020-06-image14-3.png" width="150" alt="Project Logo" />
 </p>
 <p align="center">
-  <img src="https://img.shields.io/badge/GCP-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white" alt="GCP"/>
-  <img src="https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform&logoColor=white" alt="Terraform"/>
-  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"/>
-  <img src="https://img.shields.io/badge/GitHub%20Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white" alt="GitHub Actions"/>
+  <img src="https://img.shields.io/badge/status-complete-green?style=for-the-badge" alt="Complete" />
+  <img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="MIT" />
+</p>
+<p align="center">
+  <img src="https://img.shields.io/badge/GCP-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white" alt="GCP" />
+  <img src="https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform&logoColor=white" alt="Terraform" />
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
 </p>
 
-> A production-ready **Infrastructure-as-Code (IaC)** solution designed to deploy a **PaperMC** Minecraft server behind a **Velocity** proxy on the **Google Cloud Platform (GCP)**. It automates provisioning, configuration, deployment, and updates using **Terraform**, **Docker Compose**, and **GitHub Actions**.
+# Automated minecraft server + GCP + Docker compose + Actions + CI/CD + IAC
 
----
+This project provides a **robust, scalable, and easily editable** Infrastructure as Code (IaC) solution for deploying a production-ready PaperMC Minecraft server with a Velocity proxy on the Google Cloud Platform (GCP). It automates the entire lifecycle, from provisioning and configuration to deployment and updates, all designed to be seamlessly managed through CI/CD pipelines.
 
-## 📜 Table of Contents
+The core principle of this architecture is to allow for easy modifications and scaling without needing to manually rebuild server components, making it perfect for pipeline-driven automation.
 
-1.  [🌟 Introduction](#-introduction)
-2.  [✨ Key Features](#-key-features)
-3.  [🏗️ Technical Architecture](#️-technical-architecture)
-4.  [🛠️ Technology Stack](#️-technology-stack)
-5.  [📁 Repository Structure](#-repository-structure)
-6.  [✅ Prerequisites](#-prerequisites)
-7.  [🚀 Setup & Deployment](#-setup--deployment)
-8.  [📝 Configuration Templates](#-configuration-templates)
-9.  [🔄 CI/CD Pipeline](#-cicd-pipeline)
-10. [🧩 Plugin Management](#-plugin-management)
-11. [⚙️ Operational Guidelines](#️-operational-guidelines)
-12. [🤝 Contributing](#-contributing)
-13. [📄 License](#-license)
+## ✨ Features
 
----
+* **Automated Deployment:** Use Terraform to provision and manage the entire infrastructure on GCP.
+* **CI/CD with GitHub Actions:** A complete CI/CD pipeline to automate deployments and updates.
+* **Containerized Environment:** The Minecraft server and proxy run in Docker containers for a consistent and isolated setup.
+* **Production-Ready:** Configured with security and performance best practices in mind.
+* **Highly Configurable:** Easily customize server and proxy settings through template files.
+* **Automated Backups:** Leverage Google Cloud Storage for automatic backups of your Minecraft world, with lifecycle policies to manage costs.
 
-## 🌟 Introduction
+## 🚀 Technology Stack
 
-**Server-Mine-v2** provides a scalable and reproducible platform for running multiple Minecraft services with minimal manual effort. All infrastructure, from networking to VM instances, is defined as code, and deployments are fully automated.
+* **Cloud Provider:** Google Cloud Platform (GCP)
+* **IaC & Configuration Management:** Terraform
+* **CI/CD:** GitHub Actions
+* **Container Runtime:** Docker Engine & Docker Compose
+* **Minecraft Proxy:** Velocity 3.x
+* **Minecraft Server:** PaperMC
+* **Secrets Management:** GitHub Secrets & Environment Variables
+* **Networking:** VPC, Subnets, and Firewall Rules
+* **Authentication:** Workload Identity Federation & IAP SSH
+* **Storage:** Google Cloud Storage (GCS) for Terraform state and backups
+* **Monitoring & Logging:** Cloud Monitoring & Cloud Logging
 
-**Highlights:**
+## 🏛️ Architecture Details
 
--   **Velocity Proxy** for secure forwarding and server aggregation.
--   **PaperMC Instances** for optimized performance and plugin support.
--   **Terraform** for infrastructure provisioning and remote state management in a GCS bucket.
--   **GitHub Actions** for continuous integration and deployment.
+This architecture is designed for automation and scalability, divided into three main layers: **Infrastructure (GCP & Terraform)**, **Application (Docker)**, and **CI/CD (GitHub Actions)**.
 
----
+### Architecture Diagram
 
-## ✨ Key Features
+The diagram below illustrates the complete workflow, from local configuration to cloud deployment.
 
--   **Infrastructure-as-Code**: Provision VPCs, subnets, firewall rules, Compute Engine instances, IAM roles, and Cloud Storage buckets via Terraform.
--   **Remote State**: Store Terraform state securely in a GCS backend bucket.
--   **GitOps Deploys**: Trigger deployments on commits to the `main` branch, ensuring consistency and auditability.
--   **Template-Driven Config**: Maintain `.template` files for all service configurations and inject environment-specific values at deploy time.
--   **Container Orchestration**: Use Docker Compose to manage the `velocity-proxy` and one or more `paper-server` containers with `restart: unless-stopped`.
--   **Secure Secrets**: Manage forwarding secrets, service account credentials, and plugin URLs via GitHub Secrets.
--   **Dynamic Plugin Loading**: Fetch and update plugins on startup using the Hangar API or direct URLs.
--   **Resilience**: Automatic VM and container restarts minimize downtime.
+![Project Architecture Diagram](https://i.imgur.com/8aGZ5Yc.png)
 
----
+### 1. Infrastructure Layer (Provisioning with Terraform on GCP)
 
-## 🏗️ Technical Architecture
+This is the project's foundation. Terraform declaratively defines and provisions all necessary GCP resources.
 
-```mermaid
-flowchart LR
-  subgraph "GitHub"
-    A[Repo: IaC + Config Templates]
-    B[Actions: CI/CD Pipeline]
-  end
+* **Networking (VPC):** A dedicated Virtual Private Cloud isolates the server environment, enhancing security. Firewall rules are configured to only allow necessary traffic (port `25565` for Velocity and `22` for SSH via IAP).
+* **Compute (Compute Engine):** A single VM instance is provisioned to run the Docker containers. A startup script handles the initial setup of Docker and Docker Compose.
+* **Storage (Google Cloud Storage):** Two GCS buckets are created: one for the remote Terraform state (`tfstate`) and another for world backups, which includes a lifecycle policy to delete old backups and reduce costs.
+* **Security & Identity (IAM):** A dedicated Service Account with minimal permissions is created for the VM. **Workload Identity Federation** allows the GitHub Actions pipeline to securely authenticate with GCP without long-lived keys. SSH access is secured via **IAP (Identity-Aware Proxy)**, which uses IAM for authentication instead of traditional SSH keys.
 
-  B -->|Terraform Apply| C[GCP Infrastructure]
-  B -->|gcloud SCP & SSH| C
+### 2. Application Layer (Containerization with Docker)
 
-  subgraph "Google Cloud Platform"
-    C -->|Provisions| D[Debian 11 VM]
-    D <--> G[Cloud Storage (Terraform state, Backups)]
-    D <--> H[Cloud Monitoring & Logging]
-  end
+The Minecraft server itself is managed by Docker, ensuring a portable and consistent runtime.
 
-  subgraph "VM Instance"
-    D -- Docker Compose --> E[Velocity Proxy]
-    D -- Docker Compose --> F[PaperMC Servers]
-    E --- F
-  end
+* **`docker-compose.yml`:** This file orchestrates the services. The Terraform pipeline syncs this file to the VM.
+* **`papermc` service:** Runs the [itzg/docker-minecraft-server](https://github.com/itzg/docker-minecraft-server) image. It uses a volume mount (`./paper/plugins:/data/plugins`) to map the plugins downloaded by the CI/CD pipeline directly into the container.
+* **`velocity` service:** Runs the [itzg/docker-mc-proxy](https://github.com/itzg/docker-mc-proxy) image. It exposes the server to the internet and uses a volume mount (`./velocity/plugins:/config/plugins`) for its own plugins.
 
-  style D fill:#f9f9f9,stroke:#333,stroke-width:2px
-```
+### 3. CI/CD & Automation Layer (GitHub Actions)
 
--   **Terraform**: Defines all GCP resources and configures a GCS bucket as the remote state backend.
--   **Compute Engine VM**: Runs Docker Engine and Compose, accessible only via IAP SSH.
--   **GitHub Actions**: Automates `terraform init/plan/apply`, config rendering, file transfer, and container restarts.
--   **Cloud Monitoring**: Tracks VM health, container metrics, and logs for alerting.
+This layer connects the code repository to the cloud infrastructure, enabling full automation.
 
----
+* **`.github/workflows/deploy.yml`:** This pipeline-centric approach ensures that any change, from a simple plugin addition to an infrastructure modification, is deployed automatically and consistently.
+* **Plugin Fetching:** The first step runs the `scripts/fetch-plugins.sh` script, which reads `manifest.json` and downloads the specified plugins.
+* **Secure Authentication:** The pipeline authenticates to GCP using Workload Identity Federation.
+* **Infrastructure Deployment:** Finally, `terraform apply` is executed. Terraform updates the GCP resources and syncs all necessary files, including the `docker-compose.yml` and the newly downloaded plugins, to the VM.
 
-## 🛠️ Technology Stack
-
-| Layer                      | Technology                                                      |
-| -------------------------- | --------------------------------------------------------------- |
-| **Cloud Provider** | Google Cloud Platform (GCP)                                     |
-| **IaC & Config Management**| Terraform (HCL), Environment Templating (`envsubst`)            |
-| **CI/CD** | GitHub Actions                                                  |
-| **Container Runtime** | Docker Engine + Docker Compose                                  |
-| **Minecraft Proxy** | Velocity 3.x                                                    |
-| **Minecraft Server** | PaperMC                                                         |
-| **Secrets Management** | GitHub Secrets, Environment Variables                           |
-| **Networking** | VPC, Subnets, Firewall Rules                                    |
-| **Authentication** | Workload Identity Federation, IAP SSH                           |
-| **State & Backups** | GCS Buckets                                                     |
-| **Monitoring & Logging** | Cloud Monitoring, Cloud Logging                                 |
-
----
-
-## 📁 Repository Structure
+## 📁 Project Structure
 
 ```bash
-server-mine-v2/
+.
 ├── .github/workflows/
-│   └── deploy.yml            # CI/CD pipeline definition
-├── terraform/                # Terraform modules & configs
-│   ├── backend.tf            # GCS remote state backend
-│   ├── network.tf            # VPC, subnet, firewall settings
-│   ├── compute.tf            # Compute Engine instance metadata & startup
-│   ├── iam.tf                # Service accounts & IAM bindings
-│   ├── storage.tf            # GCS bucket for backups & state
-│   └── variables.tf          # Input variables and defaults
-├── velocity/                 # Velocity proxy configuration templates
-│   ├── velocity.toml.template
-│   └── forwarding.secret.template
-├── paper/configs/            # PaperMC server configuration templates
-│   ├── paper-global.yml.template
-│   └── server.properties
-├── docker-compose.yml.template # Docker Compose template with placeholders
-├── terraform.tfvars.example  # Sample Terraform variable file
-└── README.md                 # Project documentation
+│   └── deploy.yml
+├── paper/
+│   ├── configs/
+│   └── plugins/  # PaperMC plugins are downloaded here
+├── scripts/
+│   └── fetch-plugins.sh # Script that downloads plugins
+├── terraform/
+│   ├── ... (terraform .tf files)
+├── velocity/
+│   ├── plugins/  # Velocity plugins are downloaded here
+│   └── ... (config files)
+├── docker-compose.yml
+├── manifest.json       # List of plugins to be downloaded
+├── terraform.tfvars.example
+└── README.md
 ```
 
----
+## ⚙️ Installation and Usage
 
-## ✅ Prerequisites
+### Prerequisites
 
--   [Git](https://git-scm.com/) v2.30+ installed locally.
--   [Terraform](https://www.terraform.io/downloads.html) v1.0+ with `terraform init` access.
--   [Google Cloud SDK (gcloud)](https://cloud.google.com/sdk/docs/install) latest version.
--   A GitHub repository with Actions enabled.
--   A GCP project where you have the following permissions:
-    -   `Compute Admin`
-    -   `Service Account User`
-    -   `Storage Admin`
-    -   `IAM Role Viewer`
+* A Google Cloud Platform account with a project created.
+* [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli) installed locally.
+* [gcloud CLI](https://cloud.google.com/sdk/docs/install) installed and configured.
 
----
-
-## 🚀 Setup & Deployment
+### Steps
 
 1.  **Clone the repository:**
-    ```sh
+    ```bash
     git clone [https://github.com/lucascardosobarbeiro/server-mine-v2.git](https://github.com/lucascardosobarbeiro/server-mine-v2.git)
     cd server-mine-v2
     ```
 
-2.  **Configure Terraform:**
-    ```sh
-    # Copy the example file
-    cp terraform.tfvars.example terraform/terraform.tfvars
+2.  **Configure Terraform variables:**
+    * Rename `terraform.tfvars.example` to `terraform.tfvars`.
+    * Edit `terraform.tfvars` with your GCP settings (e.g., `project_id`, `region`).
 
-    # Edit terraform/terraform.tfvars with your GCP_PROJECT_ID, GCP_ZONE, INSTANCE_NAME
+3.  **(Optional) Add Plugins:**
+    * Edit the `manifest.json` file to add or remove plugins.
+    * Run the script to download them locally: `bash scripts/fetch-plugins.sh`.
+
+4.  **Initialize Terraform:**
+    ```bash
+    cd terraform
+    terraform init
     ```
 
-3.  **Add GitHub Secrets** (Repository Settings > Secrets and variables > Actions):
-    -   `GCP_PROJECT_ID`
-    -   `GCP_ZONE`
-    -   `INSTANCE_NAME`
-    -   `GCP_WORKLOAD_IDENTITY_PROVIDER`
-    -   `GCP_SERVICE_ACCOUNT`
-    -   `FORWARDING_SECRET`
+5.  **Plan the deployment:**
+    ```bash
+    terraform plan
+    ```
 
-4.  **Customize templates (optional):**
-    -   `velocity/velocity.toml.template`
-    -   `paper/configs/paper-global.yml.template`
-    -   `docker-compose.yml.template`
+6.  **Apply the configuration:**
+    ```bash
+    terraform apply
+    ```
 
-5.  **Push your changes** to the `main` branch to trigger the automated deployment.
+After completion, Terraform will output the server's IP address and other relevant information.
 
----
+## 🔌 Installing Plugins (The Detailed Workflow)
 
-## 📝 Configuration Templates
+Plugin installation is centralized in the `manifest.json` file and automated by the `scripts/fetch-plugins.sh` script.
 
-We use `envsubst` to render placeholders in `.template` files during deployment.
+1.  **Declare Plugins in `manifest.json`**:
+    Open `manifest.json` and add an object for each plugin. Specify the `type` (`paper` or `velocity`) and the download `url`.
 
-#### Velocity Proxy (`velocity/velocity.toml.template`)
-```toml
-bind = "0.0.0.0:25577"
-forwarding-secret-file = "${FORWARDING_SECRET_FILE}"
-# ... other settings
-```
+    **Example `manifest.json`:**
+    ```json
+    [
+      {
+        "name": "LuckPerms",
+        "type": "paper",
+        "url": "[https://ci.lucko.me/job/LuckPerms/lastSuccessfulBuild/artifact/bukkit/loader/build/libs/LuckPerms-Bukkit-5.4.104.jar](https://ci.lucko.me/job/LuckPerms/lastSuccessfulBuild/artifact/bukkit/loader/build/libs/LuckPerms-Bukkit-5.4.104.jar)"
+      },
+      {
+        "name": "Dynmap",
+        "type": "paper",
+        "url": "[https://mediafilez.forgecdn.net/files/4549/255/dynmap-3.6-paper.jar](https://mediafilez.forgecdn.net/files/4549/255/dynmap-3.6-paper.jar)"
+      }
+    ]
+    ```
 
-#### PaperMC Server (`paper/configs/paper-global.yml.template`)
-```yaml
-settings:
-  global:
-    online-mode: false
-  velocity:
-    enabled: true
-    secret: ${FORWARDING_SECRET}
-# ... other settings
-```
+2.  **Run the Download Script**:
+    Execute the `fetch-plugins.sh` script from the project root. It will read the manifest, download each plugin, and place it in the correct directory (`./paper/plugins` or `./velocity/plugins`).
+    ```bash
+    bash scripts/fetch-plugins.sh
+    ```
+    *Note: The CI/CD pipeline already does this automatically.*
 
-#### Docker Compose (`docker-compose.yml.template`)
-```yaml
-version: "3.8"
-services:
-  velocity-proxy:
-    image: papermc/velocity:latest
-    environment:
-      - FORWARDING_SECRET_FILE=/config/forwarding.secret
-  paper-server:
-    image: itzg/minecraft-server
-    environment:
-      - EULA=TRUE
-      - TYPE=PAPER
-      - MEMORY=4G
-      - ONLINE_MODE=false
-      - PLUGINS=${PLUGINS}
-```
+3.  **Apply with Terraform**:
+    When you run `terraform apply`, Terraform syncs the local plugin folders to the VM. The `docker-compose.yml` is already configured to map these folders into the correct containers. The server will restart and load the new plugins.
+    ```bash
+    cd terraform
+    terraform apply
+    ```
 
----
+## 🔮 Future Improvements
 
-## 🔄 CI/CD Pipeline
+This project is built to be extensible. Here are some potential future enhancements:
 
-Defined in `.github/workflows/deploy.yml`:
+* **On-Demand Server Function:** Implement a serverless function (e.g., Google Cloud Function) triggered by an HTTP request. This function would start the server's VM when the first player tries to connect and shut it down after a period of inactivity, generating significant cost savings. It could also trigger a remote backup before shutting down.
+* **Multi-Server Scalability:** Evolve the Terraform configuration to support deploying multiple PaperMC instances behind the same Velocity proxy. This would allow for a scalable network of servers (e.g., Survival, Creative, Minigames) managed from a single, unified codebase.
+* **Advanced Security for Large-Scale Servers:** For large public servers (like Brazilian Hunger Games), integrate advanced firewall rules (WAF) and dedicated anti-cheat solutions, with their configurations managed and deployed through the automated pipeline.
 
-1.  **Checkout**: Clones the code and Terraform modules.
-2.  **Terraform**: Runs `init`, `plan`, and `apply` with remote state.
-3.  **GCP Auth**: Authenticates via Workload Identity Federation.
-4.  **Install Utilities**: Installs `envsubst`, `curl`, `jq`.
-5.  **Render Configs**: Renders the configuration templates.
-6.  **Download Plugins (Optional)**: Fetches plugins via the Hangar API.
-7.  **File Transfer**: Uploads files to the VM (`gcloud compute scp --recurse`).
-8.  **Remote Execution**: Connects to the VM via SSH to move files, set permissions, and run `docker compose up -d`.
+## 🤝 Contributions
 
-This workflow guarantees consistent, repeatable deployments across environments.
+Contributions are welcome! Feel free to open an issue or submit a pull request.
 
----
+## 📞 Contact
 
-## 🧩 Plugin Management
-
-Dynamically download plugins using the Hangar API.
-
-```yaml
-- name: Fetch plugin URL from Hangar
-  run: |
-    # Fetch the latest plugin version
-    VERSION=$(curl -s -H "User-Agent:server-mine/1.0" \
-      [https://hangar.papermc.io/api/v1/projects/$](https://hangar.papermc.io/api/v1/projects/$){{ secrets.PLUGIN_AUTHOR }}/${{ secrets.PLUGIN_SLUG }}/versions \
-      | jq -r '.versions[-1]')
-    
-    # Get the download URL for that version
-    URL=$(curl -s -H "User-Agent:server-mine/1.0" \
-      [https://hangar.papermc.io/api/v1/projects/$](https://hangar.papermc.io/api/v1/projects/$){{ secrets.PLUGIN_AUTHOR }}/${{ secrets.PLUGIN_SLUG }}/versions/$VERSION/download \
-      | jq -r '.url')
-
-    # Export the URL to the GitHub Actions environment
-    echo "PLUGINS=$URL" >> $GITHUB_ENV
-```
-
-Pass `${{ env.PLUGINS }}` into your `docker-compose.yml.template` to auto-download on container startup.
-
----
-
-## ⚙️ Operational Guidelines
-
--   **Backups**: Automate VM disk snapshots and archive the `/data` directory to GCS.
--   **Auto-restart**: Use `restart: unless-stopped` in Docker Compose and enable VM auto-restart.
--   **Monitoring**: Configure Cloud Monitoring dashboards and alerting policies.
--   **Security**: Leverage IAP SSH, apply least-privilege IAM roles, and rotate secrets regularly.
-
----
-
-## 🤝 Contributing
-
-1.  **Fork** this repository.
-2.  Create a feature branch (`git checkout -b feature/your-feature`).
-3.  Commit your changes and push.
-4.  Open a **Pull Request**.
-
-Please follow existing styles and update documentation and templates where necessary.
-
----
+* **Email:** lcb.barbeiro@gmail.com
+* **LinkedIn:** [https://www.linkedin.com/in/lucascardosobarbeiro/?locale=en_US](https://www.linkedin.com/in/lucascardosobarbeiro/?locale=en_US)
 
 ## 📄 License
 
-This project is licensed under the **MIT License**. See the `LICENSE` file for details.
+This project is licensed under the MIT License.
