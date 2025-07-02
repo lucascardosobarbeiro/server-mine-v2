@@ -12,18 +12,17 @@ services:
     ports:
       - "25566:25565"
     volumes:
-      # mundo e dados persistentes
+      # 1) mundo e dados persistentes
       - ./sobrevivencia-data:/data
 
-      # configs gerados pelo CI
-      - ./terraform/paper/configs/server.properties:/config/server.properties
-      - ./terraform/paper/configs/paper-global.yml:/config/paper-global.yml
+      # 2) todos os configs do Paper (server.properties, paper-global.yml, spigot.yml)
+      - ./terraform/paper/configs:/config:ro
 
-      # segredo Velocity gerado pelo CI
-      - ./terraform/velocity/forwarding.secret:/config/forwarding.secret
+      # 3) o secret de forwarding (gerado pelo CI a partir do template)
+      - ./terraform/velocity/forwarding.secret:/config/forwarding.secret:ro
 
-      # plugins baixados pelo CI via scripts/fetch-plugins.sh
-      - ./terraform/paper/plugins:/data/plugins
+      # 4) plugins que o CI baixou via fetch-plugins.sh
+      - ./terraform/paper/plugins:/data/plugins:ro
 
     environment:
       EULA:               "TRUE"
@@ -45,12 +44,8 @@ services:
     ports:
       - "25565:25577"
     volumes:
-      # toda config do proxy (toml + secret)
-      - ./terraform/velocity:/config
-
-      # plugins do proxy, caso use algum
-      - ./terraform/velocity/plugins:/config/plugins
-
+      # monta TODO o diretório de config do proxy (velocity.toml + secret + plugins)
+      - ./terraform/velocity:/config:ro
     environment:
       TYPE:   "VELOCITY"
       MEMORY: "1G"
