@@ -2,27 +2,23 @@
   "paper": [
     {
       "name": "ViaVersion-5.4.1",
-      "url": "https://hangar.papermc.io/api/plugins/ViaVersion/ViaVersion/versions/5.4.1/download?channel=RELEASE"
-    },
-    {
-      "name": "Geyser-2.3.5",
-      "url": "https://hangar.papermc.io/api/plugins/GeyserMC/Geyser/versions/2.3.5/download?channel=RELEASE"
+      "url": "https://hangarcdn.papermc.io/plugins/ViaVersion/ViaVersion/versions/5.4.1/PAPER/ViaVersion-5.4.1.jar"
     },
     {
       "name": "EssentialsX-2.21.1",
-      "url": "https://hangar.papermc.io/api/plugins/EssentialsX/Essentials/versions/2.21.1/download?channel=RELEASE"
+      "url": "https://github.com/EssentialsX/Essentials/releases/download/2.21.1/EssentialsX-2.21.1-Paper.jar"
     },
     {
-      "name": "ViaBackwards-3.0.0",
-      "url": "https://hangar.papermc.io/api/plugins/ViaVersion/ViaBackwards/versions/3.0.0/download?channel=RELEASE"
+      "name": "ViaBackwards-5.4.1",
+      "url": "https://hangarcdn.papermc.io/plugins/ViaVersion/ViaBackwards/versions/5.4.1/PAPER/ViaBackwards-5.4.1.jar"
     },
     {
       "name": "Chunky-1.4.40",
-      "url": "https://hangar.papermc.io/api/plugins/pop4959/Chunky/versions/1.4.40/download?channel=RELEASE"
+      "url": "https://hangarcdn.papermc.io/plugins/pop4959/Chunky/versions/1.4.40/PAPER/Chunky-Bukkit-1.4.40.jar"
     },
     {
-      "name": "Plan-Player-Analytics-5.6.2965",
-      "url": "https://hangar.papermc.io/api/plugins/AuroraLS3/Plan-Player-Analytics/versions/5.6.2965/download?channel=RELEASE"
+      "name": "Plan-5.6-build-2965",
+      "url": "https://github.com/plan-player-analytics/Plan/releases/download/5.6.2965/Plan-5.6-build-2965.jar"
     }
   ],
   "velocity": []
