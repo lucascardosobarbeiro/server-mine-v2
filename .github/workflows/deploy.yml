@@ -6,18 +6,18 @@ on:
       - main
 
 env:
-  GCP_PROJECT_ID:      ${{ secrets.GCP_PROJECT_ID }}
-  GCP_ZONE:            ${{ secrets.GCP_ZONE }}
-  INSTANCE_NAME:       ${{ secrets.INSTANCE_NAME }}
-  FORWARDING_SECRET:   ${{ secrets.FORWARDING_SECRET }}
+  GCP_PROJECT_ID:        ${{ secrets.GCP_PROJECT_ID }}
+  GCP_ZONE:              ${{ secrets.GCP_ZONE }}
+  INSTANCE_NAME:         ${{ secrets.INSTANCE_NAME }}
+  FORWARDING_SECRET:     ${{ secrets.FORWARDING_SECRET }}
   FORWARDING_SECRET_FILE: "/config/forwarding.secret"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: 'read'
-      id-token: 'write'
+      contents: read
+      id-token: write
 
     steps:
       - name: Checkout repo
@@ -25,7 +25,7 @@ jobs:
 
       - name: Install dependencies for IAP, envsubst & plugin fetch
         run: |
-          # For improved IAP TCP tunnel performance
+          # Improve IAP TCP tunnel performance
           python3 -m pip install numpy --user
           sudo apt-get update
           sudo apt-get install -y gettext-base jq curl
@@ -33,7 +33,7 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          token_format: 'access_token'
+          token_format: access_token
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account:        ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
@@ -83,15 +83,15 @@ jobs:
             --tunnel-through-iap --command="
               sudo rm -rf /mnt/data/minecraft/velocity \
                            /mnt/data/minecraft/paper/configs \
-                           /mnt/data/minecraft/paper/plugins
-              sudo mkdir -p /mnt/data/minecraft/paper/plugins
-              sudo mv ~/deploy/docker-compose.yml /mnt/data/minecraft/docker-compose.yml
-              sudo mv ~/deploy/velocity       /mnt/data/minecraft/velocity
-              sudo mv ~/deploy/configs        /mnt/data/minecraft/paper/configs
-              sudo mv ~/deploy/plugins        /mnt/data/minecraft/paper/plugins
-              sudo chmod -R a+rwX /mnt/data/minecraft/velocity
-              sudo chmod -R a+rwX /mnt/data/minecraft/paper/plugins
-              cd /mnt/data/minecraft
-              sudo docker compose down || true
+                           /mnt/data/minecraft/paper/plugins && \
+              sudo mkdir -p /mnt/data/minecraft/paper/plugins && \
+              sudo mv ~/deploy/docker-compose.yml /mnt/data/minecraft/docker-compose.yml && \
+              sudo mv ~/deploy/velocity       /mnt/data/minecraft/velocity && \
+              sudo mv ~/deploy/configs        /mnt/data/minecraft/paper/configs && \
+              sudo mv ~/deploy/plugins/*      /mnt/data/minecraft/paper/plugins/ && \
+              sudo chmod -R a+rwX /mnt/data/minecraft/velocity && \
+              sudo chmod -R a+rwX /mnt/data/minecraft/paper/plugins && \
+              cd /mnt/data/minecraft && \
+              sudo docker compose down || true && \
               sudo docker compose up -d
             "
