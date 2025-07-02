@@ -15,11 +15,11 @@ services:
       # mundo + dados persistentes
       - ./sobrevivencia-data:/data
 
-      # todos os configs do Paper (server.properties, paper-global.yml, spigot.yml, forwarding.secret)
-      - ./paper/configs:/config:ro
+      # pasta única de configs (server.properties, paper-global.yml, spigot.yml, forwarding.secret)
+      - ./paper/configs:/config
 
-      # plugins baixados pelo CI
-      - ./paper/plugins:/data/plugins:ro
+      # plugins baixados pelo CI (agora com permissão de escrita pra .paper-remapped)
+      - ./paper/plugins:/data/plugins
 
     environment:
       EULA:               "TRUE"
@@ -41,11 +41,11 @@ services:
     ports:
       - "25565:25577"
     volumes:
-      # configurações e secret do proxy
-      - ./velocity:/config:ro
+      # configs e secret do proxy
+      - ./velocity:/config
 
-      # plugins do proxy (se houver)
-      - ./velocity/plugins:/config/plugins:ro
+      # plugins do proxy (se usar)
+      - ./velocity/plugins:/config/plugins
 
     environment:
       TYPE:   "VELOCITY"
