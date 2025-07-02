@@ -1,5 +1,6 @@
-# Server-Mine-v2: Cloud-Native Minecraft Deployment
-
+<p align="center">
+  <img src="https://res.cloudinary.com/zenbusiness/image/upload/v1670445040/logaster/logaster-2020-06-image14-3.png" width="150" alt="Project Logo"/>
+</p>
 <!-- Badges -->
 <p align="center">
   <img src="https://img.shields.io/badge/status-complete-green?style=for-the-badge" alt="Project Status: Complete"/>
