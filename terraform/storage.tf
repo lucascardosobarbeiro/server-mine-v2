@@ -6,9 +6,9 @@ resource "google_storage_bucket" "minecraft_backups" {
   # O nome de um bucket deve ser único em todo o mundo. Usar o ID do projeto
   # ajuda a garantir essa exclusividade.
   name          = "backup-minecraft-${var.project_id}"
-  location      = var.region      # Cria o bucket na mesma região dos outros recursos.
-  force_destroy = false           # Proteção contra exclusão acidental via Terraform.
-  storage_class = "STANDARD"      # Classe de armazenamento padrão.
+  location      = var.region # Cria o bucket na mesma região dos outros recursos.
+  force_destroy = false      # Proteção contra exclusão acidental via Terraform.
+  storage_class = "STANDARD" # Classe de armazenamento padrão.
 
   # REGRA DE CICLO DE VIDA: Uma excelente prática de gestão de custos.
   lifecycle_rule {

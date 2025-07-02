@@ -3,7 +3,7 @@
 # Cria uma rede isolada para nossos recursos, em vez de usar a rede 'default' do GCP.
 # =================================================================================
 resource "google_compute_network" "minecraft_vpc" {
-  name                    = "minecraft-vpc"
+  name = "minecraft-vpc"
   # Boa prática de segurança: Desabilita a criação automática de sub-redes.
   # Nós criaremos nossa própria sub-rede manualmente, tendo controle total.
   auto_create_subnetworks = false
@@ -33,8 +33,8 @@ resource "google_compute_firewall" "allow_velocity_proxy" {
 
   # 'allow' define o que é permitido.
   allow {
-    protocol = "tcp"      # Protocolo de comunicação do Minecraft.
-    ports    = ["25565"]   # A única porta que os jogadores usarão.
+    protocol = "tcp"     # Protocolo de comunicação do Minecraft.
+    ports    = ["25565"] # A única porta que os jogadores usarão.
   }
   # 'source_ranges' define de onde o tráfego pode vir.
   # "0.0.0.0/0" é um CIDR especial que significa "qualquer lugar da internet".
