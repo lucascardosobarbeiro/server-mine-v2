@@ -7,224 +7,216 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #111827; /* bg-gray-900 */
+            background-color: #030712; /* bg-gray-950 */
             color: #d1d5db; /* text-gray-300 */
         }
-        .prose {
-            color: #d1d5db;
-        }
-        .prose h1, .prose h2, .prose h3 {
-            color: #ffffff;
-        }
-        .prose a {
-            color: #60a5fa; /* text-blue-400 */
-        }
-        .prose a:hover {
-            text-decoration: underline;
-        }
-        .prose strong {
-            color: #f9fafb; /* text-gray-50 */
-        }
+        .prose { color: #d1d5db; }
+        .prose h1, .prose h2, .prose h3 { color: #ffffff; }
+        .prose a { color: #60a5fa; }
+        .prose a:hover { text-decoration: underline; }
+        .prose strong { color: #f9fafb; }
         .prose code {
-            color: #facc15; /* text-yellow-400 */
-            background-color: #374151;
+            color: #fbbf24; /* amber-400 */
+            background-color: #1f2937; /* gray-800 */
             padding: 0.2em 0.4em;
             margin: 0;
             font-size: 85%;
             border-radius: 6px;
         }
         .prose pre {
-            background-color: #1f2937;
+            background-color: #111827; /* gray-900 */
+            border: 1px solid #374151; /* gray-700 */
             color: #d1d5db;
-            padding: 1rem;
-            border-radius: 0.5rem;
+            padding: 1.25rem;
+            border-radius: 0.75rem;
             position: relative;
             overflow-x: auto;
         }
-        .prose pre code {
-            color: inherit;
-            background: none;
-            padding: 0;
-            font-size: inherit;
-        }
+        .prose pre code { color: inherit; background: none; padding: 0; font-size: inherit; }
         .prose h2 {
             border-bottom: 1px solid #374151;
-            padding-bottom: 0.5rem;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            margin-top: 2.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.875rem; /* text-3xl */
+            font-weight: 700;
         }
         .copy-btn {
             position: absolute;
             top: 0.75rem;
             right: 0.75rem;
-            background-color: #4b5563;
+            background-color: #374151;
             color: white;
-            border: none;
+            border: 1px solid #4b5563;
             padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
+            border-radius: 0.375rem;
             cursor: pointer;
             font-size: 0.8rem;
-            opacity: 0.7;
-            transition: opacity 0.2s;
+            opacity: 0.6;
+            transition: all 0.2s ease-in-out;
         }
-        .copy-btn:hover {
-            opacity: 1;
+        .copy-btn:hover { opacity: 1; background-color: #4b5563; }
+        .card {
+            background-color: #111827;
+            border: 1px solid #374151;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease-in-out;
+            height: 100%;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border-color: #4f46e5;
+        }
+        .icon {
+            width: 1.5rem;
+            height: 1.5rem;
+            margin-right: 0.75rem;
+        }
+        .flow-arrow {
+            flex-grow: 1;
+            background-image: linear-gradient(to right, #4b5563 50%, transparent 50%);
+            background-size: 8px 2px;
+            background-repeat: repeat-x;
+            height: 2px;
         }
     </style>
 </head>
 <body>
 
-    <div class="container mx-auto p-4 md:p-8 max-w-4xl">
+    <div class="container mx-auto p-4 md:p-8 max-w-5xl">
         <article class="prose prose-invert max-w-none">
             
-            <!-- Cabeçalho com Logo e Badges -->
-            <div class="text-center mb-8">
-                <img src="https://res.cloudinary.com/zenbusiness/image/upload/v1670445040/logaster/logaster-2020-06-image14-3.png" width="150" alt="Logo do Projeto" class="mx-auto" />
-                <div class="my-4 space-x-2">
+            <div class="text-center mb-16">
+                <img src="https://res.cloudinary.com/zenbusiness/image/upload/v1670445040/logaster/logaster-2020-06-image14-3.png" width="150" alt="Logo do Projeto" class="mx-auto mb-4" />
+                <h1 class="text-4xl md:text-5xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">GitOps-Powered Minecraft Server on GCP</h1>
+                <p class="text-lg text-gray-400 max-w-3xl mx-auto">
+                    This project provides a <strong>robust, scalable, and easily editable</strong> Infrastructure as Code (IaC) solution for deploying a production-ready PaperMC Minecraft server with a Velocity proxy on the Google Cloud Platform (GCP). It automates the entire lifecycle, from provisioning and configuration to deployment and updates, all designed to be seamlessly managed through CI/CD pipelines.
+                </p>
+                <div class="mt-6 flex justify-center gap-2">
                     <img src="https://img.shields.io/badge/status-active-green?style=for-the-badge" alt="Status Ativo" />
                     <img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="Licença MIT" />
                 </div>
-                <div class="space-x-2">
-                    <img src="https://img.shields.io/badge/GCP-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white" alt="GCP" />
-                    <img src="https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform&logoColor=white" alt="Terraform" />
-                    <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
-                    <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white" alt="GitHub Actions" />
-                </div>
             </div>
-
-            <!-- Título Principal -->
-            <h1 class="text-4xl font-bold mb-4 text-center">GitOps-Powered Minecraft Server on GCP</h1>
-
-            <p class="text-lg text-gray-400">
-                This project provides a <strong>robust,</strong> scalable, <strong>and secure</strong> Infrastructure as Code (IaC) solution for deploying a production-ready PaperMC Minecraft server with a Velocity proxy on the Google Cloud Platform (GCP). It automates the entire lifecycle through a GitOps-centric CI/CD pipeline, from provisioning and security scanning to application deployment.
-            </p>
-            <p class="text-lg text-gray-400">
-                The core principle of this architecture is to allow for any modification—from infrastructure changes to plugin updates—to be managed, validated, and deployed automatically through Git, eliminating manual intervention.
-            </p>
-
-            <!-- Seções -->
-            <section>
-                <h2>✨ Key Accomplishments & Features</h2>
-                <ul class="list-disc list-inside space-y-2">
-                    <li><strong>✅ End-to-End Automated Pipeline:</strong> The core CI/CD workflow is fully functional. A single `git push` to the `main` branch triggers the entire deployment process.</li>
-                    <li><strong>✅ Secure IaC Foundation:</strong> Infrastructure is managed by Terraform with security scanning integrated.</li>
-                    <li><strong>✅ Remote State & Locking:</strong> Collaborative and safe state management is in place using Google Cloud Storage.</li>
-                    <li><strong>✅ Keyless GCP Authentication:</strong> Secure connection between GitHub and GCP is established via Workload Identity Federation.</li>
-                    <li><strong>✅ Automated Application Deployment:</strong> Server configuration and plugin updates are fully automated.</li>
-                    <li><strong>🛡️ Automated Security Scanning:</strong> The pipeline integrates static analysis with <strong>Trivy (tfsec)</strong> to detect security misconfigurations before deployment.</li>
-                    <li><strong>📦 Containerized Environment:</strong> The Minecraft server and proxy run in Docker containers for a consistent and isolated setup.</li>
-                    <li><strong>💾 Automated Backups:</strong> Leverages Google Cloud Storage for world backups, with lifecycle policies to manage costs.</li>
-                </ul>
-            </section>
-
-            <section>
-                <h2>🚀 Technology Stack</h2>
-                <ul class="list-disc list-inside space-y-2">
-                    <li><strong>Cloud Provider:</strong> Google Cloud Platform (GCP)</li>
-                    <li><strong>IaC:</strong> Terraform</li>
-                    <li><strong>CI/CD:</strong> GitHub Actions</li>
-                    <li><strong>Container Runtime:</strong> Docker Engine & Docker Compose</li>
-                    <li><strong>Minecraft Proxy:</strong> Velocity 3.x</li>
-                    <li><strong>Minecraft Server:</strong> PaperMC</li>
-                    <li><strong>Security:</strong> Trivy (tfsec), Workload Identity Federation, IAP SSH Tunnelling</li>
-                    <li><strong>Secrets Management:</strong> GitHub Secrets</li>
-                    <li><strong>Storage:</strong> Google Cloud Storage (GCS) for Terraform state and world backups</li>
-                    <li><strong>Monitoring & Logging:</strong> Google Cloud Monitoring & Cloud Logging</li>
-                </ul>
-            </section>
 
             <section>
                 <h2>🏛️ Architecture Details</h2>
-                <p>This architecture is designed for automation and security, divided into three main layers: <strong>Infrastructure (GCP & Terraform)</strong>, <strong>Application (Docker)</strong>, and <strong>CI/CD (GitHub Actions)</strong>.</p>
-                <h3>1. Infrastructure Layer (Provisioning with Terraform on GCP)</h3>
-                <p>Terraform declaratively defines and provisions all necessary GCP resources, ensuring the environment is reproducible and version-controlled.</p>
-                <ul>
-                    <li><strong>Networking (VPC):</strong> A dedicated Virtual Private Cloud isolates the server environment. Firewall rules are configured to only allow necessary traffic.</li>
-                    <li><strong>Compute (Compute Engine):</strong> A single VM instance is provisioned to run the Docker containers.</li>
-                    <li><strong>Storage (Google Cloud Storage):</strong> Two GCS buckets are created: one for the remote Terraform state (`tfstate`) and another for world backups.</li>
-                    <li><strong>Security & Identity (IAM):</strong> A dedicated Service Account is created for the CI/CD pipeline. <strong>Workload Identity Federation</strong> allows the pipeline to securely authenticate with GCP without long-lived keys. SSH access is secured via <strong>IAP (Identity-Aware Proxy)</strong>.</li>
-                </ul>
-                <h3>2. Application Layer (Containerization with Docker)</h3>
-                 <p>The Minecraft server is managed by Docker, ensuring a portable and consistent runtime.</p>
-                <ul>
-                    <li><strong><code>docker-compose.yml</code>:</strong> This file orchestrates the `papermc` and `velocity` services. The CI/CD pipeline syncs this file to the VM.</li>
-                    <li><strong>Volume Mounts:</strong> The `docker-compose.yml` file uses volume mounts to map configurations and plugins downloaded by the CI/CD pipeline directly into the running containers.</li>
-                </ul>
-                <h3>3. CI/CD & GitOps Layer (GitHub Actions)</h3>
-                <p>This layer connects the code repository to the cloud infrastructure, enabling full automation based on Git operations. The <code>.github/workflows/deploy.yml</code> pipeline follows a security-first approach:</p>
-                <ol class="list-decimal list-inside space-y-2">
-                    <li><strong>Secure Authentication:</strong> The pipeline authenticates to GCP using its dedicated Service Account via Workload Identity Federation.</li>
-                    <li><strong>Code Validation & Security Scan:</strong> Before any infrastructure is touched, the pipeline runs a series of critical checks.</li>
-                    <li><strong>Infrastructure Deployment (<code>terraform plan & apply</code>):</strong> If validation passes, `terraform plan` is executed to create an execution plan, and `terraform apply` runs automatically to update the infrastructure on GCP if changes are needed.</li>
-                    <li><strong>Application Deployment:</strong> The pipeline generates server configuration files, downloads plugins, and copies all necessary files to the VM, restarting the Docker containers to apply the changes.</li>
-                </ol>
+                <p>This architecture is designed for automation and scalability, divided into three main layers: **Infrastructure (GCP & Terraform)**, **Application (Docker)**, and **CI/CD (GitHub Actions)**.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
+                    <!-- Coluna Infraestrutura -->
+                    <div class="flex flex-col items-center text-center">
+                        <div class="p-4 bg-gray-800 rounded-full border border-gray-600 mb-4">
+                            <svg class="h-12 w-12 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
+                        </div>
+                        <h3 class="!mt-0">1. Infrastructure Layer</h3>
+                        <p class="text-sm text-gray-400">Managed by <strong>Terraform</strong>, this layer provisions all necessary GCP resources like VPC, Compute Engine VMs, GCS Buckets for state and backups, and secure IAM roles.</p>
+                    </div>
+                    <!-- Coluna Aplicação -->
+                    <div class="flex flex-col items-center text-center">
+                        <div class="p-4 bg-gray-800 rounded-full border border-gray-600 mb-4">
+                             <svg class="h-12 w-12 text-cyan-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M22.46,14a2.5,2.5,0,0,0-2-2.45,3.47,3.47,0,0,0-5.83-2.1,4.46,4.46,0,0,0-8.26,0,3.47,3.47,0,0,0-5.83,2.1,2.5,2.5,0,0,0-2,2.45,2.74,2.74,0,0,0,2.76,2.72H22.2A2.74,2.74,0,0,0,22.46,14Z"/></svg>
+                        </div>
+                        <h3 class="!mt-0">2. Application Layer</h3>
+                        <p class="text-sm text-gray-400">The Minecraft server (PaperMC) and proxy (Velocity) are containerized using <strong>Docker</strong> and orchestrated by a <code>docker-compose.yml</code> file for consistency and isolation.</p>
+                    </div>
+                    <!-- Coluna CI/CD -->
+                    <div class="flex flex-col items-center text-center">
+                        <div class="p-4 bg-gray-800 rounded-full border border-gray-600 mb-4">
+                            <svg class="h-12 w-12 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+                        </div>
+                        <h3 class="!mt-0">3. CI/CD & GitOps Layer</h3>
+                        <p class="text-sm text-gray-400"><strong>GitHub Actions</strong> connects the code to the cloud. A `git push` triggers a pipeline that validates, scans, plans, and applies changes to both infrastructure and application layers.</p>
+                    </div>
+                </div>
             </section>
 
             <section>
-                <h2>📁 Project Structure</h2>
-                <pre><code class="language-bash">.
-├── .github/workflows/
-│   └── deploy.yml
-├── terraform/
-│   ├── configs/            # Server config templates
-│   ├── scripts/            # Helper scripts (e.g., fetch-plugins.sh)
-│   ├── velocity/           # Velocity configs & plugins
-│   ├── paper/              # PaperMC plugins are downloaded here
-│   └── ... (all .tf files)
-├── docker-compose.yml
-├── manifest.json           # List of plugins to be downloaded
-└── README.md
-</code></pre>
-            </section>
-
-            <section>
-                <h2>⚙️ Usage (CI/CD Driven)</h2>
-                <p>This project is designed to be managed primarily through Git.</p>
-                <ol class="list-decimal list-inside space-y-2">
-                    <li><strong>Clone the repository.</strong></li>
-                    <li><strong>Configure GitHub Secrets:</strong> In your repository settings (<code>Settings > Secrets and variables > Actions</code>), create all the secrets required by the <code>deploy.yml</code> workflow.</li>
-                    <li><strong>Make a change:</strong> Edit a <code>.tf</code> file, update a plugin in <code>manifest.json</code>, or change a server configuration template.</li>
-                    <li><strong>Commit and Push:</strong>
-                        <pre><code class="language-bash">git add .
-git commit -m "Your descriptive change message"
-git push origin main
-</code></pre>
-                    </li>
-                    <li><strong>Monitor the Pipeline:</strong> Go to the "Actions" tab in your GitHub repository to watch the pipeline validate, test, and deploy your changes automatically.</li>
-                </ol>
+                <h2>⚙️ Installation and Usage Flow</h2>
+                <p>This project is designed to be managed primarily through Git. The local setup is for initial configuration or significant debugging.</p>
+                <div class="mt-8 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-0">
+                    <!-- Step 1 -->
+                    <div class="flex flex-col items-center text-center max-w-xs">
+                        <div class="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center text-2xl font-bold text-white mb-3 border-4 border-indigo-400">1</div>
+                        <h3 class="!mt-0">Clone & Configure</h3>
+                        <p class="text-sm text-gray-400">Clone the repository and configure your local <code>terraform.tfvars</code> and GitHub Secrets.</p>
+                    </div>
+                    <div class="flow-arrow hidden md:block"></div>
+                     <!-- Step 2 -->
+                    <div class="flex flex-col items-center text-center max-w-xs">
+                        <div class="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center text-2xl font-bold text-white mb-3 border-4 border-indigo-400">2</div>
+                        <h3 class="!mt-0">Develop</h3>
+                        <p class="text-sm text-gray-400">Make changes to your infrastructure (<code>.tf</code> files), plugins (<code>manifest.json</code>), or server configs.</p>
+                    </div>
+                    <div class="flow-arrow hidden md:block"></div>
+                    <!-- Step 3 -->
+                    <div class="flex flex-col items-center text-center max-w-xs">
+                        <div class="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center text-2xl font-bold text-white mb-3 border-4 border-indigo-400">3</div>
+                        <h3 class="!mt-0">Push to Git</h3>
+                        <p class="text-sm text-gray-400">Commit and push your changes to the <code>main</code> branch to trigger the automated pipeline.</p>
+                    </div>
+                     <div class="flow-arrow hidden md:block"></div>
+                     <!-- Step 4 -->
+                    <div class="flex flex-col items-center text-center max-w-xs">
+                        <div class="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center text-2xl font-bold text-white mb-3 border-4 border-indigo-400">4</div>
+                        <h3 class="!mt-0">Monitor & Play</h3>
+                        <p class="text-sm text-gray-400">Monitor the GitHub Actions pipeline. Once complete, your server is live with the new changes.</p>
+                    </div>
+                </div>
             </section>
 
             <section>
                 <h2>🗺️ Roadmap & Future Enhancements</h2>
                 <p>With a solid and secure foundation, the next steps focus on professionalizing the development workflow and adding advanced operational capabilities.</p>
-                <ul class="list-disc list-inside space-y-2">
-                    <li><strong>🗓️ `[To Do]` Implement a Pull Request Workflow:</strong> The highest-priority next step. This involves protecting the `main` branch and modifying the pipeline to run `terraform plan` on Pull Requests, allowing for team review and validation before any changes are applied to production.</li>
-                    <li><strong>🗓️ `[To Do]` Refactor to a Reusable Terraform Module:</strong> Abstract the Minecraft server resources into a dedicated, reusable Terraform module. This will make the code cleaner and allow for easy creation of multiple environments.</li>
-                    <li><strong>🗓️ `[To Do]` Advanced Observability with Prometheus & Grafana:</strong> Deploy Prometheus and Grafana alongside the server to collect and visualize detailed, real-time in-game metrics (TPS, player count, memory usage).</li>
-                    <li><strong>🗓️ `[To Do]` Serverless Operations with Cloud Functions:</strong> Automate maintenance tasks like nightly backups and create intelligent alert notifications to Discord or Slack using a serverless architecture.</li>
-                </ul>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="card">
+                        <h3 class="flex items-center !mt-0">✅ `[Done]` End-to-End Automated Pipeline</h3>
+                        <p class="text-gray-400">The core CI/CD workflow is fully functional and deploys changes on push to main.</p>
+                    </div>
+                     <div class="card">
+                        <h3 class="flex items-center !mt-0">✅ `[Done]` Secure IaC Foundation</h3>
+                        <p class="text-gray-400">Infrastructure is managed by Terraform with integrated security scanning (Trivy).</p>
+                    </div>
+                     <div class="card">
+                        <h3 class="flex items-center !mt-0">✅ `[Done]` Remote State & Locking</h3>
+                        <p class="text-gray-400">Collaborative and safe state management is in place using Google Cloud Storage.</p>
+                    </div>
+                     <div class="card">
+                        <h3 class="flex items-center !mt-0">✅ `[Done]` Keyless GCP Authentication</h3>
+                        <p class="text-gray-400">Secure connection between GitHub and GCP is established via Workload Identity Federation.</p>
+                    </div>
+                    <div class="card">
+                        <h3 class="flex items-center !mt-0">🗓️ `[To Do]` Implement a Pull Request Workflow</h3>
+                        <p class="text-gray-400">The highest-priority next step. This involves protecting the `main` branch and modifying the pipeline to run `terraform plan` on Pull Requests for team review and validation.</p>
+                    </div>
+                     <div class="card">
+                        <h3 class="flex items-center !mt-0">🗓️ `[To Do]` Refactor to a Reusable Terraform Module</h3>
+                        <p class="text-gray-400">Abstract the Minecraft server resources into a dedicated, reusable Terraform module to make the code cleaner and allow for easy creation of multiple environments.</p>
+                    </div>
+                     <div class="card">
+                        <h3 class="flex items-center !mt-0">🗓️ `[To Do]` Advanced Observability</h3>
+                        <p class="text-gray-400">Deploy Prometheus & Grafana alongside the server to collect and visualize detailed, real-time in-game metrics (TPS, player count, memory usage) on beautiful dashboards.</p>
+                    </div>
+                     <div class="card">
+                        <h3 class="flex items-center !mt-0">🗓️ `[To Do]` Serverless Operations</h3>
+                        <p class="text-gray-400">Automate maintenance tasks like nightly backups and create intelligent alert notifications to Discord or Slack using a serverless architecture with Cloud Functions.</p>
+                    </div>
+                </div>
             </section>
 
             <section>
-                <h2>🤝 Contributions</h2>
-                <p>Contributions are welcome! Feel free to open an issue or submit a pull request.</p>
-            </section>
-
-            <section>
-                <h2>📞 Contact</h2>
-                <ul class="list-disc list-inside">
-                    <li><strong>Email:</strong> lcb.barbeiro@gmail.com</li>
-                    <li><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/lucascardosobarbeiro/">https://www.linkedin.com/in/lucascardosobarbeiro/</a></li>
-                </ul>
-            </section>
-
-            <section>
-                <h2>📄 License</h2>
-                <p>This project is licensed under the MIT License.</p>
+                <h2>🤝 Contributions & Contact</h2>
+                 <div class="flex items-center gap-6 mt-4">
+                    <p class="m-0">Contributions are welcome! Feel free to open an issue or submit a pull request.</p>
+                    <div class="flex-shrink-0 border-l border-gray-700 pl-6">
+                        <p class="m-0"><strong>Email:</strong> <a href="mailto:lcb.barbeiro@gmail.com">lcb.barbeiro@gmail.com</a></p>
+                        <p class="m-0"><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/lucascardosobarbeiro/">lucascardosobarbeiro</a></p>
+                    </div>
+                </div>
             </section>
 
         </article>
