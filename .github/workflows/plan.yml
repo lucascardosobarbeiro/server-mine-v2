@@ -59,7 +59,7 @@ jobs:
             -var="zone=${{ secrets.GCP_ZONE }}" \
             -var="gcp_user_email=${{ secrets.GCP_SERVICE_ACCOUNT }}" \
             -var="github_repo=${{ secrets.REMOTE_REPO }}" \
-            -var="velocity_secret=${{ secrets.VELOCITY_FORWARDING_SECRET }}" # <-- CORRIGIDO AQUI
+            -var="velocity_secret=${{ secrets.VELOCITY_FORWARDING_SECRET }}"
       
       - name: '7. Gerar Resumo do Plano para o PR'
         id: plan-summary
@@ -72,6 +72,8 @@ jobs:
 
       - name: '8. Publicar Resumo do Plano no Pull Request'
         uses: actions/github-script@v6
+        env:
+          COMMENT_BODY: ${{ steps.plan-summary.outputs.comment_body }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -80,10 +82,13 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
-            const output = `${{ steps.plan-summary.outputs.comment_body }}`;
+
+            const output = process.env.COMMENT_BODY;
+            
             const botComment = comments.find(comment => 
               comment.user.type === 'Bot' && comment.body.includes('Terraform Plan Summary')
             );
+
             if (botComment) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
