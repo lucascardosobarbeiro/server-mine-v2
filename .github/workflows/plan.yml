@@ -64,8 +64,14 @@ jobs:
       - name: '7. Gerar Resumo do Plano para o PR'
         id: plan-summary
         run: |
-          summary=$(terraform -chdir="${{ env.TF_WORKING_DIR }}" show -no-color tfplan | tail -n 1)
+          # Usa 'grep' para encontrar a linha que começa com "Plan:", que é mais fiável.
+          # Se não encontrar, usa uma mensagem de fallback.
+          summary=$(terraform -chdir="${{ env.TF_WORKING_DIR }}" show -no-color tfplan | grep "Plan:" || echo "No changes to resources.")
+          
+          # Formata o comentário para o GitHub
           comment="#### Terraform Plan Summary 📖\n\n\`\`\`\n${summary}\n\`\`\`\n\n*A detailed plan is available in the logs of this pipeline run.*"
+          
+          # Passa o comentário para o próximo passo
           echo "comment_body<<EOF" >> $GITHUB_OUTPUT
           echo "$comment" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
