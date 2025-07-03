@@ -47,23 +47,18 @@ jobs:
       - name: 5. Validar e Analisar Código Terraform
         run: |
           echo "--- Verificando formatação do código ---"
-          # O '-check' faz a pipeline falhar se o código não estiver formatado.
           terraform -chdir="${{ env.TF_WORKING_DIR }}" fmt -check
           
           echo "--- Validando sintaxe do Terraform ---"
-          # Valida se não há erros de sintaxe no código.
           terraform -chdir="${{ env.TF_WORKING_DIR }}" validate
 
           echo "--- Instalando Trivy para análise de segurança ---"
-          # Instala o Trivy (que inclui o 'tfsec') na máquina da pipeline.
           wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
           echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
           sudo apt-get update
           sudo apt-get install trivy -y
           
           echo "--- Rodando análise de segurança com Trivy ---"
-          # Escaneia o código em busca de falhas de segurança de criticidade ALTA ou CRÍTICA.
-          # '--exit-code 1' faz a pipeline falhar se encontrar algum problema.
           trivy config --exit-code 1 --severity HIGH,CRITICAL ${{ env.TF_WORKING_DIR }}
 
       - name: 6. Terraform Plan
@@ -74,7 +69,8 @@ jobs:
             -var="region=${{ secrets.GCP_REGION }}" \
             -var="zone=${{ secrets.GCP_ZONE }}" \
             -var="gcp_user_email=${{ secrets.GCP_SERVICE_ACCOUNT }}" \
-            -var="github_repo=${{ secrets.REMOTE_REPO }}"
+            -var="github_repo=${{ secrets.REMOTE_REPO }}" \
+            -var="velocity_secret=${{ secrets.VELOCITY_SECRET }}" # <-- ADICIONADO AQUI
         continue-on-error: true
 
       - name: 7. Terraform Apply
