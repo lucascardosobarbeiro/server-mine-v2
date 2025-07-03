@@ -90,25 +90,10 @@ resource "google_service_account_iam_member" "github_wif_user" {
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repo}"
 }
 
-# terraform/iam.tf
-
-# Define a conta de serviço para a pipeline do GitHub Actions
-resource "google_service_account" "github_actions_runner" {
-  account_id   = "github-actions-runner"
-  display_name = "GitHub Actions Runner"
-  description  = "Service Account used by the GitHub Actions pipeline to deploy infrastructure."
-}
-
-# Concede o papel de Editor no projeto para a conta da pipeline
-resource "google_project_iam_member" "pipeline_editor_binding" {
-  project = var.project_id
-  role    = "roles/editor"
-  member  = google_service_account.github_actions_runner.member
-}
-
-# Concede o papel de Admin de Objetos do Storage para a conta da pipeline
-resource "google_project_iam_member" "pipeline_storage_admin_binding" {
+# Concede a permissão de Storage Object Admin para a Conta de Serviço da VM,
+# permitindo que a pipeline (que a utiliza) acesse o bucket do backend.
+resource "google_project_iam_member" "sa_minecraft_vm_storage_admin" {
   project = var.project_id
   role    = "roles/storage.objectAdmin"
-  member  = google_service_account.github_actions_runner.member
+  member  = "serviceAccount:${google_service_account.sa_minecraft_vm.email}"
 }

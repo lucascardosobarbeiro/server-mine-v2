@@ -50,9 +50,3 @@ resource "google_service_account_iam_binding" "workload_identity_binding" {
 
 # ... (código do Workload Identity Pool e Provider, se você também quiser gerenciá-los) ...
 
-# Conecta a identidade do GitHub (do seu repositório) com a conta de serviço do GCP
-resource "google_service_account_iam_member" "workload_identity_user" {
-  service_account_id = google_service_account.github_actions_runner.name
-  role               = "roles/iam.workloadIdentityUser"
-  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/subject/repo:${var.github_repo}:ref:refs/heads/main"
-}
