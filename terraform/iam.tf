@@ -89,3 +89,26 @@ resource "google_service_account_iam_member" "github_wif_user" {
   role               = "roles/iam.workloadIdentityUser"
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repo}"
 }
+
+# terraform/iam.tf
+
+# Define a conta de serviço para a pipeline do GitHub Actions
+resource "google_service_account" "github_actions_runner" {
+  account_id   = "github-actions-runner"
+  display_name = "GitHub Actions Runner"
+  description  = "Service Account used by the GitHub Actions pipeline to deploy infrastructure."
+}
+
+# Concede o papel de Editor no projeto para a conta da pipeline
+resource "google_project_iam_member" "pipeline_editor_binding" {
+  project = var.project_id
+  role    = "roles/editor"
+  member  = google_service_account.github_actions_runner.member
+}
+
+# Concede o papel de Admin de Objetos do Storage para a conta da pipeline
+resource "google_project_iam_member" "pipeline_storage_admin_binding" {
+  project = var.project_id
+  role    = "roles/storage.objectAdmin"
+  member  = google_service_account.github_actions_runner.member
+}
