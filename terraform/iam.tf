@@ -95,5 +95,5 @@ resource "google_service_account_iam_member" "github_wif_user" {
 resource "google_project_iam_member" "sa_minecraft_vm_storage_admin" {
   project = var.project_id
   role    = "roles/storage.objectAdmin"
-  member  = "serviceAccount:${google_service_account.sa_minecraft_vm.email}"
+  member  = "serviceAccount:${google_service_account.minecraft_sa.email}"
 }
