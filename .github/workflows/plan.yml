@@ -5,7 +5,6 @@ name: 'Terraform Plan & Validate'
 on:
   pull_request:
     branches: [ main ]
-    # Para otimizar, só aciona se houver mudanças nos ficheiros de infraestrutura
     paths:
       - 'terraform/**'
       - '.github/workflows/plan.yml'
@@ -20,7 +19,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-      pull-requests: write # Permissão para escrever comentários no PR
+      pull-requests: write
 
     steps:
       - name: '1. Checkout do Repositório'
@@ -36,7 +35,6 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: '4. Terraform Init'
-        id: init
         run: |
           terraform -chdir="${{ env.TF_WORKING_DIR }}" init \
             -backend-config="bucket=${{ secrets.GCS_BACKEND_BUCKET }}" \
@@ -44,19 +42,12 @@ jobs:
 
       - name: '5. Validar e Analisar Código Terraform'
         run: |
-          echo "--- Verificando formatação do código ---"
           terraform -chdir="${{ env.TF_WORKING_DIR }}" fmt -check
-          
-          echo "--- Validando sintaxe do Terraform ---"
           terraform -chdir="${{ env.TF_WORKING_DIR }}" validate
-
-          echo "--- Instalando Trivy para análise de segurança ---"
           wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
           echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
           sudo apt-get update
           sudo apt-get install trivy -y
-          
-          echo "--- Rodando análise de segurança com Trivy ---"
           trivy config --exit-code 1 --severity HIGH,CRITICAL ${{ env.TF_WORKING_DIR }}
 
       - name: '6. Terraform Plan'
@@ -68,9 +59,18 @@ jobs:
             -var="zone=${{ secrets.GCP_ZONE }}" \
             -var="gcp_user_email=${{ secrets.GCP_SERVICE_ACCOUNT }}" \
             -var="github_repo=${{ secrets.REMOTE_REPO }}" \
-            -var="velocity_secret=${{ secrets.VELOCITY_SECRET }}"
+            -var="velocity_secret=${{ secrets.VELOCITY_FORWARDING_SECRET }}" # <-- CORRIGIDO AQUI
       
-      - name: '7. Publicar Plano no Pull Request'
+      - name: '7. Gerar Resumo do Plano para o PR'
+        id: plan-summary
+        run: |
+          summary=$(terraform -chdir="${{ env.TF_WORKING_DIR }}" show -no-color tfplan | tail -n 1)
+          comment="#### Terraform Plan Summary 📖\n\n\`\`\`\n${summary}\n\`\`\`\n\n*A detailed plan is available in the logs of this pipeline run.*"
+          echo "comment_body<<EOF" >> $GITHUB_OUTPUT
+          echo "$comment" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: '8. Publicar Resumo do Plano no Pull Request'
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -80,14 +80,10 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
-
-            const planOutput = `${{ steps.tf-plan.outputs.stdout }}`;
-            const output = `#### Terraform Plan 📖\n\n<details><summary>Clique para ver o plano</summary>\n\n\`\`\`\n${planOutput}\n\`\`\`\n\n</details>`;
-            
+            const output = `${{ steps.plan-summary.outputs.comment_body }}`;
             const botComment = comments.find(comment => 
-              comment.user.type === 'Bot' && comment.body.includes('Terraform Plan')
+              comment.user.type === 'Bot' && comment.body.includes('Terraform Plan Summary')
             );
-
             if (botComment) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,

@@ -1,18 +1,17 @@
-# Nome do workflow, refletindo que ele gerencia tanto a infra quanto a aplicação.
+# .github/workflows/deploy.yml
+
 name: Deploy Infra & Application
 
-# Gatilho (trigger): Define quando a pipeline deve rodar.
 on:
   push:
     branches:
       - main
 
-# Bloco 'env' unificado com todas as variáveis de ambiente.
 env:
   GCP_PROJECT_ID:         ${{ secrets.GCP_PROJECT_ID }}
   GCP_ZONE:               ${{ secrets.GCP_ZONE }}
   INSTANCE_NAME:          ${{ secrets.INSTANCE_NAME }}
-  FORWARDING_SECRET:      ${{ secrets.FORWARDING_SECRET }}
+  FORWARDING_SECRET:      ${{ secrets.FORWARDING_SECRET }} # Mantido para a configuração da aplicação
   FORWARDING_SECRET_FILE: "/config/forwarding.secret"
   TF_WORKING_DIR:         ./terraform
 
@@ -37,28 +36,20 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: 4. Terraform Init
-        id: init
         run: |
           terraform -chdir="${{ env.TF_WORKING_DIR }}" init \
             -backend-config="bucket=${{ secrets.GCS_BACKEND_BUCKET }}" \
             -backend-config="prefix=server-mine-v2/terraform.tfstate"
 
-      # --- PASSO DE VALIDAÇÃO E SEGURANÇA INSERIDO AQUI ---
       - name: 5. Validar e Analisar Código Terraform
         run: |
-          echo "--- Verificando formatação do código ---"
           terraform -chdir="${{ env.TF_WORKING_DIR }}" fmt -check
-          
-          echo "--- Validando sintaxe do Terraform ---"
           terraform -chdir="${{ env.TF_WORKING_DIR }}" validate
-
-          echo "--- Instalando Trivy para análise de segurança ---"
+          # Instalação e execução do Trivy
           wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
           echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
           sudo apt-get update
           sudo apt-get install trivy -y
-          
-          echo "--- Rodando análise de segurança com Trivy ---"
           trivy config --exit-code 1 --severity HIGH,CRITICAL ${{ env.TF_WORKING_DIR }}
 
       - name: 6. Terraform Plan
@@ -70,42 +61,30 @@ jobs:
             -var="zone=${{ secrets.GCP_ZONE }}" \
             -var="gcp_user_email=${{ secrets.GCP_SERVICE_ACCOUNT }}" \
             -var="github_repo=${{ secrets.REMOTE_REPO }}" \
-            -var="velocity_secret=${{ secrets.VELOCITY_SECRET }}" # <-- ADICIONADO AQUI
+            -var="velocity_secret=${{ secrets.VELOCITY_FORWARDING_SECRET }}" # <-- CORRIGIDO AQUI
         continue-on-error: true
 
       - name: 7. Terraform Apply
         if: steps.plan.outputs.exitcode == 2
         run: terraform -chdir="${{ env.TF_WORKING_DIR }}" apply -auto-approve tfplan
 
-      # --- ETAPA DE DEPLOY DA APLICAÇÃO - Lógica original 100% preservada ---
-
-      - name: 8. Instalar Dependências da Aplicação
+      - name: 8. Instalar Dependências e Gerar Configs
         run: |
-          python3 -m pip install numpy --user
-          sudo apt-get update
-          sudo apt-get install -y gettext-base jq curl
-
-      - name: 9. Gerar forwarding.secret
-        run: |
+          sudo apt-get update && sudo apt-get install -y gettext-base jq curl
+          # Lógica de geração de configs usando FORWARDING_SECRET
           mkdir -p terraform/velocity
           envsubst '${FORWARDING_SECRET}' < terraform/velocity/forwarding.secret.template > terraform/velocity/forwarding.secret
-
-      - name: 10. Gerar paper-global.yml
-        run: |
           mkdir -p terraform/paper/configs
           envsubst '${FORWARDING_SECRET}' < terraform/paper/configs/paper-global.yml.template > terraform/paper/configs/paper-global.yml
-
-      - name: 11. Gerar velocity.toml
-        run: |
           mkdir -p terraform/velocity
           envsubst '${FORWARDING_SECRET_FILE}' < terraform/velocity/velocity.toml.template > terraform/velocity/velocity.toml
-
-      - name: 12. Baixar Plugins do Servidor
+          
+      - name: 9. Baixar Plugins do Servidor
         run: |
           chmod +x terraform/scripts/fetch-plugins.sh
           terraform/scripts/fetch-plugins.sh
 
-      - name: 13. Copiar Arquivos para a VM
+      - name: 10. Copiar Arquivos para a VM
         run: |
           gcloud compute scp --recurse \
             terraform/docker-compose.yml \
@@ -117,22 +96,18 @@ jobs:
             --project=${{ env.GCP_PROJECT_ID }} \
             --tunnel-through-iap
 
-      - name: 14. Reiniciar os Containers do Minecraft na VM
+      - name: 11. Reiniciar os Containers do Minecraft na VM
         run: |
           gcloud compute ssh ${{ env.INSTANCE_NAME }} \
             --zone ${{ env.GCP_ZONE }} \
             --project ${{ env.GCP_PROJECT_ID }} \
             --tunnel-through-iap --command="
-              sudo rm -rf /mnt/data/minecraft/velocity \
-                          /mnt/data/minecraft/paper/configs \
-                          /mnt/data/minecraft/paper/plugins && \
+              sudo rm -rf /mnt/data/minecraft/velocity /mnt/data/minecraft/paper/configs /mnt/data/minecraft/paper/plugins && \
               sudo mkdir -p /mnt/data/minecraft/paper/plugins && \
               sudo mv ~/deploy/docker-compose.yml /mnt/data/minecraft/docker-compose.yml && \
               sudo mv ~/deploy/velocity      /mnt/data/minecraft/velocity && \
               sudo mv ~/deploy/configs       /mnt/data/minecraft/paper/configs && \
               sudo mv ~/deploy/plugins/* /mnt/data/minecraft/paper/plugins/ && \
-              sudo chmod -R a+rwX /mnt/data/minecraft/velocity && \
-              sudo chmod -R a+rwX /mnt/data/minecraft/paper/plugins && \
               cd /mnt/data/minecraft && \
               sudo docker compose down || true && \
               sudo docker compose up -d
