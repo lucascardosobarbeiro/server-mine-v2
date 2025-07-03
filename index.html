@@ -7,12 +7,58 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes fade-in-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes subtle-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        @keyframes grid-pan {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
+        }
+        .animate-gradient {
+            background-size: 200% 200%;
+            animation: gradient-animation 15s ease infinite;
+        }
+        .fade-in-up {
+            animation: fade-in-up 0.8s ease-out forwards;
+            opacity: 0;
+        }
+        .icon-pulse {
+            animation: subtle-pulse 2.5s ease-in-out infinite;
+        }
         body {
             font-family: 'Inter', sans-serif;
             background-color: #030712; /* bg-gray-950 */
             color: #d1d5db; /* text-gray-300 */
+        }
+        .hero-section {
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-bg-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: grid-pan 60s linear infinite;
+            z-index: 0;
+            opacity: 0.5;
         }
         .prose { color: #d1d5db; }
         .prose h1, .prose h2, .prose h3 { color: #ffffff; }
@@ -40,10 +86,10 @@
         .prose h2 {
             border-bottom: 1px solid #374151;
             padding-bottom: 0.75rem;
-            margin-top: 2.5rem;
+            margin-top: 3rem;
             margin-bottom: 1.5rem;
-            font-size: 1.875rem; /* text-3xl */
-            font-weight: 700;
+            font-size: 2.25rem; /* text-4xl */
+            font-weight: 800;
         }
         .copy-btn {
             position: absolute;
@@ -61,134 +107,162 @@
         }
         .copy-btn:hover { opacity: 1; background-color: #4b5563; }
         .card {
-            background-color: #111827;
+            background-color: rgba(17, 24, 39, 0.8); /* bg-gray-900 com transparência */
+            backdrop-filter: blur(10px);
             border: 1px solid #374151;
             border-radius: 0.75rem;
             padding: 1.5rem;
             transition: all 0.3s ease-in-out;
             height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        .card:hover::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 0.75rem;
+            padding: 1px;
+            background: linear-gradient(145deg, #4f46e5, #3b82f6);
+            -webkit-mask: 
+                linear-gradient(#fff 0 0) content-box, 
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
         }
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            border-color: #4f46e5;
+            box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.2);
         }
         .icon {
-            width: 1.5rem;
-            height: 1.5rem;
+            width: 1.75rem;
+            height: 1.75rem;
             margin-right: 0.75rem;
-        }
-        .flow-arrow {
-            flex-grow: 1;
-            background-image: linear-gradient(to right, #4b5563 50%, transparent 50%);
-            background-size: 8px 2px;
-            background-repeat: repeat-x;
-            height: 2px;
         }
     </style>
 </head>
 <body>
 
-    <div class="container mx-auto p-4 md:p-8 max-w-5xl">
+    <div class="container mx-auto p-4 md:p-8 max-w-6xl">
         <article class="prose prose-invert max-w-none">
             
-            <div class="text-center mb-16">
-                <img src="https://res.cloudinary.com/zenbusiness/image/upload/v1670445040/logaster/logaster-2020-06-image14-3.png" width="150" alt="Logo do Projeto" class="mx-auto mb-4" />
-                <h1 class="text-4xl md:text-5xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">GitOps-Powered Minecraft Server on GCP</h1>
-                <p class="text-lg text-gray-400 max-w-3xl mx-auto">
-                    This project provides a <strong>robust, scalable, and easily editable</strong> Infrastructure as Code (IaC) solution for deploying a production-ready PaperMC Minecraft server with a Velocity proxy on the Google Cloud Platform (GCP). It automates the entire lifecycle, from provisioning and configuration to deployment and updates, all designed to be seamlessly managed through CI/CD pipelines.
-                </p>
-                <div class="mt-6 flex justify-center gap-2">
-                    <img src="https://img.shields.io/badge/status-active-green?style=for-the-badge" alt="Status Ativo" />
-                    <img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="Licença MIT" />
+            <header class="hero-section text-center mb-20 py-16 rounded-xl">
+                <div class="hero-bg-grid"></div>
+                <div class="relative z-10">
+                    <img src="https://res.cloudinary.com/zenbusiness/image/upload/v1670445040/logaster/logaster-2020-06-image14-3.png" width="150" alt="Logo do Projeto" class="mx-auto mb-6" />
+                    <h1 class="text-4xl md:text-6xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-emerald-400 animate-gradient">GitOps-Powered Minecraft Server</h1>
+                    <p class="text-xl text-gray-400 max-w-3xl mx-auto">
+                        A fully automated, secure, and scalable Infrastructure as Code (IaC) solution for deploying a production-ready Minecraft server on GCP.
+                    </p>
+                    <div class="mt-8 flex justify-center gap-2">
+                        <img src="https://img.shields.io/badge/status-active-green?style=for-the-badge" alt="Status Ativo" />
+                        <img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="Licença MIT" />
+                        <img src="https://img.shields.io/github/stars/lucascardosobarbeiro/server-mine-v2?style=for-the-badge&logo=github" alt="GitHub Stars" />
+                    </div>
                 </div>
-            </div>
+            </header>
 
-            <section>
+            <section class="fade-in-up">
+                <h2>✨ Key Accomplishments</h2>
+                <p>This project isn't just a concept; it's a fully functional, production-ready system built on modern DevOps principles.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                    <div class="card">
+                        <h3 class="flex items-center !mt-0">✅ End-to-End Automated Pipeline</h3>
+                        <p class="text-gray-400">The core CI/CD workflow is fully functional and deploys changes on push to main.</p>
+                    </div>
+                     <div class="card">
+                        <h3 class="flex items-center !mt-0">✅ Secure IaC Foundation</h3>
+                        <p class="text-gray-400">Infrastructure is managed by Terraform with integrated security scanning (Trivy).</p>
+                    </div>
+                     <div class="card">
+                        <h3 class="flex items-center !mt-0">✅ Remote State & Locking</h3>
+                        <p class="text-gray-400">Collaborative and safe state management is in place using Google Cloud Storage.</p>
+                    </div>
+                     <div class="card">
+                        <h3 class="flex items-center !mt-0">✅ Keyless GCP Authentication</h3>
+                        <p class="text-gray-400">Secure connection between GitHub and GCP is established via Workload Identity Federation.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="fade-in-up">
                 <h2>🏛️ Architecture Details</h2>
-                <p>This architecture is designed for automation and scalability, divided into three main layers: **Infrastructure (GCP & Terraform)**, **Application (Docker)**, and **CI/CD (GitHub Actions)**.</p>
+                <p>The architecture is designed for automation and scalability, divided into three main layers that work in concert: Infrastructure, Application, and the CI/CD pipeline that orchestrates them.</p>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
                     <!-- Coluna Infraestrutura -->
-                    <div class="flex flex-col items-center text-center">
-                        <div class="p-4 bg-gray-800 rounded-full border border-gray-600 mb-4">
-                            <svg class="h-12 w-12 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
+                    <div class="card">
+                        <div class="flex items-center mb-4">
+                            <div class="p-3 bg-blue-500/10 rounded-lg border border-blue-500/30 mr-4"><svg class="h-8 w-8 text-blue-400 icon-pulse" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg></div>
+                            <h3 class="!mt-0">1. Infrastructure Layer</h3>
                         </div>
-                        <h3 class="!mt-0">1. Infrastructure Layer</h3>
                         <p class="text-sm text-gray-400">Managed by <strong>Terraform</strong>, this layer provisions all necessary GCP resources like VPC, Compute Engine VMs, GCS Buckets for state and backups, and secure IAM roles.</p>
                     </div>
                     <!-- Coluna Aplicação -->
-                    <div class="flex flex-col items-center text-center">
-                        <div class="p-4 bg-gray-800 rounded-full border border-gray-600 mb-4">
-                             <svg class="h-12 w-12 text-cyan-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M22.46,14a2.5,2.5,0,0,0-2-2.45,3.47,3.47,0,0,0-5.83-2.1,4.46,4.46,0,0,0-8.26,0,3.47,3.47,0,0,0-5.83,2.1,2.5,2.5,0,0,0-2,2.45,2.74,2.74,0,0,0,2.76,2.72H22.2A2.74,2.74,0,0,0,22.46,14Z"/></svg>
+                    <div class="card">
+                         <div class="flex items-center mb-4">
+                            <div class="p-3 bg-cyan-500/10 rounded-lg border border-cyan-500/30 mr-4"><svg class="h-8 w-8 text-cyan-400 icon-pulse" style="animation-delay: 0.2s" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M22.46,14a2.5,2.5,0,0,0-2-2.45,3.47,3.47,0,0,0-5.83-2.1,4.46,4.46,0,0,0-8.26,0,3.47,3.47,0,0,0-5.83,2.1,2.5,2.5,0,0,0-2,2.45,2.74,2.74,0,0,0,2.76,2.72H22.2A2.74,2.74,0,0,0,22.46,14Z"/></svg></div>
+                            <h3 class="!mt-0">2. Application Layer</h3>
                         </div>
-                        <h3 class="!mt-0">2. Application Layer</h3>
                         <p class="text-sm text-gray-400">The Minecraft server (PaperMC) and proxy (Velocity) are containerized using <strong>Docker</strong> and orchestrated by a <code>docker-compose.yml</code> file for consistency and isolation.</p>
                     </div>
                     <!-- Coluna CI/CD -->
-                    <div class="flex flex-col items-center text-center">
-                        <div class="p-4 bg-gray-800 rounded-full border border-gray-600 mb-4">
-                            <svg class="h-12 w-12 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+                    <div class="card">
+                        <div class="flex items-center mb-4">
+                            <div class="p-3 bg-purple-500/10 rounded-lg border border-purple-500/30 mr-4"><svg class="h-8 w-8 text-purple-400 icon-pulse" style="animation-delay: 0.4s" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg></div>
+                            <h3 class="!mt-0">3. CI/CD & GitOps Layer</h3>
                         </div>
-                        <h3 class="!mt-0">3. CI/CD & GitOps Layer</h3>
                         <p class="text-sm text-gray-400"><strong>GitHub Actions</strong> connects the code to the cloud. A `git push` triggers a pipeline that validates, scans, plans, and applies changes to both infrastructure and application layers.</p>
                     </div>
                 </div>
             </section>
 
-            <section>
-                <h2>⚙️ Installation and Usage Flow</h2>
-                <p>This project is designed to be managed primarily through Git. The local setup is for initial configuration or significant debugging.</p>
-                <div class="mt-8 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-0">
-                    <!-- Step 1 -->
-                    <div class="flex flex-col items-center text-center max-w-xs">
-                        <div class="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center text-2xl font-bold text-white mb-3 border-4 border-indigo-400">1</div>
-                        <h3 class="!mt-0">Clone & Configure</h3>
-                        <p class="text-sm text-gray-400">Clone the repository and configure your local <code>terraform.tfvars</code> and GitHub Secrets.</p>
+            <section class="fade-in-up">
+                <h2>🔌 Player Connection Flow</h2>
+                <p>The use of a Velocity proxy is a key feature for security and scalability. It acts as a secure gateway, hiding the main server and allowing for future expansion into a multi-server network.</p>
+                <div class="mt-8 bg-gray-900 p-6 rounded-xl border border-gray-700 flex flex-col md:flex-row items-center justify-around gap-4 text-center">
+                    <!-- Player -->
+                    <div class="flex flex-col items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-400 icon-pulse" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" /></svg>
+                        <p class="font-bold mt-2">Player</p>
+                        <p class="text-xs text-gray-400">Minecraft Client</p>
                     </div>
-                    <div class="flow-arrow hidden md:block"></div>
-                     <!-- Step 2 -->
-                    <div class="flex flex-col items-center text-center max-w-xs">
-                        <div class="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center text-2xl font-bold text-white mb-3 border-4 border-indigo-400">2</div>
-                        <h3 class="!mt-0">Develop</h3>
-                        <p class="text-sm text-gray-400">Make changes to your infrastructure (<code>.tf</code> files), plugins (<code>manifest.json</code>), or server configs.</p>
+
+                    <div class="text-green-400 font-mono text-2xl mx-4">→</div>
+
+                    <!-- GCP Firewall -->
+                    <div class="flex flex-col items-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-red-400 icon-pulse" style="animation-delay: 0.2s" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                        <p class="font-bold mt-2">GCP Firewall</p>
+                        <p class="text-xs text-gray-400">Allows Port 25565</p>
                     </div>
-                    <div class="flow-arrow hidden md:block"></div>
-                    <!-- Step 3 -->
-                    <div class="flex flex-col items-center text-center max-w-xs">
-                        <div class="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center text-2xl font-bold text-white mb-3 border-4 border-indigo-400">3</div>
-                        <h3 class="!mt-0">Push to Git</h3>
-                        <p class="text-sm text-gray-400">Commit and push your changes to the <code>main</code> branch to trigger the automated pipeline.</p>
+
+                    <div class="text-green-400 font-mono text-2xl mx-4">→</div>
+
+                    <!-- Velocity Proxy -->
+                    <div class="flex flex-col items-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-cyan-400 icon-pulse" style="animation-delay: 0.4s" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+                        <p class="font-bold mt-2">Velocity Proxy</p>
+                        <p class="text-xs text-gray-400">Docker Container</p>
                     </div>
-                     <div class="flow-arrow hidden md:block"></div>
-                     <!-- Step 4 -->
-                    <div class="flex flex-col items-center text-center max-w-xs">
-                        <div class="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center text-2xl font-bold text-white mb-3 border-4 border-indigo-400">4</div>
-                        <h3 class="!mt-0">Monitor & Play</h3>
-                        <p class="text-sm text-gray-400">Monitor the GitHub Actions pipeline. Once complete, your server is live with the new changes.</p>
+
+                    <div class="text-green-400 font-mono text-2xl mx-4">→</div>
+
+                    <!-- PaperMC Server -->
+                    <div class="flex flex-col items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-emerald-400 icon-pulse" style="animation-delay: 0.6s" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" /></svg>
+                        <p class="font-bold mt-2">PaperMC Server</p>
+                        <p class="text-xs text-gray-400">Docker Container</p>
                     </div>
                 </div>
             </section>
-
-            <section>
+            
+            <section class="fade-in-up">
                 <h2>🗺️ Roadmap & Future Enhancements</h2>
                 <p>With a solid and secure foundation, the next steps focus on professionalizing the development workflow and adding advanced operational capabilities.</p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="card">
-                        <h3 class="flex items-center !mt-0">✅ `[Done]` End-to-End Automated Pipeline</h3>
-                        <p class="text-gray-400">The core CI/CD workflow is fully functional and deploys changes on push to main.</p>
-                    </div>
-                     <div class="card">
-                        <h3 class="flex items-center !mt-0">✅ `[Done]` Secure IaC Foundation</h3>
-                        <p class="text-gray-400">Infrastructure is managed by Terraform with integrated security scanning (Trivy).</p>
-                    </div>
-                     <div class="card">
-                        <h3 class="flex items-center !mt-0">✅ `[Done]` Remote State & Locking</h3>
-                        <p class="text-gray-400">Collaborative and safe state management is in place using Google Cloud Storage.</p>
-                    </div>
-                     <div class="card">
-                        <h3 class="flex items-center !mt-0">✅ `[Done]` Keyless GCP Authentication</h3>
-                        <p class="text-gray-400">Secure connection between GitHub and GCP is established via Workload Identity Federation.</p>
-                    </div>
                     <div class="card">
                         <h3 class="flex items-center !mt-0">🗓️ `[To Do]` Implement a Pull Request Workflow</h3>
                         <p class="text-gray-400">The highest-priority next step. This involves protecting the `main` branch and modifying the pipeline to run `terraform plan` on Pull Requests for team review and validation.</p>
@@ -208,9 +282,9 @@
                 </div>
             </section>
 
-            <section>
+            <section class="fade-in-up">
                 <h2>🤝 Contributions & Contact</h2>
-                 <div class="flex items-center gap-6 mt-4">
+                 <div class="flex items-center gap-6 mt-4 p-6 bg-gray-900 rounded-lg border border-gray-700">
                     <p class="m-0">Contributions are welcome! Feel free to open an issue or submit a pull request.</p>
                     <div class="flex-shrink-0 border-l border-gray-700 pl-6">
                         <p class="m-0"><strong>Email:</strong> <a href="mailto:lcb.barbeiro@gmail.com">lcb.barbeiro@gmail.com</a></p>
@@ -251,6 +325,19 @@
                     }, 2000);
                 });
             }
+        });
+
+        // Animação de fade-in ao rolar
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in-up');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('section').forEach(section => {
+            observer.observe(section);
         });
     </script>
 </body>
