@@ -12,8 +12,10 @@
 
 </p>
 
-# Automated minecraft server + GCP + Docker compose + Actions + CI/CD + IAC
-# Can see more here > https://lucascardosobarbeiro.github.io/server-mine-v2/
+**Can see more here > https://lucascardosobarbeiro.github.io/server-mine-v2/**
+
+Automated minecraft server + GCP + Docker compose + Actions + CI/CD + IAC
+
 This project provides a **robust, scalable, and easily editable** Infrastructure as Code (IaC) solution for deploying a production-ready PaperMC Minecraft server with a Velocity proxy on the Google Cloud Platform (GCP). It automates the entire lifecycle, from provisioning and configuration to deployment and updates, all designed to be seamlessly managed through CI/CD pipelines.
 
 The core principle of this architecture is to allow for easy modifications and scaling without needing to manually rebuild server components, making it perfect for pipeline-driven automation.
