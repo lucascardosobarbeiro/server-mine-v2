@@ -13,7 +13,7 @@ resource "google_compute_address" "static_ip" {
   name   = "minecraft-static-ip"
   region = var.region
 }
-
+# trivy:ignore:AVD-GCP-0031 "O servidor Minecraft precisa de um IP público para ser acessado pelos jogadores."
 # Cria a instância da máquina virtual.
 resource "google_compute_instance" "minecraft_server_host" {
   name         = "minecraft-server-host"
