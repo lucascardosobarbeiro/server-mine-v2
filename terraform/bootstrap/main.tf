@@ -4,6 +4,21 @@ resource "random_string" "suffix" {
   upper   = false
 }
 
+# Bucket para armazenar o estado remoto do Terraform
+resource "google_storage_bucket" "tfstate" {
+  name          = "tfstate-${var.project_id}"
+  location      = var.region
+  force_destroy = false
+}
+
+# Conta de serviço usada pelo servidor e pela pipeline
+resource "google_service_account" "minecraft_vm_sa" {
+  account_id   = "sa-minecraft-vm"
+  display_name = "Service Account for Minecraft VM"
+  project      = var.project_id
+}
+
+# Workload Identity Pool para o GitHub Actions
 resource "google_iam_workload_identity_pool" "github_pool" {
   workload_identity_pool_id = "github-pool-${random_string.suffix.result}"
   display_name              = "GitHub Actions Pool"
@@ -30,23 +45,30 @@ resource "google_iam_workload_identity_pool_provider" "github_provider" {
   }
 }
 
-resource "google_service_account" "minecraft_sa" {
-  account_id   = "sa-minecraft-vm"
-  display_name = "SA for Minecraft VM"
-  project      = var.project_id
-}
-
+# Permite que o GitHub use a conta de serviço via Workload Identity
 resource "google_service_account_iam_binding" "workload_identity_binding" {
-  service_account_id = google_service_account.minecraft_sa.name
+  service_account_id = google_service_account.minecraft_vm_sa.name
   role               = "roles/iam.workloadIdentityUser"
-
   members = [
     "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repo}"
   ]
 }
 
+# Concede acesso de gravação ao bucket de estado
+resource "google_storage_bucket_iam_member" "sa_state_admin" {
+  bucket = google_storage_bucket.tfstate.name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${google_service_account.minecraft_vm_sa.email}"
+}
 
-# terraform/github_actions.tf
+output "service_account_email" {
+  value = google_service_account.minecraft_vm_sa.email
+}
 
-# ... (código do Workload Identity Pool e Provider, se você também quiser gerenciá-los) ...
+output "state_bucket_name" {
+  value = google_storage_bucket.tfstate.name
+}
 
+output "workload_identity_pool" {
+  value = google_iam_workload_identity_pool.github_pool.name
+}

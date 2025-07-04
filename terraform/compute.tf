@@ -42,7 +42,7 @@ resource "google_compute_instance" "minecraft_server_host" {
   }
 
   service_account {
-    email  = google_service_account.minecraft_vm_sa.email
+    email  = data.google_service_account.minecraft_vm_sa.email
     scopes = ["cloud-platform"]
   }
 

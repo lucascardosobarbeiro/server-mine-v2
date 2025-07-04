@@ -87,7 +87,8 @@ This layer connects the code repository to the cloud infrastructure, enabling fu
 ├── scripts/
 │   └── fetch-plugins.sh # Script that downloads plugins
 ├── terraform/
-│   ├── ... (terraform .tf files)
+│   ├── bootstrap/      # stack with state bucket and Workload Identity
+│   ├── ... (terraform .tf files for the main stack)
 ├── velocity/
 │   ├── plugins/  # Velocity plugins are downloaded here
 │   └── ... (config files)
@@ -96,6 +97,18 @@ This layer connects the code repository to the cloud infrastructure, enabling fu
 ├── terraform.tfvars.example
 └── README.md
 ```
+
+### Bootstrap stack
+
+Long‑lived resources such as the remote Terraform state bucket and the Workload Identity configuration are defined under `terraform/bootstrap`. Run this stack once before using the main pipeline:
+
+```bash
+cd terraform/bootstrap
+terraform init
+terraform apply
+```
+
+The pipelines reference the bucket and service account created in this step, so a normal `terraform destroy` in the main stack will not remove them.
 
 
 
