@@ -1,5 +1,8 @@
+# terraform/backend.tf
+
 terraform {
-  # Informa ao Terraform para se preparar para usar o Google Cloud Storage.
-  # Os detalhes (nome do bucket) serão injetados pela pipeline.
-  backend "gcs" {}
+  backend "gcs" {
+    bucket = "terraform-state-server-mine-463823" # Nome do bucket definido diretamente
+    prefix = "server-mine-v2/terraform.tfstate"
+  }
 }
