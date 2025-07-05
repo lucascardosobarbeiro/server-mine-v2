@@ -36,14 +36,8 @@ jobs:
             -backend-config="bucket=${{ secrets.GCS_BACKEND_BUCKET }}" \
             -backend-config="prefix=server-mine-v2/terraform.tfstate"
 
-      - name: "Debug: Listar estado remoto"
-        run: |
-          echo ">> Estado atual no GCS:"
-          gsutil ls gs://${{ secrets.GCS_BACKEND_BUCKET }}/server-mine-v2/terraform.tfstate/
-
       - name: "Remove stale Terraform lock"
         run: |
-          echo ">> Removendo lock padrão, se existir"
           gsutil rm -f gs://${{ secrets.GCS_BACKEND_BUCKET }}/server-mine-v2/terraform.tfstate/default.tflock || true
 
       - name: "Terraform Fmt"
