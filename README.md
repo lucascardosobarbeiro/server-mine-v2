@@ -100,7 +100,7 @@ This layer connects the code repository to the cloud infrastructure, enabling fu
 
 ### Bootstrap stack
 
-Long‑lived resources such as the remote Terraform state bucket and the Workload Identity configuration are defined under `terraform/bootstrap`. Run this stack once before using the main pipeline:
+Long‑lived resources such as the remote Terraform state bucket and the Workload Identity configuration are defined under `terraform/bootstrap`. Run this stack once before provisioning the rest of the infrastructure:
 
 ```bash
 cd terraform/bootstrap
@@ -108,7 +108,13 @@ terraform init
 terraform apply
 ```
 
-The pipelines reference the bucket and service account created in this step, so a normal `terraform destroy` in the main stack will not remove them.
+The pipelines reference the bucket and service account created in this step, so a normal `terraform destroy` in the main stack will not remove them. After the bootstrap completes, run Terraform in the repository root:
+
+```bash
+cd ..
+terraform init
+terraform apply
+```
 
 
 

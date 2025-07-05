@@ -14,3 +14,14 @@ output "ssh_command" {
   description = "Comando para acessar a VM via SSH de forma segura."
   value       = "gcloud compute ssh ${google_compute_instance.minecraft_server_host.name} --zone ${var.zone} --project ${var.project_id} --tunnel-through-iap"
 }
+
+# As saídas abaixo auxiliam na configuração dos segredos do GitHub.
+output "workload_identity_provider" {
+  description = "O nome do provedor Workload Identity para usar nos segredos do GitHub."
+  value       = data.google_iam_workload_identity_pool_provider.github_provider.name
+}
+
+output "service_account_email_for_github" {
+  description = "O e-mail da conta de serviço para usar nos segredos do GitHub."
+  value       = data.google_service_account.minecraft_vm_sa.email
+}
