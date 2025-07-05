@@ -37,7 +37,7 @@ jobs:
 
       - name: Remove stale Terraform lock
         run: |
-          gsutil rm -f gs://${{ secrets.GCS_BACKEND_BUCKET }}/server-mine-v2/terraform.tfstate.tflock || true
+          gsutil rm -f gs://${{ secrets.GCS_BACKEND_BUCKET }}/server-mine-v2/terraform.tfstate/default.tflock || true
 
       - name: Terraform Fmt
         run: terraform -chdir=terraform fmt -check
@@ -56,4 +56,3 @@ jobs:
             -var="velocity_secret=${{ secrets.VELOCITY_SECRET }}" \
             -var="github_service_account_email=${{ secrets.GCP_SERVICE_ACCOUNT }}" \
             -var="github_workload_identity_provider=${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}"
-
