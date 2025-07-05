@@ -11,7 +11,12 @@ resource "google_iam_workload_identity_pool_provider" "this" {
     "attribute.ref"        = "assertion.ref"
   }
 
-  attribute_condition = "attribute.repository == \"${var.github_repo}\" && attribute.ref == \"refs/heads/main\""
+  # Agora usando startsWith para aceitar branches main e PR merges:
+  attribute_condition = <<-EOT
+  attribute.repository == "${var.github_repo}" &&
+  attribute.ref.startsWith("refs/heads/main")
+EOT
+
 
   oidc {
     issuer_uri = "https://token.actions.githubusercontent.com"
