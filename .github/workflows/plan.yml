@@ -17,86 +17,89 @@ jobs:
       id-token: write
 
     steps:
-      - name: "Checkout do repositório"
+      - name: Checkout do repositório
         uses: actions/checkout@v4
 
-      - name: "Autenticação com Google Cloud"
+      - name: Autenticação com Google Cloud
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account:            ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
-      - name: "Setup Terraform"
+      - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: "Terraform Init (bootstrap)"
-        run: terraform -chdir=terraform/bootstrap init -reconfigure \
-          -backend-config="bucket=${{ secrets.GCS_BACKEND_BUCKET }}" \
-          -backend-config="prefix=server-mine-v2/terraform.tfstate"
+      - name: Terraform Init (bootstrap)
+        run: |
+          terraform -chdir=terraform/bootstrap init -reconfigure \
+            -backend-config="bucket=${{ secrets.GCS_BACKEND_BUCKET }}" \
+            -backend-config="prefix=server-mine-v2/terraform.tfstate"
 
-      - name: "Terraform Fmt (bootstrap)"
+      - name: Terraform Fmt (bootstrap)
         run: terraform -chdir=terraform/bootstrap fmt -check
 
-      - name: "Terraform Validate (bootstrap)"
-        run: terraform -chdir=terraform/bootstrap validate \
-          -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
-          -var="pool_id=server-mine-pool-v2" \
-          -var="provider_id=github-provider"
+      - name: Terraform Validate (bootstrap)
+        run: |
+          terraform -chdir=terraform/bootstrap validate \
+            -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
+            -var="pool_id=server-mine-pool-v2" \
+            -var="provider_id=github-provider"
 
-      - name: "Terraform Plan (bootstrap)"
-        run: terraform -chdir=terraform/bootstrap plan -no-color \
-          -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
-          -var="pool_id=server-mine-pool-v2" \
-          -var="provider_id=github-provider"
+      - name: Terraform Plan (bootstrap)
+        run: |
+          terraform -chdir=terraform/bootstrap plan -no-color \
+            -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
+            -var="pool_id=server-mine-pool-v2" \
+            -var="provider_id=github-provider"
 
   app-plan:
     name: "App Plan"
-    runs-on: ubuntu-latest
     needs: bootstrap-plan
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
       pull-requests: write
 
     steps:
-      - name: "Checkout do repositório"
+      - name: Checkout do repositório
         uses: actions/checkout@v4
 
-      - name: "Autenticação com Google Cloud"
+      - name: Autenticação com Google Cloud
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account:            ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
-      - name: "Setup Terraform"
+      - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: "Terraform Init (app)"
+      - name: Terraform Init (app)
         run: |
-          terraform -chdir=terraform init \
+          terraform -chdir=terraform init -reconfigure \
             -backend-config="bucket=${{ secrets.GCS_BACKEND_BUCKET }}" \
-            -backend-config="prefix=server-mine-v2/terraform.tfstate" \
-            -reconfigure
+            -backend-config="prefix=server-mine-v2/terraform.tfstate"
 
-      - name: "Remove stale Terraform lock"
+      - name: Remove stale Terraform lock
         run: |
           gsutil rm -f gs://${{ secrets.GCS_BACKEND_BUCKET }}/server-mine-v2/terraform.tfstate/default.tflock || true
 
-      - name: "Terraform Fmt (app)"
+      - name: Terraform Fmt (app)
         run: terraform -chdir=terraform fmt -check
 
-      - name: "Terraform Validate (app)"
-        run: terraform -chdir=terraform validate \
-          -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
-          -var="region=${{ secrets.GCP_REGION }}" \
-          -var="zone=${{ secrets.GCP_ZONE }}" \
-          -var="gcp_user_email=${{ secrets.GCP_USER_EMAIL }}" \
-          -var="github_repo=${{ secrets.REMOTE_REPO }}" \
-          -var="velocity_secret=${{ secrets.VELOCITY_SECRET }}" \
-          -var="github_service_account_email=${{ secrets.GCP_SERVICE_ACCOUNT }}" \
-          -var="github_workload_identity_provider=${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}"
+      - name: Terraform Validate (app)
+        run: |
+          terraform -chdir=terraform validate \
+            -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
+            -var="region=${{ secrets.GCP_REGION }}" \
+            -var="zone=${{ secrets.GCP_ZONE }}" \
+            -var="gcp_user_email=${{ secrets.GCP_USER_EMAIL }}" \
+            -var="github_repo=${{ secrets.REMOTE_REPO }}" \
+            -var="velocity_secret=${{ secrets.VELOCITY_SECRET }}" \
+            -var="github_service_account_email=${{ secrets.GCP_SERVICE_ACCOUNT }}" \
+            -var="github_workload_identity_provider=${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}"
 
-      - name: "Terraform Plan (app)"
+      - name: Terraform Plan (app)
         run: |
           terraform -chdir=terraform plan -no-color -lock-timeout=300s \
             -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
