@@ -21,6 +21,9 @@ terraform/paper/configs/spigot.yml           # se for gerado
 terraform/paper/plugins/
 velocity/plugins/
 
+# Ignore Terraform plan output
+tfplan
+
 # — Docker Compose output —
 docker-compose.override.yml
 
@@ -30,8 +33,3 @@ docker-compose.override.yml
 *.swp
 .DS_Store
 Thumbs.db
-
-
-# — Outros —
-terraform/velocity/plugins/
-terraform/paper/plugins/

@@ -43,6 +43,10 @@ jobs:
             -backend-config="bucket=${{ secrets.GCS_BACKEND_BUCKET }}" \
             -backend-config="prefix=server-mine-v2/terraform.tfstate"
 
+      - name: Remove stale Terraform lock
+        run: |
+          gsutil rm -f gs://${{ secrets.GCS_BACKEND_BUCKET }}/server-mine-v2/terraform.tfstate.tflock || true
+
       # --- PASSO DE VALIDAÇÃO E SEGURANÇA INSERIDO AQUI ---
       - name: 5. Validar e Analisar Código Terraform
         run: |
@@ -64,18 +68,20 @@ jobs:
       - name: 6. Terraform Plan
         id: plan
         run: |
-          terraform -chdir="${{ env.TF_WORKING_DIR }}" plan -no-color -out=tfplan \
+          terraform -chdir="${{ env.TF_WORKING_DIR }}" plan -no-color -out=tfplan -lock-timeout=300s \
             -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
             -var="region=${{ secrets.GCP_REGION }}" \
             -var="zone=${{ secrets.GCP_ZONE }}" \
-            -var="gcp_user_email=${{ secrets.GCP_SERVICE_ACCOUNT }}" \
+            -var="gcp_user_email=${{ secrets.GCP_USER_EMAIL }}" \
             -var="github_repo=${{ secrets.REMOTE_REPO }}" \
             -var="velocity_secret=${{ secrets.VELOCITY_SECRET }}" # <-- ADICIONADO AQUI
+            -var="github_service_account_email=${{ secrets.GCP_SERVICE_ACCOUNT }}" \
+            -var="github_workload_identity_provider=${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}"
         continue-on-error: true
 
       - name: 7. Terraform Apply
         if: steps.plan.outputs.exitcode == 2
-        run: terraform -chdir="${{ env.TF_WORKING_DIR }}" apply -auto-approve tfplan
+        run: terraform -chdir="${{ env.TF_WORKING_DIR }}" apply -auto-approve -lock-timeout=300s tfplan
 
       # --- ETAPA DE DEPLOY DA APLICAÇÃO - Lógica original 100% preservada ---
 
