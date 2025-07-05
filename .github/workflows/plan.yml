@@ -49,4 +49,7 @@ jobs:
             -var="zone=${{ secrets.GCP_ZONE }}" \
             -var="gcp_user_email=${{ secrets.GCP_USER_EMAIL }}" \
             -var="github_repo=${{ secrets.REMOTE_REPO }}" \
-            -var="velocity_secret=${{ secrets.VELOCITY_FORWARDING_SECRET }}"
+            -var="velocity_secret=${{ secrets.VELOCITY_FORWARDING_SECRET }}" \
+            -var="github_service_account_email=${{ secrets.GCP_SERVICE_ACCOUNT }}" \
+            -var="github_workload_identity_provider=${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}"
+
