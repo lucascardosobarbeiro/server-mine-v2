@@ -2,14 +2,15 @@ name: Terraform Plan & Validate
 
 on:
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
     paths:
-      - 'terraform/**'
-      - '.github/workflows/plan.yml'
+      - terraform/**
+      - .github/workflows/plan.yml
 
 jobs:
   plan:
-    name: 'Terraform Plan'
+    name: Terraform Plan
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -24,7 +25,7 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account:            ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
