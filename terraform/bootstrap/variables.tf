@@ -23,11 +23,16 @@ variable "account_id" {
 variable "pool_id" {
   description = "Workload Identity Pool ID"
   type        = string
-  default     = "github-pool"
+  default     = "github-pool-v2"
 }
 
 variable "provider_id" {
   description = "Workload Identity Provider ID"
   type        = string
   default     = "github-provider"
+}
+variable "velocity_secret" {
+  description = "Secret key used to forward player info to backend servers"
+  type        = string
+  sensitive   = true
 }
