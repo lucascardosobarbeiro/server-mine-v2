@@ -42,7 +42,8 @@ jobs:
             -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
             -var="pool_id=server-mine-pool-v2" \
             -var="provider_id=github-provider" \
-            -var="github_repo=${{ secrets.REMOTE_REPO }}"
+            -var="github_repo=${{ secrets.REMOTE_REPO }}" \
+            -var="velocity_secret=${{ secrets.VELOCITY_FORWARDING_SECRET }}"
 
   app-plan:
     name: "App Plan"
