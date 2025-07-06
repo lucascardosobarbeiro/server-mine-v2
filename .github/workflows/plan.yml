@@ -39,6 +39,10 @@ jobs:
       - name: Terraform Fmt (bootstrap)
         run: terraform -chdir=terraform/bootstrap fmt -check
 
+      - name: Remove stale Terraform lock (bootstrap)
+        run: |
+          gsutil rm -f gs://${{ secrets.GCS_BACKEND_BUCKET }}/server-mine-v2/terraform.tfstate/default.tflock || true
+
       - name: Terraform Plan (bootstrap)
         run: |
           terraform -chdir=terraform/bootstrap plan -no-color \
@@ -75,7 +79,7 @@ jobs:
             -backend-config="bucket=${{ secrets.GCS_BACKEND_BUCKET }}" \
             -backend-config="prefix=server-mine-v2/terraform.tfstate"
 
-      - name: Remove stale Terraform lock
+      - name: Remove stale Terraform lock (app)
         run: |
           gsutil rm -f gs://${{ secrets.GCS_BACKEND_BUCKET }}/server-mine-v2/terraform.tfstate/default.tflock || true
 
@@ -83,8 +87,7 @@ jobs:
         run: terraform -chdir=terraform fmt -check
 
       - name: Terraform Validate (app)
-        run: |
-          terraform -chdir=terraform validate
+        run: terraform -chdir=terraform validate
 
       - name: Terraform Plan (app)
         run: |
