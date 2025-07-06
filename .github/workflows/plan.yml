@@ -1,3 +1,5 @@
+### .github/workflows/plan.yml
+
 name: "Terraform Plan & Validate"
 
 on:
@@ -31,14 +33,15 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init (bootstrap)
-        run: terraform -chdir=terraform/bootstrap init
+        run: |
+          terraform init -chdir=terraform/bootstrap
 
       - name: Terraform Fmt (bootstrap)
-        run: terraform -chdir=terraform/bootstrap fmt -check
+        run: terraform fmt -chdir=terraform/bootstrap -check
 
       - name: Terraform Plan (bootstrap)
         run: |
-          terraform -chdir=terraform/bootstrap plan -no-color \
+          terraform plan -chdir=terraform/bootstrap -no-color \
             -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
             -var="pool_id=server-mine-pool-v2" \
             -var="provider_id=github-provider" \
@@ -69,7 +72,7 @@ jobs:
 
       - name: Terraform Init (app)
         run: |
-          terraform -chdir=terraform init -reconfigure \
+          terraform init -chdir=terraform -reconfigure \
             -backend-config="bucket=${{ secrets.GCS_BACKEND_BUCKET }}" \
             -backend-config="prefix=server-mine-v2/terraform.tfstate"
 
@@ -78,15 +81,14 @@ jobs:
           gsutil rm -f gs://${{ secrets.GCS_BACKEND_BUCKET }}/server-mine-v2/terraform.tfstate/default.tflock || true
 
       - name: Terraform Fmt (app)
-        run: terraform -chdir=terraform fmt -check
+        run: terraform fmt -chdir=terraform -check
 
       - name: Terraform Validate (app)
-        run: terraform -chdir=terraform validate
+        run: terraform validate -chdir=terraform
 
       - name: Terraform Plan (app)
         run: |
-          terraform -chdir=terraform plan -no-color -lock-timeout=300s \
-          terraform -chdir=terraform plan -no-color -lock-timeout=300s -lock=false \
+          terraform plan -chdir=terraform -no-color -lock-timeout=300s -lock=false \
             -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
             -var="region=${{ secrets.GCP_REGION }}" \
             -var="zone=${{ secrets.GCP_ZONE }}" \
@@ -95,3 +97,4 @@ jobs:
             -var="velocity_secret=${{ secrets.VELOCITY_FORWARDING_SECRET }}" \
             -var="github_service_account_email=${{ secrets.GCP_SERVICE_ACCOUNT }}" \
             -var="github_workload_identity_provider=${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}"
+
