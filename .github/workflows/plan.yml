@@ -1,6 +1,5 @@
 ### .github/workflows/plan.yml
 
-# This workflow runs Terraform plan and validate commands on pull requests
 name: "Terraform Plan & Validate"
 
 on:
@@ -47,7 +46,8 @@ jobs:
           terraform -chdir=terraform/bootstrap plan -no-color \
             -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
             -var="pool_id=server-mine-pool-v2" \
-            -var="provider_id=github-provider"
+            -var="provider_id=github-provider" \
+            -var="github_repo=${{ secrets.REMOTE_REPO }}"
 
   app-plan:
     name: "App Plan"
