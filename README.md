@@ -29,6 +29,24 @@ The core principle of this architecture is to allow for easy modifications and s
 * **Highly Configurable:** Easily customize server and proxy settings through template files.
 * **Automated Backups:** Leverage Google Cloud Storage for automatic backups of your Minecraft world, with lifecycle policies to manage costs.
 
+## Quick Start
+
+1. Copy `terraform/backend.hcl.example` to `terraform/backend.hcl` and set your state bucket name.
+2. Copy `terraform/terraform.tfvars.example` to `terraform/terraform.tfvars` and fill in `project_id`, `region`, `zone`, `gcp_user_email`, `github_repo`, and `velocity_secret`.
+   The `velocity_secret` value is required by the Velocity proxy and must match the secret used in your server configuration.
+3. Run the bootstrap stack to create the bucket and service account:
+   ```bash
+   cd terraform/bootstrap
+   terraform init
+   terraform apply
+   ```
+4. Return to the main stack, initialize with the backend, and apply:
+   ```bash
+   cd ..
+   terraform init -backend-config=backend.hcl
+   terraform apply
+   ```
+
 ## 🚀 Technology Stack
 
 * **Cloud Provider:** Google Cloud Platform (GCP)
@@ -112,7 +130,7 @@ The pipelines reference the bucket and service account created in this step, so 
 
 ```bash
 cd ..
-terraform init
+terraform init -backend-config=backend.hcl
 terraform apply
 ```
 

@@ -5,3 +5,4 @@ region          = "YOUR_REGION_HERE"
 zone            = "YOUR_ZONE_HERE"
 gcp_user_email  = "YOUR_EMAIL"
 github_repo     = "YOUR GIT REPO HERE" # <-- CHANGE HERE FROM YOUR USER/REPO
+velocity_secret = "CHANGEME"

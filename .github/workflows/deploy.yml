@@ -87,7 +87,6 @@ jobs:
 
       - name: 8. Instalar Dependências da Aplicação
         run: |
-          python3 -m pip install numpy --user
           sudo apt-get update
           sudo apt-get install -y gettext-base jq curl
 
