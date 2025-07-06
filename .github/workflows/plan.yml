@@ -31,17 +31,10 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init (bootstrap)
-        run: |
-          terraform -chdir=terraform/bootstrap init -reconfigure \
-            -backend-config="bucket=${{ secrets.GCS_BACKEND_BUCKET }}" \
-            -backend-config="prefix=server-mine-v2/terraform.tfstate"
+        run: terraform -chdir=terraform/bootstrap init
 
       - name: Terraform Fmt (bootstrap)
         run: terraform -chdir=terraform/bootstrap fmt -check
-
-      - name: Remove stale Terraform lock (bootstrap)
-        run: |
-          gsutil rm -f gs://${{ secrets.GCS_BACKEND_BUCKET }}/server-mine-v2/terraform.tfstate/default.tflock || true
 
       - name: Terraform Plan (bootstrap)
         run: |
