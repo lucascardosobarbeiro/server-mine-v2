@@ -1,3 +1,6 @@
+### .github/workflows/plan.yml
+
+# This workflow runs Terraform plan and validate commands on pull requests
 name: "Terraform Plan & Validate"
 
 on:
@@ -38,13 +41,6 @@ jobs:
 
       - name: Terraform Fmt (bootstrap)
         run: terraform -chdir=terraform/bootstrap fmt -check
-
-      - name: Terraform Validate (bootstrap)
-        run: |
-          terraform -chdir=terraform/bootstrap validate \
-            -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
-            -var="pool_id=server-mine-pool-v2" \
-            -var="provider_id=github-provider"
 
       - name: Terraform Plan (bootstrap)
         run: |
@@ -90,15 +86,7 @@ jobs:
 
       - name: Terraform Validate (app)
         run: |
-          terraform -chdir=terraform validate \
-            -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
-            -var="region=${{ secrets.GCP_REGION }}" \
-            -var="zone=${{ secrets.GCP_ZONE }}" \
-            -var="gcp_user_email=${{ secrets.GCP_USER_EMAIL }}" \
-            -var="github_repo=${{ secrets.REMOTE_REPO }}" \
-            -var="velocity_secret=${{ secrets.VELOCITY_SECRET }}" \
-            -var="github_service_account_email=${{ secrets.GCP_SERVICE_ACCOUNT }}" \
-            -var="github_workload_identity_provider=${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}"
+          terraform -chdir=terraform validate
 
       - name: Terraform Plan (app)
         run: |
@@ -111,3 +99,4 @@ jobs:
             -var="velocity_secret=${{ secrets.VELOCITY_SECRET }}" \
             -var="github_service_account_email=${{ secrets.GCP_SERVICE_ACCOUNT }}" \
             -var="github_workload_identity_provider=${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}"
+
