@@ -86,6 +86,7 @@ jobs:
       - name: Terraform Plan (app)
         run: |
           terraform -chdir=terraform plan -no-color -lock-timeout=300s \
+          terraform -chdir=terraform plan -no-color -lock-timeout=300s -lock=false \
             -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
             -var="region=${{ secrets.GCP_REGION }}" \
             -var="zone=${{ secrets.GCP_ZONE }}" \
