@@ -1,5 +1,3 @@
-### .github/workflows/plan.yml
-
 name: "Terraform Plan & Validate"
 
 on:
@@ -99,4 +97,3 @@ jobs:
             -var="velocity_secret=${{ secrets.VELOCITY_SECRET }}" \
             -var="github_service_account_email=${{ secrets.GCP_SERVICE_ACCOUNT }}" \
             -var="github_workload_identity_provider=${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}"
-
