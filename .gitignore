@@ -9,6 +9,7 @@
 terraform.tfvars
 terraform.tfvars.json
 gha-creds-*.json             # credenciais do CI
+terraform/backend.hcl        # backend config (local only)
 
 # — Configs gerados pelos templates/pipeline —
 terraform/velocity/forwarding.secret
