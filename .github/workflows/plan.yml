@@ -71,11 +71,11 @@ jobs:
         run: |
           terraform -chdir=terraform init -reconfigure \
             -backend-config="bucket=${{ secrets.GCS_BACKEND_BUCKET }}" \
-            -backend-config="prefix=server-mine-v2/terraform.tfstate"
+            -backend-config="prefix=server-mine-v2/terraform"
 
       - name: Remove stale Terraform lock (app)
         run: |
-          gsutil rm -f gs://${{ secrets.GCS_BACKEND_BUCKET }}/server-mine-v2/terraform.tfstate/default.tflock || true
+          gsutil rm -f gs://${{ secrets.GCS_BACKEND_BUCKET }}/server-mine-v2/terraform/default.tflock || true
 
       - name: Terraform Fmt (app)
         run: terraform -chdir=terraform fmt -check

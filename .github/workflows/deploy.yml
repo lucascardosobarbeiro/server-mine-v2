@@ -41,11 +41,11 @@ jobs:
         run: |
           terraform -chdir="${{ env.TF_WORKING_DIR }}" init \
             -backend-config="bucket=${{ secrets.GCS_BACKEND_BUCKET }}" \
-            -backend-config="prefix=server-mine-v2/terraform.tfstate"
+            -backend-config="prefix=server-mine-v2/terraform"
 
       - name: Remove stale Terraform lock
         run: |
-          gsutil rm -f gs://${{ secrets.GCS_BACKEND_BUCKET }}/server-mine-v2/terraform.tfstate.tflock || true
+          gsutil rm -f gs://${{ secrets.GCS_BACKEND_BUCKET }}/server-mine-v2/terraform/default.tflock || true
 
       # --- PASSO DE VALIDAÇÃO E SEGURANÇA INSERIDO AQUI ---
       - name: 5. Validar e Analisar Código Terraform
