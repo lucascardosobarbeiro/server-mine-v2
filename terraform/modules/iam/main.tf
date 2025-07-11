@@ -1,69 +1,68 @@
-# iam.tf - Versão Final e Consolidada de Todas as Permissões
+# =================================================================================
+# MÓDULO IAM - PERMISSÕES E SERVICE ACCOUNT PARA A VM
+# =================================================================================
 
+# Service Account para a VM Minecraft
 resource "google_service_account" "minecraft_vm_sa" {
-  account_id   = "sa-minecraft-vm"
+  account_id   = "sa-minecraft-vm-2"
   display_name = "Service Account for Minecraft VM"
 }
 
 # =================================================================================
-# Permissões para a CONTA DE SERVIÇO (sa-minecraft-vm@...)
+# PERMISSÕES PARA A SERVICE ACCOUNT
 # =================================================================================
 
-# --- Permissões Operacionais Básicas ---
-
-# Permite que a VM (via Ops Agent) envie logs e métricas para o Cloud Operations.
+# Logging
 resource "google_project_iam_member" "logging_writer" {
   project = var.project_id
   role    = "roles/logging.logWriter"
   member  = "serviceAccount:${google_service_account.minecraft_vm_sa.email}"
 }
 
+# Monitoring
 resource "google_project_iam_member" "monitoring_writer" {
   project = var.project_id
   role    = "roles/monitoring.metricWriter"
   member  = "serviceAccount:${google_service_account.minecraft_vm_sa.email}"
 }
 
-# Permite que a VM (via script de backup) escreva ficheiros no bucket de backups.
+# Storage (backup)
 resource "google_storage_bucket_iam_member" "backup_writer" {
   bucket = var.backup_bucket_name
   role   = "roles/storage.objectAdmin"
   member = "serviceAccount:${google_service_account.minecraft_vm_sa.email}"
 }
 
-# --- Permissões para Acesso Remoto do CI/CD ---
-
-# Permite que o gcloud veja os detalhes da VM antes de se conectar.
+# Compute Viewer
 resource "google_project_iam_member" "compute_viewer_for_sa" {
   project = var.project_id
   role    = "roles/compute.viewer"
   member  = "serviceAccount:${google_service_account.minecraft_vm_sa.email}"
 }
 
-# Permite que a conta de serviço use o túnel IAP (Plano A de conexão).
+# IAP Tunnel
 resource "google_project_iam_member" "iap_tunnel_for_sa" {
   project = var.project_id
   role    = "roles/iap.tunnelResourceAccessor"
   member  = "serviceAccount:${google_service_account.minecraft_vm_sa.email}"
 }
 
-# Permite que a conta de serviço atue como ela mesma, necessário para fluxos IAP complexos.
+# SA User (permite que ela atue como ela mesma, necessário para IAP)
 resource "google_project_iam_member" "sa_user_for_sa" {
   project = var.project_id
   role    = "roles/iam.serviceAccountUser"
   member  = "serviceAccount:${google_service_account.minecraft_vm_sa.email}"
 }
 
-# Permite que a SA modifique metadados da VM (Plano B de conexão), resolvendo o erro de fallback do SSH.
+# Compute Admin limitado (para alterar metadados e conectar)
 resource "google_project_iam_member" "instance_admin_for_sa" {
   project = var.project_id
   role    = "roles/compute.instanceAdmin.v1"
   member  = "serviceAccount:${google_service_account.minecraft_vm_sa.email}"
 }
 
-
 # =================================================================================
-# Permissões para o seu UTILIZADOR HUMANO 
+# PERMISSÕES PARA O USUÁRIO HUMANO
 # =================================================================================
 
 resource "google_project_iam_member" "iap_ssh_access" {
@@ -78,22 +77,13 @@ resource "google_project_iam_member" "compute_viewer_for_user" {
   member  = "user:${var.gcp_user_email}"
 }
 
-
 # =================================================================================
-# Permissão para o WORKLOAD IDENTITY FEDERATION
+# WORKLOAD IDENTITY FEDERATION (GITHUB ACTIONS)
 # =================================================================================
 
-# Concede à identidade do GitHub a permissão para "personificar" esta conta de serviço.
 resource "google_service_account_iam_member" "github_wif_user" {
   service_account_id = google_service_account.minecraft_vm_sa.name
   role               = "roles/iam.workloadIdentityUser"
-  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repo}"
+  member             = "principalSet://iam.googleapis.com/${var.google_iam_workload_identity_pool}/attribute.repository/${var.github_repo}"
 }
 
-# Concede a permissão de Storage Object Admin para a Conta de Serviço da VM,
-# permitindo que a pipeline (que a utiliza) acesse o bucket do backend.
-resource "google_project_iam_member" "sa_minecraft_vm_storage_admin" {
-  project = var.project_id
-  role    = "roles/storage.objectAdmin"
-  member  = "serviceAccount:${google_service_account.minecraft_sa.email}"
-}

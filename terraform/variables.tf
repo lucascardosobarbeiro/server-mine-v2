@@ -6,7 +6,7 @@
 # O ID do seu projeto no GCP, a identificação principal.
 variable "project_id" {
   description = "O ID do seu projeto no Google Cloud."
-  type        = string # Garante que o valor fornecido seja um texto.
+  type        = string
 }
 
 # A região geográfica onde a maioria dos recursos será criada.
@@ -32,7 +32,10 @@ variable "github_repo" {
   description = "Seu repositório no GitHub no formato 'usuario/repositorio'."
   type        = string
 }
-variable "velocity_secret" {
-  description = "Secret key used to forward player info to backend servers"
+
+# Nome do bucket de backup que será usado para armazenar dados da VM.
+variable "backup_bucket_name" {
+  description = "Nome do bucket de backup onde a SA da VM terá acesso para escrever arquivos."
   type        = string
 }
+
