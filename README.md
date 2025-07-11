@@ -4,6 +4,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/status-complete-green?style=for-the-badge" alt="Complete" />
   <img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="MIT" />
+  <img src="https://github.com/lucascardosobarbeiro/server-mine-v2/actions/workflows/deploy.yml/badge.svg?branch=main" alt="CI Status" />
 </p>
 <p align="center">
   <img src="https://img.shields.io/badge/GCP-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white" alt="GCP" />
@@ -96,6 +97,17 @@ This layer connects the code repository to the cloud infrastructure, enabling fu
 ├── terraform.tfvars.example
 └── README.md
 ```
+
+## 💰 Cost Estimate
+
+Below is a rough monthly estimate for running the infrastructure using Google Cloud resources:
+
+- **Compute Engine VM (custom-4-18432)**: ~US$120
+- **50GB Persistent Disk**: ~US$10
+- **Static IP address**: ~US$7
+- **Backups Bucket (5GB + lifecycle)**: ~US$1
+
+Use the [GCP pricing calculator](https://cloud.google.com/products/calculator) for a detailed breakdown.
 
 
 

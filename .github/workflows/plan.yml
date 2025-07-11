@@ -46,9 +46,19 @@ jobs:
         run: |
           echo "--- Verificando formatação do código ---"
           terraform -chdir="${{ env.TF_WORKING_DIR }}" fmt -check
-          
+
           echo "--- Validando sintaxe do Terraform ---"
           terraform -chdir="${{ env.TF_WORKING_DIR }}" validate
+
+          echo "--- Instalando TFLint ---"
+          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+          echo "--- Executando TFLint ---"
+          tflint --chdir=${{ env.TF_WORKING_DIR }}
+
+      - name: 'YAML Lint'
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: .github/workflows
 
           echo "--- Instalando Trivy para análise de segurança ---"
           wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
