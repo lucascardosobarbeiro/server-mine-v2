@@ -20,3 +20,9 @@ output "ssh_command" {
 output "workload_identity_provider" {
   value = module.wif.github_wif_provider_name
 }
+
+# saída do nome do Workload Identity Pool
+output "workload_identity_pool" {
+  value       = module.wif.pool_name
+  description = "Workload Identity Pool usado pelo GitHub Actions"
+}
