@@ -38,4 +38,3 @@ variable "backup_bucket_name" {
   description = "Nome do bucket de backup onde a SA da VM terá acesso para escrever arquivos."
   type        = string
 }
-

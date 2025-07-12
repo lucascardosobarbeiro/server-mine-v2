@@ -16,12 +16,7 @@ output "ssh_command" {
 }
 
 # As duas saídas abaixo são usadas para configurar os segredos no GitHub.
-output "workload_identity_provider" {
-  description = "O nome do provedor Workload Identity para usar nos segredos do GitHub."
-  value       = google_iam_workload_identity_pool_provider.github_provider.name
-}
 
-output "service_account_email_for_github" {
-  description = "O e-mail da conta de serviço para usar nos segredos do GitHub."
-  value       = module.iam.service_account_email
+output "workload_identity_provider" {
+  value = module.wif.github_wif_provider_name
 }
