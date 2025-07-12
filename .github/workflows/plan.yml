@@ -1,11 +1,8 @@
-# .github/workflows/plan.yml
-
 name: 'Terraform Plan & Validate'
 
 on:
   pull_request:
     branches: [ main ]
-    # Para otimizar, só aciona se houver mudanças nos ficheiros de infraestrutura
     paths:
       - 'terraform/**'
       - '.github/workflows/plan.yml'
@@ -20,17 +17,17 @@ jobs:
     permissions:
       contents: read
       id-token: write
-      pull-requests: write # Permissão para escrever comentários no PR
+      pull-requests: write
 
     steps:
       - name: '1. Checkout do Repositório'
         uses: actions/checkout@v4
 
       - name: '2. Autenticação com Google Cloud'
-        uses: 'google-github-actions/auth@v2'
+        uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          service_account:          ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
       - name: '3. Setup do Terraform'
         uses: hashicorp/setup-terraform@v3
@@ -44,43 +41,39 @@ jobs:
 
       - name: '5. Validar e Analisar Código Terraform'
         run: |
-          echo "--- Verificando formatação do código ---"
           terraform -chdir="${{ env.TF_WORKING_DIR }}" fmt -check
-
-          echo "--- Validando sintaxe do Terraform ---"
           terraform -chdir="${{ env.TF_WORKING_DIR }}" validate
-
-          echo "--- Instalando TFLint ---"
           curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
-          echo "--- Executando TFLint ---"
           tflint --chdir=${{ env.TF_WORKING_DIR }}
 
-      - name: 'YAML Lint'
+      - name: '6. YAML Lint'
         uses: ibiqlik/action-yamllint@v3
         with:
           file_or_dir: .github/workflows
 
-          echo "--- Instalando Trivy para análise de segurança ---"
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
-          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
-          sudo apt-get update
-          sudo apt-get install trivy -y
-          
-          echo "--- Rodando análise de segurança com Trivy ---"
+      - name: '7. Segurança: instalar e rodar Trivy'
+        run: |
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
+            | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] \
+            https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" \
+            | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update && sudo apt-get install trivy -y
           trivy config --exit-code 1 --severity HIGH,CRITICAL ${{ env.TF_WORKING_DIR }}
 
-      - name: '6. Terraform Plan'
-        id: tf-plan
+      - name: '8. Terraform Plan'
+        id: plan
         run: |
           terraform -chdir="${{ env.TF_WORKING_DIR }}" plan -no-color -out=tfplan \
             -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
             -var="region=${{ secrets.GCP_REGION }}" \
             -var="zone=${{ secrets.GCP_ZONE }}" \
-            -var="gcp_user_email=${{ secrets.GCP_SERVICE_ACCOUNT }}" \
+            -var="gcp_user_email=${{ secrets.GCP_USER_EMAIL }}" \
             -var="github_repo=${{ secrets.REMOTE_REPO }}" \
-            -var="velocity_secret=${{ secrets.VELOCITY_SECRET }}"
-      
-      - name: '7. Publicar Plano no Pull Request'
+            -var="forwarding_secret=${{ secrets.FORWARDING_SECRET }}"
+        continue-on-error: true
+
+      - name: '9. Publicar Plano no Pull Request'
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -90,26 +83,6 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
+            const planOutput = `${{ steps.plan.outputs.stdout }}`;
+            const body = `#### Terraform Plan 📖
 
-            const planOutput = `${{ steps.tf-plan.outputs.stdout }}`;
-            const output = `#### Terraform Plan 📖\n\n<details><summary>Clique para ver o plano</summary>\n\n\`\`\`\n${planOutput}\n\`\`\`\n\n</details>`;
-            
-            const botComment = comments.find(comment => 
-              comment.user.type === 'Bot' && comment.body.includes('Terraform Plan')
-            );
-
-            if (botComment) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: botComment.id,
-                body: output
-              });
-            } else {
-              await github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: output
-              });
-            }
