@@ -1,3 +1,5 @@
+# .github/workflows/deploy.yml
+
 name: 'Deploy Infra & Application'
 
 on:
@@ -5,13 +7,15 @@ on:
     branches: [ main ]
 
 env:
-  GCP_PROJECT_ID:         ${{ secrets.GCP_PROJECT_ID }}
-  GCP_REGION:             ${{ secrets.GCP_REGION }}
-  GCP_ZONE:               ${{ secrets.GCP_ZONE }}
-  INSTANCE_NAME:          ${{ secrets.INSTANCE_NAME }}
-  FORWARDING_SECRET:      ${{ secrets.FORWARDING_SECRET }}
-  FORWARDING_SECRET_FILE: "/config/forwarding.secret"
-  TF_WORKING_DIR:         ./terraform
+  GCP_PROJECT_ID:                ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REGION:                    ${{ secrets.GCP_REGION }}
+  GCP_ZONE:                      ${{ secrets.GCP_ZONE }}
+  GCP_USER_EMAIL:                ${{ secrets.GCP_USER_EMAIL }}
+  INSTANCE_NAME:                 ${{ secrets.INSTANCE_NAME }}
+  FORWARDING_SECRET:             ${{ secrets.FORWARDING_SECRET }}
+  FORWARDING_SECRET_FILE:        "/config/forwarding.secret"
+  TF_WORKING_DIR:                ./terraform
+  TF_VAR_workload_identity_pool: ${{ secrets.WORKLOAD_IDENTITY_POOL }}
 
 jobs:
   deploy:
@@ -21,16 +25,16 @@ jobs:
       id-token: write
 
     steps:
-      - name: '1. Checkout'
+      - name: '1. Checkout do Repositório'
         uses: actions/checkout@v4
 
-      - name: '2. Auth GCP'
+      - name: '2. Autenticação com Google Cloud'
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account:          ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          service_account:           ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
-      - name: '3. Setup Terraform'
+      - name: '3. Setup do Terraform'
         uses: hashicorp/setup-terraform@v3
 
       - name: '4. Terraform Init'
@@ -39,19 +43,19 @@ jobs:
             -backend-config="bucket=${{ secrets.GCS_BACKEND_BUCKET }}" \
             -backend-config="prefix=server-mine-v2/terraform.tfstate"
 
-      - name: '5. Validar Terraform'
+      - name: '5. Validar e Analisar Código Terraform'
         run: |
           terraform -chdir="${{ env.TF_WORKING_DIR }}" fmt -check
           terraform -chdir="${{ env.TF_WORKING_DIR }}" validate
           curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
-          tflint --chdir=${{ env.TF_WORKING_DIR }}
+          tflint --chdir="${{ env.TF_WORKING_DIR }}"
 
       - name: '6. YAML Lint'
         uses: ibiqlik/action-yamllint@v3
         with:
           file_or_dir: .github/workflows
 
-      - name: '7. Segurança: Trivy'
+      - name: '7. Segurança: instalar e rodar Trivy'
         run: |
           wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
             | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
@@ -59,74 +63,74 @@ jobs:
             https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" \
             | sudo tee -a /etc/apt/sources.list.d/trivy.list
           sudo apt-get update && sudo apt-get install trivy -y
-          trivy config --exit-code 1 --severity HIGH,CRITICAL ${{ env.TF_WORKING_DIR }}
+          trivy config --exit-code 1 --severity HIGH,CRITICAL "${{ env.TF_WORKING_DIR }}"
 
       - name: '8. Terraform Plan'
         id: plan
+        continue-on-error: true
         run: |
           terraform -chdir="${{ env.TF_WORKING_DIR }}" plan -no-color -out=tfplan \
             -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
             -var="region=${{ secrets.GCP_REGION }}" \
             -var="zone=${{ secrets.GCP_ZONE }}" \
-            -var="gcp_user_email=${{ secrets.GCP_USER_EMAIL }}" \
+            -var="gcp_user_email=${{ env.GCP_USER_EMAIL }}" \
             -var="github_repo=${{ secrets.REMOTE_REPO }}" \
             -var="forwarding_secret=${{ secrets.FORWARDING_SECRET }}"
-        continue-on-error: true
 
       - name: '9. Terraform Apply'
         if: steps.plan.outputs.exitcode == '2'
-        run: terraform -chdir="${{ env.TF_WORKING_DIR }}" apply -auto-approve tfplan
+        run: |
+          terraform -chdir="${{ env.TF_WORKING_DIR }}" apply -auto-approve tfplan
 
-      # — começa deploy da aplicação, igual ao original —
-
-      - name: '10. Instalar Dependências'
+      - name: '10. Instalar Dependências da Aplicação'
         run: |
           python3 -m pip install numpy --user
-          sudo apt update && sudo apt install -y gettext-base jq curl
+          sudo apt-get update
+          sudo apt-get install -y gettext-base jq curl
 
       - name: '11. Gerar forwarding.secret'
         run: |
-          mkdir -p terraform/velocity
+          mkdir -p "${{ env.TF_WORKING_DIR }}/velocity"
           envsubst '${FORWARDING_SECRET}' \
-            < terraform/velocity/forwarding.secret.template \
-            > terraform/velocity/forwarding.secret
+            < "${{ env.TF_WORKING_DIR }}/velocity/forwarding.secret.template" \
+            > "${{ env.TF_WORKING_DIR }}/velocity/forwarding.secret"
 
       - name: '12. Gerar paper-global.yml'
         run: |
-          mkdir -p terraform/paper/configs
+          mkdir -p "${{ env.TF_WORKING_DIR }}/paper/configs"
           envsubst '${FORWARDING_SECRET}' \
-            < terraform/paper/configs/paper-global.yml.template \
-            > terraform/paper/configs/paper-global.yml
+            < "${{ env.TF_WORKING_DIR }}/paper/configs/paper-global.yml.template" \
+            > "${{ env.TF_WORKING_DIR }}/paper/configs/paper-global.yml"
 
       - name: '13. Gerar velocity.toml'
         run: |
-          mkdir -p terraform/velocity
+          mkdir -p "${{ env.TF_WORKING_DIR }}/velocity"
           envsubst '${FORWARDING_SECRET_FILE}' \
-            < terraform/velocity/velocity.toml.template \
-            > terraform/velocity/velocity.toml
+            < "${{ env.TF_WORKING_DIR }}/velocity/velocity.toml.template" \
+            > "${{ env.TF_WORKING_DIR }}/velocity/velocity.toml"
 
-      - name: '14. Baixar Plugins'
+      - name: '14. Baixar Plugins do Servidor'
         run: |
-          chmod +x terraform/scripts/fetch-plugins.sh
-          terraform/scripts/fetch-plugins.sh
+          chmod +x "${{ env.TF_WORKING_DIR }}/scripts/fetch-plugins.sh"
+          "${{ env.TF_WORKING_DIR }}/scripts/fetch-plugins.sh"
 
-      - name: '15. Copiar para VM'
+      - name: '15. Copiar para a VM'
         run: |
           gcloud compute scp --recurse \
-            terraform/docker-compose.yml \
-            terraform/velocity \
-            terraform/paper/configs \
-            terraform/paper/plugins \
-            ${{ secrets.INSTANCE_NAME }}:~/deploy/ \
-            --zone=${{ secrets.GCP_ZONE }} \
-            --project=${{ secrets.GCP_PROJECT_ID }} \
+            "${{ env.TF_WORKING_DIR }}/docker-compose.yml" \
+            "${{ env.TF_WORKING_DIR }}/velocity" \
+            "${{ env.TF_WORKING_DIR }}/paper/configs" \
+            "${{ env.TF_WORKING_DIR }}/paper/plugins" \
+            ${{ env.INSTANCE_NAME }}:~/deploy/ \
+            --zone="${{ env.GCP_ZONE }}" \
+            --project="${{ env.GCP_PROJECT_ID }}" \
             --tunnel-through-iap
 
-      - name: '16. Reiniciar Containers'
+      - name: '16. Reiniciar Containers na VM'
         run: |
-          gcloud compute ssh ${{ secrets.INSTANCE_NAME }} \
-            --zone ${{ secrets.GCP_ZONE }} \
-            --project ${{ secrets.GCP_PROJECT_ID }} \
+          gcloud compute ssh ${{ env.INSTANCE_NAME }} \
+            --zone="${{ env.GCP_ZONE }}" \
+            --project="${{ env.GCP_PROJECT_ID }}" \
             --tunnel-through-iap --command="
               sudo rm -rf /mnt/data/minecraft/velocity \
                           /mnt/data/minecraft/paper/configs \

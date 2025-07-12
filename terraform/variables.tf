@@ -32,9 +32,3 @@ variable "github_repo" {
   description = "Seu repositório no GitHub no formato 'usuario/repositorio'."
   type        = string
 }
-
-# Nome do bucket de backup que será usado para armazenar dados da VM.
-variable "backup_bucket_name" {
-  description = "Nome do bucket de backup onde a SA da VM terá acesso para escrever arquivos."
-  type        = string
-}

@@ -1,3 +1,5 @@
+# .github/workflows/plan.yml
+
 name: 'Terraform Plan & Validate'
 
 on:
@@ -9,14 +11,15 @@ on:
 
 env:
   TF_WORKING_DIR: ./terraform
+  TF_VAR_workload_identity_pool: ${{ secrets.WORKLOAD_IDENTITY_POOL }}
 
 jobs:
   plan:
     name: 'Terraform Plan'
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      id-token: write
+      contents:      read
+      id-token:      write
       pull-requests: write
 
     steps:
@@ -27,13 +30,12 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account:          ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          service_account:           ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
       - name: '3. Setup do Terraform'
         uses: hashicorp/setup-terraform@v3
 
       - name: '4. Terraform Init'
-        id: init
         run: |
           terraform -chdir="${{ env.TF_WORKING_DIR }}" init \
             -backend-config="bucket=${{ secrets.GCS_BACKEND_BUCKET }}" \
@@ -41,6 +43,7 @@ jobs:
 
       - name: '5. Validar e Analisar Código Terraform'
         run: |
+          terraform -chdir="${{ env.TF_WORKING_DIR }}" fmt -check -recursive
           terraform -chdir="${{ env.TF_WORKING_DIR }}" fmt -check
           terraform -chdir="${{ env.TF_WORKING_DIR }}" validate
           curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
@@ -63,6 +66,7 @@ jobs:
 
       - name: '8. Terraform Plan'
         id: plan
+        continue-on-error: true
         run: |
           terraform -chdir="${{ env.TF_WORKING_DIR }}" plan -no-color -out=tfplan \
             -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
@@ -71,7 +75,6 @@ jobs:
             -var="gcp_user_email=${{ secrets.GCP_USER_EMAIL }}" \
             -var="github_repo=${{ secrets.REMOTE_REPO }}" \
             -var="forwarding_secret=${{ secrets.FORWARDING_SECRET }}"
-        continue-on-error: true
 
       - name: '9. Publicar Plano no Pull Request'
         uses: actions/github-script@v6
@@ -86,3 +89,28 @@ jobs:
             const planOutput = `${{ steps.plan.outputs.stdout }}`;
             const body = `#### Terraform Plan 📖
 
+              <details><summary>Clique para ver o plano</summary>
+
+              \`\`\`
+              ${planOutput}
+              \`\`\`
+
+              </details>`;
+                          const botComment = comments.find(c =>
+                            c.user.type === 'Bot' && c.body.includes('Terraform Plan')
+                          );
+                          if (botComment) {
+                            await github.rest.issues.updateComment({
+                              owner:       context.repo.owner,
+                              repo:        context.repo.repo,
+                              comment_id:  botComment.id,
+                              body,
+                            });
+                          } else {
+                            await github.rest.issues.createComment({
+                              issue_number: context.issue.number,
+                              owner:        context.repo.owner,
+                              repo:         context.repo.repo,
+                              body,
+                            });
+                          }
