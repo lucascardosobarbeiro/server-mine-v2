@@ -68,7 +68,7 @@ jobs:
             -var="zone=${{ secrets.GCP_ZONE }}" \
             -var="gcp_user_email=${{ secrets.GCP_USER_EMAIL }}" \
             -var="github_repo=${{ secrets.REMOTE_REPO }}" \
-            terraform -chdir="${{ env.TF_WORKING_DIR }}" plan -no-color -out=tfplan
+          terraform -chdir="${{ env.TF_WORKING_DIR }}" plan -no-color -out=tfplan
 
       - name: '9. Publicar Plano no Pull Request'
         uses: actions/github-script@v6
