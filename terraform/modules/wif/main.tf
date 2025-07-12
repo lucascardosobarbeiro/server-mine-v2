@@ -37,14 +37,14 @@ resource "google_service_account" "minecraft_sa" {
 
 # Anexa o papel iam.workloadIdentityUser sem sobrescrever outros membros
 resource "google_service_account_iam_member" "workload_identity_user" {
-  service_account_id = google_service_account.minecraft_sa.email
+  service_account_id = google_service_account.minecraft_sa.id
   role               = "roles/iam.workloadIdentityUser"
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repo}"
 }
 
 # Anexa o papel iam.serviceAccountTokenCreator sem sobrescrever outros membros
 resource "google_service_account_iam_member" "token_creator" {
-  service_account_id = google_service_account.minecraft_sa.email
+  service_account_id = google_service_account.minecraft_sa.id
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repo}"
 }
