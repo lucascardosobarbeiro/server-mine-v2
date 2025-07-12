@@ -5,11 +5,6 @@ resource "google_project_service" "compute" {
   service = "compute.googleapis.com"
 }
 
-resource "google_project_service" "iam" {
-  project = var.project_id
-  service = "iam.googleapis.com"
-}
-
 resource "google_project_service" "iap" {
   project = var.project_id
   service = "iap.googleapis.com"
@@ -35,10 +30,6 @@ resource "google_project_service" "sts" {
   service = "sts.googleapis.com"
 }
 
-resource "google_project_service" "iamcredentials" {
-  project = var.project_id
-  service = "iamcredentials.googleapis.com"
-}
 
 resource "google_project_service" "iamcredentials" {
   service              = "iamcredentials.googleapis.com"
