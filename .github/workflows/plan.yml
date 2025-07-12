@@ -67,8 +67,7 @@ jobs:
             -var="region=${{ secrets.GCP_REGION }}" \
             -var="zone=${{ secrets.GCP_ZONE }}" \
             -var="gcp_user_email=${{ secrets.GCP_USER_EMAIL }}" \
-            -var="github_repo=${{ secrets.REMOTE_REPO }}" \
-          terraform -chdir="${{ env.TF_WORKING_DIR }}" plan -no-color -out=tfplan
+            -var="github_repo=${{ secrets.REMOTE_REPO }}"
 
       - name: '9. Publicar Plano no Pull Request'
         uses: actions/github-script@v6
@@ -83,28 +82,28 @@ jobs:
             const planOutput = `${{ steps.plan.outputs.stdout }}`;
             const body = `#### Terraform Plan 📖
 
-              <details><summary>Clique para ver o plano</summary>
+            <details><summary>Clique para ver o plano</summary>
 
-              \`\`\`
-              ${planOutput}
-              \`\`\`
+            \`\`\`
+            ${planOutput}
+            \`\`\`
 
-              </details>`;
-                          const botComment = comments.find(c =>
-                            c.user.type === 'Bot' && c.body.includes('Terraform Plan')
-                          );
-                          if (botComment) {
-                            await github.rest.issues.updateComment({
-                              owner:       context.repo.owner,
-                              repo:        context.repo.repo,
-                              comment_id:  botComment.id,
-                              body,
-                            });
-                          } else {
-                            await github.rest.issues.createComment({
-                              issue_number: context.issue.number,
-                              owner:        context.repo.owner,
-                              repo:         context.repo.repo,
-                              body,
-                            });
-                          }
+            </details>`;
+                        const botComment = comments.find(c =>
+                          c.user.type === 'Bot' && c.body.includes('Terraform Plan')
+                        );
+                        if (botComment) {
+                          await github.rest.issues.updateComment({
+                            owner:       context.repo.owner,
+                            repo:        context.repo.repo,
+                            comment_id:  botComment.id,
+                            body,
+                          });
+                        } else {
+                          await github.rest.issues.createComment({
+                            issue_number: context.issue.number,
+                            owner:        context.repo.owner,
+                            repo:         context.repo.repo,
+                            body,
+                          });
+                        }
