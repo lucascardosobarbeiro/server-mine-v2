@@ -6,5 +6,5 @@ module "iam" {
   github_repo                       = var.github_repo
   backup_bucket_name                = module.storage.bucket_name
   google_iam_workload_identity_pool = module.wif.github_wif_pool_name
-  depends_on = [module.wif]
+  depends_on                        = [module.wif]
 }
