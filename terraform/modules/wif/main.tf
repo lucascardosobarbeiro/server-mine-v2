@@ -22,10 +22,6 @@ resource "google_iam_workload_identity_pool_provider" "github_provider" {
     "attribute.ref"        = "assertion.ref"
   }
 
-  # Se quiser aceitar apenas main e/ou PRs, use:
-  # attribute_condition = "attribute.repository == \"${var.github_repo}\" && (attribute.ref == \"refs/heads/main\" || startsWith(attribute.ref, \"refs/pull/\"))"
-  #
-  # Ou, para não filtrar ref:
   attribute_condition = "attribute.repository == \"${var.github_repo}\""
 
   oidc {
@@ -39,21 +35,16 @@ resource "google_service_account" "minecraft_sa" {
   project      = var.project_id
 }
 
-resource "google_service_account_iam_binding" "workload_identity_binding" {
-  service_account_id = google_service_account.minecraft_sa.name
+# Anexa o papel iam.workloadIdentityUser sem sobrescrever outros membros
+resource "google_service_account_iam_member" "workload_identity_user" {
+  service_account_id = google_service_account.minecraft_sa.email
   role               = "roles/iam.workloadIdentityUser"
-
-  members = [
-    # use o principalSet completo que coincide com attribute.repository
-    "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repo}"
-  ]
+  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repo}"
 }
 
-# (Não esqueça de adicionar também o papel Token Creator:)
-resource "google_service_account_iam_binding" "token_creator_binding" {
-  service_account_id = google_service_account.minecraft_sa.name
+# Anexa o papel iam.serviceAccountTokenCreator sem sobrescrever outros membros
+resource "google_service_account_iam_member" "token_creator" {
+  service_account_id = google_service_account.minecraft_sa.email
   role               = "roles/iam.serviceAccountTokenCreator"
-  members = [
-    "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repo}"
-  ]
+  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repo}"
 }
