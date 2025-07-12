@@ -32,11 +32,11 @@ resource "google_project_service" "sts" {
 
 
 resource "google_project_service" "iamcredentials" {
-  service              = "iamcredentials.googleapis.com"
-  disable_on_destroy   = false
+  service            = "iamcredentials.googleapis.com"
+  disable_on_destroy = false
 }
 
 resource "google_project_service" "iam" {
-  service              = "iam.googleapis.com"
-  disable_on_destroy   = false
+  service            = "iam.googleapis.com"
+  disable_on_destroy = false
 }
