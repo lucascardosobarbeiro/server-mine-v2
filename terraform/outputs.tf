@@ -14,7 +14,6 @@ output "ssh_command" {
   description = "Comando para acessar a VM via SSH de forma segura."
   value       = "gcloud compute ssh ${module.compute.instance_name} --zone ${var.zone} --project ${var.project_id} --tunnel-through-iap"
 }
-
 # As duas saídas abaixo são usadas para configurar os segredos no GitHub.
 
 output "workload_identity_provider" {
