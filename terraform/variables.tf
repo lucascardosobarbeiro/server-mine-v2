@@ -38,7 +38,4 @@ variable "backend_bucket" {
   type        = string
 }
 
-variable "state_prefix" {
-  type    = string
-  default = "terraform/state"
-}
+
