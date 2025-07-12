@@ -32,8 +32,3 @@ variable "github_repo" {
   description = "Seu repositório no GitHub no formato 'usuario/repositorio'."
   type        = string
 }
-#variable secret
-variable "forwarding_secret" {
-  description = "Secret para geração de forwarding.secret (Velocity)"
-  type        = string
-}
