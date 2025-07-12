@@ -32,3 +32,13 @@ variable "github_repo" {
   description = "Seu repositório no GitHub no formato 'usuario/repositorio'."
   type        = string
 }
+#backend remoto
+variable "backend_bucket" {
+  description = "Nome do bucket GCS para o remote state"
+  type        = string
+}
+
+variable "state_prefix" {
+  type    = string
+  default = "terraform/state"
+}

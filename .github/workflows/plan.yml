@@ -12,6 +12,7 @@ on:
 env:
   TF_WORKING_DIR: ./terraform
   TF_VAR_workload_identity_pool: ${{ secrets.WORKLOAD_IDENTITY_POOL }}
+  TF_VAR_backend_bucket:          ${{ secrets.GCS_BACKEND_BUCKET }}
 
 jobs:
   plan:
