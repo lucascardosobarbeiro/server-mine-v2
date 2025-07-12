@@ -41,7 +41,7 @@ jobs:
         run: |
           terraform -chdir="${{ env.TF_WORKING_DIR }}" init \
             -backend-config="bucket=${{ secrets.GCS_BACKEND_BUCKET }}" \
-            -backend-config="prefix=server-mine-v2/terraform.tfstate"
+            -backend-config="prefix=terraform/state"
 
       - name: '5. Validar e Analisar Código Terraform'
         run: |
