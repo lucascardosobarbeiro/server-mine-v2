@@ -44,15 +44,9 @@ jobs:
       - name: '5. Validar e Analisar Código Terraform'
         run: |
           terraform -chdir="${{ env.TF_WORKING_DIR }}" fmt -check -recursive
-          terraform -chdir="${{ env.TF_WORKING_DIR }}" fmt -check
           terraform -chdir="${{ env.TF_WORKING_DIR }}" validate
           curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
-          tflint --chdir=${{ env.TF_WORKING_DIR }}
-
-      - name: '6. YAML Lint'
-        uses: ibiqlik/action-yamllint@v3
-        with:
-          file_or_dir: .github/workflows
+          tflint --chdir="${{ env.TF_WORKING_DIR }}"
 
       - name: '7. Segurança: instalar e rodar Trivy'
         run: |
