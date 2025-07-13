@@ -28,7 +28,6 @@ resource "google_compute_instance" "minecraft_server_host" {
       size  = 20
     }
   }
-
   # Anexa o disco de dados persistente à VM.
   attached_disk {
     source = google_compute_disk.minecraft_data_disk.self_link
