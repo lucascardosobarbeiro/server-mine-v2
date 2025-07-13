@@ -4,7 +4,8 @@ name: Deploy Infra & Application
 on:
   push:
     branches: [ main ]
-
+  pull_request:
+    branches: [ main ]
 # ───────── Variáveis de ambiente ─────────
 env:
   # GCP
