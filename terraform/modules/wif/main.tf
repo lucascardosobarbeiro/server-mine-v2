@@ -18,12 +18,11 @@ resource "google_iam_workload_identity_pool_provider" "github_provider" {
 
   attribute_mapping = {
     "google.subject"       = "assertion.sub"
-    "attribute.actor"      = "assertion.actor"
     "attribute.repository" = "assertion.repository"
     "attribute.ref"        = "assertion.ref"
   }
 
-  attribute_condition = "attribute.repository == \"${var.github_repo}\" && attribute.ref == \"refs/heads/main\""
+  attribute_condition = "attribute.repository == \"${var.github_repo}\""
 
   oidc {
     issuer_uri = "https://token.actions.githubusercontent.com"
@@ -36,17 +35,16 @@ resource "google_service_account" "minecraft_sa" {
   project      = var.project_id
 }
 
-resource "google_service_account_iam_binding" "workload_identity_binding" {
-  service_account_id = google_service_account.minecraft_sa.name
+# Anexa o papel iam.workloadIdentityUser sem sobrescrever outros membros
+resource "google_service_account_iam_member" "workload_identity_user" {
+  service_account_id = google_service_account.minecraft_sa.id
   role               = "roles/iam.workloadIdentityUser"
-
-  members = [
-    "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repo}"
-  ]
+  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repo}"
 }
 
-
-# terraform/github_actions.tf
-
-# ... (código do Workload Identity Pool e Provider, se você também quiser gerenciá-los) ...
-
+# Anexa o papel iam.serviceAccountTokenCreator sem sobrescrever outros membros
+resource "google_service_account_iam_member" "token_creator" {
+  service_account_id = google_service_account.minecraft_sa.id
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repo}"
+}
