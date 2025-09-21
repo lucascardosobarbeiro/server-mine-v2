@@ -17,7 +17,7 @@ resource "google_compute_address" "static_ip" {
 # trivy:ignore:AVD-GCP-0031 "O servidor Minecraft precisa de um IP público para ser acessado pelos jogadores."
 resource "google_compute_instance" "minecraft_server_host" {
   name         = "minecraft-server-host"
-  machine_type = "custom-4-18432"
+  machine_type = "e2-standard-2"
   zone         = var.zone
   tags         = ["minecraft-server"]
 
