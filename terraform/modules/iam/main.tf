@@ -87,3 +87,8 @@ resource "google_service_account_iam_member" "github_wif_user" {
   member             = "principalSet://iam.googleapis.com/${var.google_iam_workload_identity_pool}/attribute.repository/${var.github_repo}"
 }
 
+resource "google_project_service" "iam" {
+  service            = "iam.googleapis.com"
+  disable_on_destroy = false
+
+}

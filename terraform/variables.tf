@@ -32,9 +32,9 @@ variable "github_repo" {
   description = "Seu repositório no GitHub no formato 'usuario/repositorio'."
   type        = string
 }
-#backend remoto
-variable "backend_bucket" {
-  description = "Nome do bucket GCS para o remote state"
+
+variable "forwarding_secret" {
+  description = "O segredo para o proxy Velocity"
   type        = string
 }
 

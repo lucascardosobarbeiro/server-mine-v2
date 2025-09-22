@@ -60,21 +60,3 @@ resource "google_compute_firewall" "allow_iap_ssh" {
   target_tags   = ["minecraft-server"]
 }
 
-# Regra 3: Permite acesso público ao painel web do plugin Plan.
-# Expõe a porta 8804 para que qualquer pessoa com o link possa ver as estatísticas.
-resource "google_compute_firewall" "allow_plan_webui" {
-  name    = "allow-plan-tcp-8804"
-  network = google_compute_network.minecraft_vpc.self_link # Aplica-se à nossa VPC.
-
-  # Define o que é permitido.
-  allow {
-    protocol = "tcp"
-    ports    = ["8804"] # Porta padrão do painel web do Plan.
-  }
-
-  # Permite que o tráfego venha de qualquer lugar da internet.
-  source_ranges = ["0.0.0.0/0"]
-
-  # Aplica esta regra à mesma VM do servidor de Minecraft.
-  target_tags = ["minecraft-server"]
-}

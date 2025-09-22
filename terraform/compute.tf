@@ -4,6 +4,7 @@ module "compute" {
   region                = var.region
   subnetwork_self_link  = module.network.subnetwork_self_link
   service_account_email = module.iam.service_account_email
+  forwarding_secret     = var.forwarding_secret
 
   depends_on = [
     google_project_service.compute,
