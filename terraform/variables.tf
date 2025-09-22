@@ -33,5 +33,9 @@ variable "github_repo" {
   type        = string
 }
 
+variable "forwarding_secret" {
+  description = "O segredo para o proxy Velocity"
+  type        = string
+}
 
 
