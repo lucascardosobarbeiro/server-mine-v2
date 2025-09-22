@@ -1,12 +1,7 @@
 terraform {
+  required_version = ">= 1.5.0"
   backend "gcs" {
-    bucket = "state-tf-minecraft" # O bucket deve existir
+    bucket = var.backend_bucket
     prefix = "terraform/state"
   }
 }
-
-variable "state_prefix" {
-  type    = string
-  default = "terraform/state"
-}
-
