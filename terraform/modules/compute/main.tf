@@ -61,6 +61,10 @@ resource "google_compute_instance" "minecraft_server_host" {
       mkdir -p /mnt/data
       mount -o discard,defaults /dev/sdb /mnt/data
       echo UUID=$(blkid -s UUID -o value /dev/sdb) /mnt/data ext4 discard,defaults,nofail 0 2 | tee -a /etc/fstab
+
+      # Exportar variaveis
+      # Variáveis de ambiente
+      export FORWARDING_SECRET="${var.forwarding_secret}
       
       # ---- Instalação das Ferramentas Essenciais ----
       # Instala o Docker e o plugin Compose de forma robusta.
