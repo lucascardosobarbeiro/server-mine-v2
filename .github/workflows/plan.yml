@@ -1,55 +1,55 @@
 # .github/workflows/plan.yml
 
-name: 'Terraform Plan & Validate'
+name: "Terraform Plan & Validate"
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - 'terraform/**'
-      - '.github/workflows/plan.yml'
+      - "terraform/**"
+      - ".github/workflows/plan.yml"
 
 env:
   TF_WORKING_DIR: ./terraform
   TF_VAR_workload_identity_pool: ${{ secrets.WORKLOAD_IDENTITY_POOL }}
-  TF_VAR_backend_bucket:          ${{ secrets.GCS_BACKEND_BUCKET }}
+  TF_VAR_backend_bucket: ${{ secrets.GCS_BACKEND_BUCKET }}
 
 jobs:
   plan:
-    name: 'Terraform Plan'
+    name: "Terraform Plan"
     runs-on: ubuntu-latest
     permissions:
-      contents:      read
-      id-token:      write
+      contents: read
+      id-token: write
       pull-requests: write
 
     steps:
-      - name: '1. Checkout do Repositório'
+      - name: "1. Checkout do Repositório"
         uses: actions/checkout@v4
 
-      - name: '2. Autenticação com Google Cloud'
+      - name: "2. Autenticação com Google Cloud"
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account:           ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
-      - name: '3. Setup do Terraform'
+      - name: "3. Setup do Terraform"
         uses: hashicorp/setup-terraform@v3
 
-      - name: '4. Terraform Init'
+      - name: "4. Terraform Init"
         run: |
           terraform -chdir="${{ env.TF_WORKING_DIR }}" init \
             -backend-config="bucket=${{ secrets.GCS_BACKEND_BUCKET }}" \
             -backend-config="prefix=terraform/state"
 
-      - name: '5. Validar e Analisar Código Terraform'
+      - name: "5. Validar e Analisar Código Terraform"
         run: |
           terraform -chdir="${{ env.TF_WORKING_DIR }}" fmt -check -recursive
           terraform -chdir="${{ env.TF_WORKING_DIR }}" validate
           curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
           tflint --chdir="${{ env.TF_WORKING_DIR }}"
 
-      - name: '7. Segurança: instalar e rodar Trivy'
+      - name: "7. Segurança: instalar e rodar Trivy"
         run: |
           wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
             | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
@@ -59,7 +59,8 @@ jobs:
           sudo apt-get update && sudo apt-get install trivy -y
           trivy config --exit-code 1 --severity HIGH,CRITICAL ${{ env.TF_WORKING_DIR }}
 
-      - name: '8. Terraform Plan'
+      # No seu arquivo .github/workflows/deploy.yml
+      - name: "8. Terraform Plan"
         id: plan
         continue-on-error: true
         run: |
@@ -68,9 +69,10 @@ jobs:
             -var="region=${{ secrets.GCP_REGION }}" \
             -var="zone=${{ secrets.GCP_ZONE }}" \
             -var="gcp_user_email=${{ secrets.GCP_USER_EMAIL }}" \
-            -var="github_repo=${{ secrets.REMOTE_REPO }}"
+            -var="github_repo=${{ secrets.REMOTE_REPO }}" \
+            -var="forwarding_secret=${{ secrets.FORWARDING_SECRET }}"
 
-      - name: '9. Publicar Plano no Pull Request'
+      - name: "9. Publicar Plano no Pull Request"
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
