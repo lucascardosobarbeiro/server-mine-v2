@@ -30,7 +30,7 @@ resource "google_iam_workload_identity_pool_provider" "github_provider" {
 }
 
 resource "google_service_account" "minecraft_sa" {
-  account_id   = "sa-minecraft-vm"
+  account_id   = "sa-minecraft-vm-2"
   display_name = "SA for Minecraft VM"
   project      = var.project_id
 }
