@@ -7,6 +7,7 @@ resource "google_compute_network" "minecraft_vpc" {
   # Boa prática de segurança: Desabilita a criação automática de sub-redes.
   # Nós criaremos nossa própria sub-rede manualmente, tendo controle total.
   auto_create_subnetworks = false
+  depends_on              = [google_project_service.project_apis]
 }
 
 # =================================================================================
@@ -19,6 +20,7 @@ resource "google_compute_subnetwork" "minecraft_subnet" {
   ip_cidr_range = "10.10.1.0/24"
   network       = google_compute_network.minecraft_vpc.self_link # Vincula à nossa VPC.
   region        = var.region
+  depends_on    = [google_project_service.project_apis]
 }
 
 # =================================================================================
@@ -33,8 +35,8 @@ resource "google_compute_firewall" "allow_velocity_proxy" {
 
   # 'allow' define o que é permitido.
   allow {
-    protocol = "tcp"         # Protocolo de comunicação do Minecraft.
-    ports    = ["25565"]     # A única porta que os jogadores usarão.
+    protocol = "tcp"     # Protocolo de comunicação do Minecraft.
+    ports    = ["25565"] # A única porta que os jogadores usarão.
   }
   # 'source_ranges' define de onde o tráfego pode vir.
   # "0.0.0.0/0" é um CIDR especial que significa "qualquer lugar da internet".
@@ -47,8 +49,9 @@ resource "google_compute_firewall" "allow_velocity_proxy" {
 # Regra 2: Permite acesso administrativo via SSH de forma segura.
 # Esta é a regra de segurança mais importante para o administrador.
 resource "google_compute_firewall" "allow_iap_ssh" {
-  name    = "allow-iap-ssh"
-  network = google_compute_network.minecraft_vpc.self_link
+  name       = "allow-iap-ssh"
+  network    = google_compute_network.minecraft_vpc.self_link
+  depends_on = [google_project_service.project_apis]
   allow {
     protocol = "tcp"
     ports    = ["22"] # Porta padrão do SSH.

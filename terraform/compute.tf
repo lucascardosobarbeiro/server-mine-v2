@@ -2,30 +2,34 @@
 
 # Cria o disco persistente que irá sobreviver à recriação da VM.
 resource "google_compute_disk" "minecraft_data_disk" {
-  name = "minecraft-data-disk"
-  type = "pd-balanced"
-  zone = var.zone
-  size = 50
+  name       = "minecraft-data-disk"
+  type       = "pd-balanced"
+  zone       = var.zone
+  size       = 50
+  depends_on = [google_project_service.project_apis]
 }
 
 # Reserva um endereço de IP público estático.
 resource "google_compute_address" "static_ip" {
-  name   = "minecraft-static-ip"
-  region = var.region
+  name       = "minecraft-static-ip"
+  region     = var.region
+  depends_on = [google_project_service.project_apis]
 }
 
 # Cria a instância da máquina virtual.
 resource "google_compute_instance" "minecraft_server_host" {
   name         = "minecraft-server-host"
-  machine_type = "custom-4-18432"
+  machine_type = "e2-standard-4" # 4 vCPUs, 16 GB RAM
   zone         = var.zone
   tags         = ["minecraft-server"]
+  depends_on   = [google_project_service.project_apis]
 
   boot_disk {
     initialize_params {
       # Usamos a imagem Debian 11 pela sua flexibilidade.
       image = "debian-cloud/debian-11"
       size  = 20
+
     }
   }
 
@@ -44,6 +48,7 @@ resource "google_compute_instance" "minecraft_server_host" {
   service_account {
     email  = google_service_account.minecraft_vm_sa.email
     scopes = ["cloud-platform"]
+
   }
 
   metadata = {
@@ -79,5 +84,5 @@ resource "google_compute_instance" "minecraft_server_host" {
     EOT
   }
 
-  depends_on = [google_compute_firewall.allow_iap_ssh]
+
 }

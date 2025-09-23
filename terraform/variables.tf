@@ -32,7 +32,8 @@ variable "github_repo" {
   description = "Seu repositório no GitHub no formato 'usuario/repositorio'."
   type        = string
 }
+/*
 variable "velocity_secret" {
   description = "Secret key used to forward player info to backend servers"
   type        = string
-}
+}*/
