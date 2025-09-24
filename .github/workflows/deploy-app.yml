@@ -1,0 +1,97 @@
+name: Deploy Minecraft Server
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  GCP_PROJECT_ID:        ${{ secrets.GCP_PROJECT_ID }}
+  GCP_ZONE:              ${{ secrets.GCP_ZONE }}
+  INSTANCE_NAME:         ${{ secrets.INSTANCE_NAME }}
+  FORWARDING_SECRET:     ${{ secrets.FORWARDING_SECRET }}
+  FORWARDING_SECRET_FILE: "/config/forwarding.secret"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install dependencies for IAP, envsubst & plugin fetch
+        run: |
+          # Improve IAP TCP tunnel performance
+          python3 -m pip install numpy --user
+          sudo apt-get update
+          sudo apt-get install -y gettext-base jq curl
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: access_token
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account:        ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Generate forwarding.secret from template
+        run: |
+          mkdir -p terraform/velocity
+          envsubst '${FORWARDING_SECRET}' \
+            < terraform/velocity/forwarding.secret.template \
+            > terraform/velocity/forwarding.secret
+
+      - name: Generate paper-global.yml from template
+        run: |
+          mkdir -p terraform/paper/configs
+          envsubst '${FORWARDING_SECRET}' \
+            < terraform/paper/configs/paper-global.yml.template \
+            > terraform/paper/configs/paper-global.yml
+
+      - name: Generate velocity.toml from template
+        run: |
+          mkdir -p terraform/velocity
+          envsubst '${FORWARDING_SECRET_FILE}' \
+            < terraform/velocity/velocity.toml.template \
+            > terraform/velocity/velocity.toml
+
+      - name: Download plugins via manifest
+        run: |
+          chmod +x terraform/scripts/fetch-plugins.sh
+          terraform/scripts/fetch-plugins.sh
+
+      - name: Copy configs, compose and plugins to VM
+        run: |
+          gcloud compute scp --recurse \
+            terraform/docker-compose.yml \
+            terraform/velocity \
+            terraform/paper/configs \
+            terraform/paper/plugins \
+            ${{ env.INSTANCE_NAME }}:~/deploy/ \
+            --zone=${{ env.GCP_ZONE }} \
+            --project=${{ env.GCP_PROJECT_ID }} \
+            --tunnel-through-iap
+
+      - name: Restart Minecraft containers
+        run: |
+          gcloud compute ssh ${{ env.INSTANCE_NAME }} \
+            --zone ${{ env.GCP_ZONE }} \
+            --project ${{ env.GCP_PROJECT_ID }} \
+            --tunnel-through-iap --command="
+              sudo rm -rf /mnt/data/minecraft/velocity \
+                           /mnt/data/minecraft/paper/configs \
+                           /mnt/data/minecraft/paper/plugins && \
+              sudo mkdir -p /mnt/data/minecraft/paper/plugins && \
+              sudo mv ~/deploy/docker-compose.yml /mnt/data/minecraft/docker-compose.yml && \
+              sudo mv ~/deploy/velocity       /mnt/data/minecraft/velocity && \
+              sudo mv ~/deploy/configs        /mnt/data/minecraft/paper/configs && \
+              sudo mv ~/deploy/plugins/*      /mnt/data/minecraft/paper/plugins/ && \
+              sudo chmod -R a+rwX /mnt/data/minecraft/velocity && \
+              sudo chmod -R a+rwX /mnt/data/minecraft/paper/plugins && \
+              cd /mnt/data/minecraft && \
+              sudo docker compose down || true && \
+              sudo docker compose up -d
+            "
