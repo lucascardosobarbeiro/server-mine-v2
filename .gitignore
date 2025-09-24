@@ -31,10 +31,7 @@ docker-compose.override.yml
 .DS_Store
 Thumbs.db
 
-#bucket backend
-terraform/backend.tf
 
 # — Outros —
 terraform/velocity/plugins/
 terraform/paper/plugins/
-
