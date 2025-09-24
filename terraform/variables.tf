@@ -6,7 +6,7 @@
 # O ID do seu projeto no GCP, a identificação principal.
 variable "project_id" {
   description = "O ID do seu projeto no Google Cloud."
-  type        = string
+  type        = string # Garante que o valor fornecido seja um texto.
 }
 
 # A região geográfica onde a maioria dos recursos será criada.
@@ -32,10 +32,8 @@ variable "github_repo" {
   description = "Seu repositório no GitHub no formato 'usuario/repositorio'."
   type        = string
 }
-
-variable "forwarding_secret" {
-  description = "O segredo para o proxy Velocity"
+/*
+variable "velocity_secret" {
+  description = "Secret key used to forward player info to backend servers"
   type        = string
-}
-
-
+}*/
