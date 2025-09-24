@@ -4,6 +4,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/status-complete-green?style=for-the-badge" alt="Complete" />
   <img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="MIT" />
+  <img src="https://github.com/lucascardosobarbeiro/server-mine-v2/actions/workflows/deploy.yml/badge.svg?branch=main" alt="CI Status" />
 </p>
 <p align="center">
   <img src="https://img.shields.io/badge/GCP-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white" alt="GCP" />
@@ -12,7 +13,9 @@
 
 </p>
 
-# Automated minecraft server + GCP + Docker compose + Actions + CI/CD + IAC
+**Can see more here > https://lucascardosobarbeiro.github.io/server-mine-v2/**
+
+Automated minecraft server + GCP + Docker compose + Actions + CI/CD + IAC
 
 This project provides a **robust, scalable, and easily editable** Infrastructure as Code (IaC) solution for deploying a production-ready PaperMC Minecraft server with a Velocity proxy on the Google Cloud Platform (GCP). It automates the entire lifecycle, from provisioning and configuration to deployment and updates, all designed to be seamlessly managed through CI/CD pipelines.
 
@@ -95,92 +98,18 @@ This layer connects the code repository to the cloud infrastructure, enabling fu
 └── README.md
 ```
 
-## ⚙️ Installation and Usage
+## 💰 Cost Estimate
 
-### Prerequisites
+Below is a rough monthly estimate for running the infrastructure using Google Cloud resources:
 
-* A Google Cloud Platform account with a project created.
-* [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli) installed locally.
-* [gcloud CLI](https://cloud.google.com/sdk/docs/install) installed and configured.
+- **Compute Engine VM (custom-4-18432)**: ~US$120
+- **50GB Persistent Disk**: ~US$10
+- **Static IP address**: ~US$7
+- **Backups Bucket (5GB + lifecycle)**: ~US$1
 
-### Steps
+Use the [GCP pricing calculator](https://cloud.google.com/products/calculator) for a detailed breakdown.
 
-1.  **Clone the repository:**
-    ```bash
-    git clone [https://github.com/lucascardosobarbeiro/server-mine-v2.git](https://github.com/lucascardosobarbeiro/server-mine-v2.git)
-    cd server-mine-v2
-    ```
 
-2.  **Configure Terraform variables:**
-    * Rename `terraform.tfvars.example` to `terraform.tfvars`.
-    * Edit `terraform.tfvars` with your GCP settings (e.g., `project_id`, `region`).
-
-3.  **(Optional) Add Plugins:**
-    * Edit the `manifest.json` file to add or remove plugins.
-    * Run the script to download them locally: `bash scripts/fetch-plugins.sh`.
-
-4.  **Initialize Terraform:**
-    ```bash
-    cd terraform
-    terraform init
-    ```
-
-5.  **Plan the deployment:**
-    ```bash
-    terraform plan
-    ```
-
-6.  **Apply the configuration:**
-    ```bash
-    terraform apply
-    ```
-
-After completion, Terraform will output the server's IP address and other relevant information.
-
-## 🔌 Installing Plugins (The Detailed Workflow)
-
-Plugin installation is centralized in the `manifest.json` file and automated by the `scripts/fetch-plugins.sh` script.
-
-1.  **Declare Plugins in `manifest.json`**:
-    Open `manifest.json` and add an object for each plugin. Specify the `type` (`paper` or `velocity`) and the download `url`.
-
-    **Example `manifest.json`:**
-    ```json
-    [
-      {
-        "name": "LuckPerms",
-        "type": "paper",
-        "url": "[https://ci.lucko.me/job/LuckPerms/lastSuccessfulBuild/artifact/bukkit/loader/build/libs/LuckPerms-Bukkit-5.4.104.jar](https://ci.lucko.me/job/LuckPerms/lastSuccessfulBuild/artifact/bukkit/loader/build/libs/LuckPerms-Bukkit-5.4.104.jar)"
-      },
-      {
-        "name": "Dynmap",
-        "type": "paper",
-        "url": "[https://mediafilez.forgecdn.net/files/4549/255/dynmap-3.6-paper.jar](https://mediafilez.forgecdn.net/files/4549/255/dynmap-3.6-paper.jar)"
-      }
-    ]
-    ```
-
-2.  **Run the Download Script**:
-    Execute the `fetch-plugins.sh` script from the project root. It will read the manifest, download each plugin, and place it in the correct directory (`./paper/plugins` or `./velocity/plugins`).
-    ```bash
-    bash scripts/fetch-plugins.sh
-    ```
-    *Note: The CI/CD pipeline already does this automatically.*
-
-3.  **Apply with Terraform**:
-    When you run `terraform apply`, Terraform syncs the local plugin folders to the VM. The `docker-compose.yml` is already configured to map these folders into the correct containers. The server will restart and load the new plugins.
-    ```bash
-    cd terraform
-    terraform apply
-    ```
-
-## 🔮 Future Improvements
-
-This project is built to be extensible. Here are some potential future enhancements:
-
-* **On-Demand Server Function:** Implement a serverless function (e.g., Google Cloud Function) triggered by an HTTP request. This function would start the server's VM when the first player tries to connect and shut it down after a period of inactivity, generating significant cost savings. It could also trigger a remote backup before shutting down.
-* **Multi-Server Scalability:** Evolve the Terraform configuration to support deploying multiple PaperMC instances behind the same Velocity proxy. This would allow for a scalable network of servers (e.g., Survival, Creative, Minigames) managed from a single, unified codebase.
-* **Advanced Security for Large-Scale Servers:** For large public servers (like Brazilian Hunger Games), integrate advanced firewall rules (WAF) and dedicated anti-cheat solutions, with their configurations managed and deployed through the automated pipeline.
 
 ## 🤝 Contributions
 

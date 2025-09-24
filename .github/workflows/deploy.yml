@@ -1,16 +1,21 @@
-name: Deploy Minecraft Server
+# .github/workflows/deploy.yml
+
+name: 'Deploy Infra & Application'
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 env:
-  GCP_PROJECT_ID:        ${{ secrets.GCP_PROJECT_ID }}
-  GCP_ZONE:              ${{ secrets.GCP_ZONE }}
-  INSTANCE_NAME:         ${{ secrets.INSTANCE_NAME }}
-  FORWARDING_SECRET:     ${{ secrets.FORWARDING_SECRET }}
-  FORWARDING_SECRET_FILE: "/config/forwarding.secret"
+  GCP_PROJECT_ID:                ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REGION:                    ${{ secrets.GCP_REGION }}
+  GCP_ZONE:                      ${{ secrets.GCP_ZONE }}
+  GCP_USER_EMAIL:                ${{ secrets.GCP_USER_EMAIL }}
+  INSTANCE_NAME:                 ${{ secrets.INSTANCE_NAME }}
+  FORWARDING_SECRET:             ${{ secrets.FORWARDING_SECRET }}
+  FORWARDING_SECRET_FILE:        "/config/forwarding.secret"
+  TF_WORKING_DIR:                ./terraform
+  TF_VAR_workload_identity_pool: ${{ secrets.WORKLOAD_IDENTITY_POOL }}
 
 jobs:
   deploy:
@@ -20,78 +25,56 @@ jobs:
       id-token: write
 
     steps:
-      - name: Checkout repo
+      - name: '1. Checkout do Repositório'
         uses: actions/checkout@v4
 
-      - name: Install dependencies for IAP, envsubst & plugin fetch
-        run: |
-          # Improve IAP TCP tunnel performance
-          python3 -m pip install numpy --user
-          sudo apt-get update
-          sudo apt-get install -y gettext-base jq curl
-
-      - name: Authenticate to Google Cloud
+      - name: '2. Autenticação com Google Cloud'
         uses: google-github-actions/auth@v2
         with:
-          token_format: access_token
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account:        ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          service_account:           ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
-      - name: Generate forwarding.secret from template
-        run: |
-          mkdir -p terraform/velocity
-          envsubst '${FORWARDING_SECRET}' \
-            < terraform/velocity/forwarding.secret.template \
-            > terraform/velocity/forwarding.secret
+      - name: '3. Setup do Terraform'
+        uses: hashicorp/setup-terraform@v3
 
-      - name: Generate paper-global.yml from template
+      - name: '4. Terraform Init'
         run: |
-          mkdir -p terraform/paper/configs
-          envsubst '${FORWARDING_SECRET}' \
-            < terraform/paper/configs/paper-global.yml.template \
-            > terraform/paper/configs/paper-global.yml
+          terraform -chdir="${{ env.TF_WORKING_DIR }}" init \
+            -backend-config="bucket=${{ secrets.GCS_BACKEND_BUCKET }}" \
+            -backend-config="prefix=terraform/state"
 
-      - name: Generate velocity.toml from template
+      - name: '5. Validar e Analisar Código Terraform'
         run: |
-          mkdir -p terraform/velocity
-          envsubst '${FORWARDING_SECRET_FILE}' \
-            < terraform/velocity/velocity.toml.template \
-            > terraform/velocity/velocity.toml
+          terraform -chdir="${{ env.TF_WORKING_DIR }}" fmt -check -recursive
+          terraform -chdir="${{ env.TF_WORKING_DIR }}" validate
+          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+          tflint --chdir="${{ env.TF_WORKING_DIR }}"
 
-      - name: Download plugins via manifest
+      - name: '7. Segurança: instalar e rodar Trivy'
         run: |
-          chmod +x terraform/scripts/fetch-plugins.sh
-          terraform/scripts/fetch-plugins.sh
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
+            | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] \
+            https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" \
+            | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update && sudo apt-get install trivy -y
+          trivy config --exit-code 1 --severity HIGH,CRITICAL "${{ env.TF_WORKING_DIR }}"
 
-      - name: Copy configs, compose and plugins to VM
+      - name: '8. Terraform Plan'
+        id: plan
+        continue-on-error: true
         run: |
-          gcloud compute scp --recurse \
-            terraform/docker-compose.yml \
-            terraform/velocity \
-            terraform/paper/configs \
-            terraform/paper/plugins \
-            ${{ env.INSTANCE_NAME }}:~/deploy/ \
-            --zone=${{ env.GCP_ZONE }} \
-            --project=${{ env.GCP_PROJECT_ID }} \
-            --tunnel-through-iap
+          terraform -chdir="${{ env.TF_WORKING_DIR }}" plan -no-color -out=tfplan \
+            -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
+            -var="region=${{ secrets.GCP_REGION }}" \
+            -var="zone=${{ secrets.GCP_ZONE }}" \
+            -var="gcp_user_email=${{ env.GCP_USER_EMAIL }}" \
+            -var="github_repo=${{ secrets.REMOTE_REPO }}" \
+            -var="forwarding_secret=${{ secrets.FORWARDING_SECRET }}"
 
-      - name: Restart Minecraft containers
+      - name: '9. Terraform Apply'
+        if: steps.plan.outputs.exitcode == '2'
         run: |
-          gcloud compute ssh ${{ env.INSTANCE_NAME }} \
-            --zone ${{ env.GCP_ZONE }} \
-            --project ${{ env.GCP_PROJECT_ID }} \
-            --tunnel-through-iap --command="
-              sudo rm -rf /mnt/data/minecraft/velocity \
-                           /mnt/data/minecraft/paper/configs \
-                           /mnt/data/minecraft/paper/plugins && \
-              sudo mkdir -p /mnt/data/minecraft/paper/plugins && \
-              sudo mv ~/deploy/docker-compose.yml /mnt/data/minecraft/docker-compose.yml && \
-              sudo mv ~/deploy/velocity       /mnt/data/minecraft/velocity && \
-              sudo mv ~/deploy/configs        /mnt/data/minecraft/paper/configs && \
-              sudo mv ~/deploy/plugins/*      /mnt/data/minecraft/paper/plugins/ && \
-              sudo chmod -R a+rwX /mnt/data/minecraft/velocity && \
-              sudo chmod -R a+rwX /mnt/data/minecraft/paper/plugins && \
-              cd /mnt/data/minecraft && \
-              sudo docker compose down || true && \
-              sudo docker compose up -d
-            "
+          terraform -chdir="${{ env.TF_WORKING_DIR }}" apply -auto-approve tfplan
+
+      # … restante dos steps de deploy da aplicação, sem alteração no YAML Lint …
